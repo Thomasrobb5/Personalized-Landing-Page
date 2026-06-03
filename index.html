@@ -75,110 +75,14 @@
       </section>
 
       <!-- Sidebar Utilities -->
-      <aside class="sidebar">
-        
-        <!-- Digital Clock Widget -->
-        <article id="clock-widget" class="widget-card clock-card">
-          <div class="clock-time">
-            <span id="clock-hours">00</span>:<span id="clock-minutes">00</span><span id="clock-seconds" class="clock-seconds">00</span>
+      <aside class="sidebar" id="sidebar-container">
+        <div id="sidebar-widgets" class="sidebar-widgets-grid" style="display: grid; grid-template-columns: repeat(var(--sidebar-cols, 1), 1fr); gap: 24px; width: 100%;"></div>
+        <button id="add-widget-btn" class="app-card add-card" style="display: none; min-height: 80px; padding: 20px; border-radius: 20px; flex-direction: row; gap: 10px; align-items: center; justify-content: center; width: 100%;">
+          <div class="add-card-icon" style="width: 32px; height: 32px; font-size: 1rem; border-radius: 8px;">
+            <i class="fa-solid fa-plus"></i>
           </div>
-          <div id="clock-date" class="clock-date">Loading date...</div>
-        </article>
-
-        <!-- Notepad Auto-Save Widget -->
-        <article id="notepad-widget" class="widget-card notepad-card">
-          <div class="widget-header">
-            <h2 class="widget-title"><i class="fa-solid fa-note-sticky"></i> Notepad</h2>
-            <div id="notepad-status" class="widget-status"><i class="fa-solid fa-circle-check"></i> Saved</div>
-          </div>
-          <textarea id="notepad-textarea" placeholder="Type notes here... Saves automatically to local browser storage." aria-label="Notepad notes"></textarea>
-        </article>
-
-        <!-- Background Theme Picker Widget -->
-        <article id="theme-widget" class="widget-card theme-card">
-          <div class="widget-header">
-            <h2 class="widget-title"><i class="fa-solid fa-palette"></i> Workspace Style</h2>
-          </div>
-          <div class="theme-options">
-            <button class="theme-btn" data-theme="theme-midnight-nebula" style="background: linear-gradient(135deg, #4f46e5, #db2777);" title="Midnight Nebula" aria-label="Select Midnight Nebula theme"></button>
-            <button class="theme-btn" data-theme="theme-aurora-borealis" style="background: linear-gradient(135deg, #059669, #0891b2);" title="Aurora Borealis" aria-label="Select Aurora Borealis theme"></button>
-            <button class="theme-btn" data-theme="theme-solar-eclipse" style="background: linear-gradient(135deg, #d97706, #dc2626);" title="Solar Eclipse" aria-label="Select Solar Eclipse theme"></button>
-            <button class="theme-btn" data-theme="theme-cyberpunk" style="background: linear-gradient(135deg, #ff007f, #7000ff);" title="Cyberpunk" aria-label="Select Cyberpunk theme"></button>
-          </div>
-        </article>
-
-        <!-- Weather Widget -->
-        <article id="weather-widget" class="widget-card weather-card">
-          <div class="widget-header">
-            <h2 class="widget-title"><i class="fa-solid fa-cloud-sun"></i> Weather</h2>
-            <div id="weather-city" class="widget-status">Loading...</div>
-          </div>
-          <div class="weather-content" style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
-            <div class="weather-temp-info">
-              <span id="weather-temp" style="font-size: 2rem; font-weight: 700; font-family: 'Outfit', sans-serif; line-height: 1;">--°C</span>
-              <div id="weather-desc" style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">Loading weather...</div>
-            </div>
-            <div class="weather-icon-container" style="font-size: 2.5rem; opacity: 0.9;">
-              <i id="weather-icon" class="fa-solid fa-cloud"></i>
-            </div>
-          </div>
-        </article>
-
-        <!-- Resource Monitor Widget -->
-        <article id="resources-widget" class="widget-card resources-card">
-          <div class="widget-header">
-            <h2 class="widget-title"><i class="fa-solid fa-microchip"></i> System Resources</h2>
-          </div>
-          <div class="resource-gauges-container" style="margin-top: 10px;">
-            <!-- CPU -->
-            <div class="resource-gauge-wrapper resource-cpu">
-              <div class="resource-svg-container">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" class="resource-circle-bg"></circle>
-                  <circle cx="50" cy="50" r="40" class="resource-circle-val" id="cpu-circle" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
-                </svg>
-                <div class="resource-text" id="cpu-value">0%</div>
-              </div>
-              <span class="resource-label">CPU</span>
-            </div>
-            
-            <!-- MEM -->
-            <div class="resource-gauge-wrapper resource-mem">
-              <div class="resource-svg-container">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" class="resource-circle-bg"></circle>
-                  <circle cx="50" cy="50" r="40" class="resource-circle-val" id="ram-circle" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
-                </svg>
-                <div class="resource-text" id="ram-value">0%</div>
-              </div>
-              <span class="resource-label">RAM</span>
-            </div>
-            
-            <!-- NET -->
-            <div class="resource-gauge-wrapper resource-net">
-              <div class="resource-svg-container">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" class="resource-circle-bg"></circle>
-                  <circle cx="50" cy="50" r="40" class="resource-circle-val" id="net-circle" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
-                </svg>
-                <div class="resource-text" id="net-value">0 Mbps</div>
-              </div>
-              <span class="resource-label">NET</span>
-            </div>
-          </div>
-        </article>
-
-        <!-- Bookmarks Widget -->
-        <article id="bookmarks-widget" class="widget-card bookmarks-card">
-          <div class="widget-header">
-            <h2 class="widget-title"><i class="fa-solid fa-bookmark"></i> Quick Bookmarks</h2>
-          </div>
-          <div class="bookmarks-list" id="bookmarks-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; font-size: 0.9rem;">
-            <a href="https://github.com" target="_blank" class="bookmark-item" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); transition: background 0.2s;"><i class="fa-brands fa-github"></i> GitHub</a>
-            <a href="https://stackoverflow.com" target="_blank" class="bookmark-item" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); transition: background 0.2s;"><i class="fa-brands fa-stack-overflow"></i> Stack Overflow</a>
-          </div>
-        </article>
-
+          <span class="add-card-title" style="font-size: 0.95rem;">Add Widget</span>
+        </button>
       </aside>
 
     </main>
@@ -212,6 +116,33 @@
         <div class="color-selector-wrapper">
           <label for="modal-app-color">Accent Color</label>
           <input type="color" id="modal-app-color" class="color-dot-input" value="#a855f7">
+        </div>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+          <div class="form-group">
+            <label for="modal-app-colspan">Width (Cols)</label>
+            <select id="modal-app-colspan">
+              <option value="1">1 Column</option>
+              <option value="2">2 Columns</option>
+              <option value="3">3 Columns</option>
+              <option value="4">4 Columns</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-app-rowspan">Height (Rows)</label>
+            <select id="modal-app-rowspan">
+              <option value="1">1 Row</option>
+              <option value="2">2 Rows</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modal-app-size">Card Sizing Style</label>
+          <select id="modal-app-size">
+            <option value="default">Use Global Setting</option>
+            <option value="compact">Compact</option>
+            <option value="balanced">Balanced</option>
+            <option value="expanded">Expanded</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="modal-app-icon">Icon Glyph</label>
@@ -267,6 +198,24 @@
             <option value="spacious">Spacious</option>
           </select>
         </div>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="settings-sidebar-pos">Sidebar Position</label>
+            <select id="settings-sidebar-pos">
+              <option value="right">Sidebar Right</option>
+              <option value="left">Sidebar Left</option>
+              <option value="top">Widgets Top</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="settings-sidebar-cols">Sidebar Columns</label>
+            <select id="settings-sidebar-cols">
+              <option value="1">1 Column</option>
+              <option value="2">2 Columns</option>
+            </select>
+          </div>
+        </div>
         
         <div class="form-group">
           <label>Widget Visibility</label>
@@ -307,6 +256,91 @@
         <div class="modal-actions">
           <button type="button" id="settings-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
           <button type="submit" id="settings-save-btn" class="btn-macos btn-macos-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Widget Modal (Hidden by Default) -->
+  <div id="widget-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="widget-modal-title">Add Widget</h3>
+        <button type="button" class="modal-close-btn" id="widget-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="widget-form" onsubmit="event.preventDefault();">
+        <div class="form-group" id="widget-type-select-group">
+          <label for="widget-type">Widget Type</label>
+          <select id="widget-type">
+            <option value="clock">Digital Clock</option>
+            <option value="notepad">Notepad Notes</option>
+            <option value="theme">Workspace Style Theme Picker</option>
+            <option value="weather">Weather Forecast</option>
+            <option value="resources">System Resources Monitor</option>
+            <option value="bookmarks">Quick Bookmarks</option>
+            <option value="todo">To-Do Checklist</option>
+            <option value="countdown">Countdown Timer</option>
+            <option value="iframe">Iframe Embed Screen</option>
+            <option value="calculator">Calculator</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="widget-title-input">Widget Title</label>
+          <input type="text" id="widget-title-input" placeholder="e.g. Notes, Project Countdown" required>
+        </div>
+
+        <div class="form-group">
+          <label for="widget-col-span">Width Span</label>
+          <select id="widget-col-span">
+            <option value="1">1 Column (Normal)</option>
+            <option value="2">2 Columns (Wide)</option>
+          </select>
+        </div>
+
+        <!-- Dynamic inputs shown based on selected widget type -->
+        <div id="widget-config-fields">
+          <!-- Weather Config -->
+          <div class="widget-type-fields field-weather" style="display: none;">
+            <div class="form-group">
+              <label for="widget-weather-city">City</label>
+              <input type="text" id="widget-weather-city" placeholder="e.g. London">
+            </div>
+            <div class="form-group">
+              <label for="widget-weather-state">Default Condition</label>
+              <select id="widget-weather-state">
+                <option value="sunny">Sunny</option>
+                <option value="cloudy">Cloudy</option>
+                <option value="rainy">Rainy</option>
+                <option value="snowy">Snowy</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Countdown Config -->
+          <div class="widget-type-fields field-countdown" style="display: none;">
+            <div class="form-group">
+              <label for="widget-countdown-date">Target Date & Time</label>
+              <input type="datetime-local" id="widget-countdown-date">
+            </div>
+          </div>
+
+          <!-- Iframe Config -->
+          <div class="widget-type-fields field-iframe" style="display: none;">
+            <div class="form-group">
+              <label for="widget-iframe-url">Embed URL</label>
+              <input type="url" id="widget-iframe-url" placeholder="https://example.com/widget">
+            </div>
+            <div class="form-group">
+              <label for="widget-iframe-height">Widget Height (px)</label>
+              <input type="number" id="widget-iframe-height" placeholder="200" min="100" max="800" value="200">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="widget-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
+          <button type="submit" id="widget-save-btn" class="btn-macos btn-macos-primary">Save Widget</button>
         </div>
       </form>
     </div>

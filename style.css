@@ -1745,3 +1745,318 @@ a {
     transform: translateY(0);
   }
 }
+
+/* ==========================================================================
+   Advanced Customization Layouts & Dynamic Grid Overrides
+   ========================================================================== */
+
+/* App Card Layout Overrides */
+.colspan-1 { grid-column: span 1; }
+.colspan-2 { grid-column: span 2 !important; }
+.colspan-3 { grid-column: span 3 !important; }
+.colspan-4 { grid-column: span 4 !important; }
+
+.rowspan-1 { grid-row: span 1; }
+.rowspan-2 { grid-row: span 2 !important; }
+
+/* Sidebar Layout Positions */
+@media (min-width: 1024px) {
+  .dashboard-layout.sidebar-left {
+    grid-template-columns: 1fr 2.3fr !important;
+  }
+  .dashboard-layout.sidebar-left .sidebar {
+    grid-column: 1;
+  }
+  .dashboard-layout.sidebar-left .main-content {
+    grid-column: 2;
+  }
+
+  .dashboard-layout.sidebar-top {
+    grid-template-columns: 1fr !important;
+  }
+  .dashboard-layout.sidebar-top .sidebar {
+    grid-row: 1;
+    margin-bottom: 20px;
+  }
+  .dashboard-layout.sidebar-top .main-content {
+    grid-row: 2;
+  }
+
+  .dashboard-layout.sidebar-hidden {
+    grid-template-columns: 1fr !important;
+  }
+  .dashboard-layout.sidebar-hidden .sidebar {
+    display: none !important;
+  }
+}
+
+/* Sidebar Grid Layouts */
+.sidebar-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--sidebar-cols, 1), 1fr);
+  gap: 24px;
+  width: 100%;
+}
+
+.widget-colspan-1 { grid-column: span 1; }
+.widget-colspan-2 { grid-column: span 2 !important; }
+
+/* Drag and Drop Visual Feedback */
+.app-card.dragging,
+.widget-card.dragging {
+  opacity: 0.4 !important;
+  transform: scale(0.97) rotate(1deg) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.app-card.drag-over,
+.widget-card.drag-over {
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Edit Mode styling for Dynamic Widgets */
+.edit-active .widget-card {
+  animation: wiggle 0.3s ease-in-out infinite alternate;
+  cursor: default;
+}
+.edit-active .widget-card:hover {
+  transform: none;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.edit-active .widget-card .delete-badge,
+.edit-active .widget-card .edit-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ==========================================================================
+   New Premium Widgets Styling
+   ========================================================================== */
+
+/* Calculator Widget */
+.calculator-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.calc-display {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: right;
+  color: #ffffff;
+  min-height: 58px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.calc-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.calc-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+.calc-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+.calc-btn:active {
+  transform: scale(0.95);
+}
+.calc-btn.op-btn {
+  background: rgba(255, 159, 10, 0.15);
+  border-color: rgba(255, 159, 10, 0.3);
+  color: #ff9f0a;
+}
+.calc-btn.op-btn:hover {
+  background: rgba(255, 159, 10, 0.25);
+}
+.calc-btn.eq-btn {
+  background: #ff9f0a;
+  border: none;
+  color: #ffffff;
+}
+.calc-btn.eq-btn:hover {
+  background: #ffb03a;
+}
+.calc-btn.clear-btn {
+  background: rgba(255, 69, 58, 0.15);
+  border-color: rgba(255, 69, 58, 0.3);
+  color: #ff453a;
+}
+.calc-btn.clear-btn:hover {
+  background: rgba(255, 69, 58, 0.25);
+}
+
+/* To-Do Checklist Widget */
+.todo-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.todo-list-container {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  transition: var(--transition-fast);
+}
+.todo-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.todo-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+}
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.todo-item.completed .todo-checkbox {
+  border-color: #10b981;
+  background: #10b981;
+}
+.todo-checkbox i {
+  font-size: 0.65rem;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.todo-item.completed .todo-checkbox i {
+  opacity: 1;
+}
+.todo-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+  user-select: none;
+}
+.todo-item.completed .todo-text {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.todo-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0.4;
+  padding: 4px;
+  transition: var(--transition-fast);
+}
+.todo-delete-btn:hover {
+  opacity: 1;
+  color: #ff3b30;
+}
+.todo-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.todo-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition-fast);
+}
+.todo-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Countdown Timer Widget */
+.countdown-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+.countdown-display {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+.countdown-segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 56px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.countdown-val {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+.countdown-lbl {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.countdown-ended {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #10b981;
+  margin-top: 6px;
+}
