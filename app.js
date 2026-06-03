@@ -1715,19 +1715,87 @@ function updateAllClocks() {
   }
 }
 
+let lastCpuTime = performance.now();
+
 function updateDynamicResources() {
-  const cpuPercent = Math.floor(12 + Math.random() * 37);
-  const ramPercent = Math.floor(55 + Math.random() * 3);
-  const netSpeed = Math.floor(25 + Math.random() * 68);
-  const netPercent = Math.round((netSpeed / 100) * 100);
+  const currentTime = performance.now();
+  const elapsed = currentTime - lastCpuTime;
+  lastCpuTime = currentTime;
   
+  // Event Loop Lag calculation (2500ms is expected gap)
+  const lag = Math.max(0, elapsed - 2500);
+  // Map lag (0-120ms) to CPU load (3% - 95%)
+  const cpuPercent = Math.min(95, Math.max(3, Math.round(5 + (lag / 1.5))));
+  const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : '';
+  const cpuLabelText = `${cpuPercent}%`;
+
+  // Memory (RAM) Calculation using Tab JS Heap usage & deviceMemory API
+  let ramPercent = 42;
+  let ramLabelText = '42 MB';
+  if (window.performance && performance.memory) {
+    const used = performance.memory.usedJSHeapSize;
+    const limit = performance.memory.jsHeapLimit;
+    ramPercent = Math.min(100, Math.max(1, Math.round((used / limit) * 100)));
+    const mbUsed = Math.round(used / (1024 * 1024));
+    
+    if (navigator.deviceMemory) {
+      ramLabelText = `${mbUsed}MB / ${navigator.deviceMemory}GB`;
+    } else {
+      ramLabelText = `${mbUsed} MB`;
+    }
+  } else {
+    // Fallback if performance.memory is not supported (Firefox / Safari)
+    const fallbackMock = Math.floor(18 + Math.random() * 5);
+    ramPercent = fallbackMock;
+    if (navigator.deviceMemory) {
+      ramLabelText = `${fallbackMock}MB / ${navigator.deviceMemory}GB`;
+    } else {
+      ramLabelText = `${fallbackMock} MB`;
+    }
+  }
+
+  // Network Bandwidth Speed (Downlink API)
+  let netSpeed = 50;
+  let netPercent = 50;
+  let netLabelText = '50 Mbps';
+  
+  if (navigator.connection && navigator.connection.downlink) {
+    netSpeed = navigator.connection.downlink;
+    // Map to scale (e.g. 100 Mbps = full capacity)
+    netPercent = Math.min(100, Math.round((netSpeed / 100) * 100));
+    netLabelText = `${netSpeed} Mbps`;
+  } else {
+    // Fallback
+    const fallbackSpeed = Math.floor(45 + Math.random() * 20);
+    netPercent = Math.round((fallbackSpeed / 100) * 100);
+    netLabelText = `${fallbackSpeed} Mbps`;
+  }
+
+  // Measure Real Server Roundtrip latency using HEAD fetch test
+  const pingStart = performance.now();
+  fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+    .then(() => {
+      const pingMs = Math.round(performance.now() - pingStart);
+      document.querySelectorAll('.net-val-dynamic').forEach(el => {
+        el.textContent = `${netLabelText} (${pingMs}ms)`;
+      });
+    })
+    .catch(() => {
+      document.querySelectorAll('.net-val-dynamic').forEach(el => {
+        el.textContent = netLabelText;
+      });
+    });
+
+  // Render CPU, RAM, Network Gauges
   document.querySelectorAll('.cpu-circle-dynamic').forEach(el => updateCircularGauge(el, cpuPercent));
   document.querySelectorAll('.ram-circle-dynamic').forEach(el => updateCircularGauge(el, ramPercent));
   document.querySelectorAll('.net-circle-dynamic').forEach(el => updateCircularGauge(el, netPercent));
   
-  document.querySelectorAll('.cpu-val-dynamic').forEach(el => el.textContent = `${cpuPercent}%`);
-  document.querySelectorAll('.ram-val-dynamic').forEach(el => el.textContent = `${ramPercent}%`);
-  document.querySelectorAll('.net-val-dynamic').forEach(el => el.textContent = `${netSpeed} Mbps`);
+  document.querySelectorAll('.cpu-val-dynamic').forEach(el => {
+    el.textContent = cpuLabelText;
+    if (cores) el.title = `${cores} detected`;
+  });
+  document.querySelectorAll('.ram-val-dynamic').forEach(el => el.textContent = ramLabelText);
 }
 
 function tickCountdowns() {
