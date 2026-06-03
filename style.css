@@ -553,12 +553,22 @@ a {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: var(--transition-smooth);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .badge-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-card:hover .app-accent-badge, .app-card.keyboard-active .app-accent-badge {

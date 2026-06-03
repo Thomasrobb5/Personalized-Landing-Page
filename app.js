@@ -308,7 +308,7 @@ function renderAppGrid(apps) {
     cardFooter.innerHTML = `
       <span class="app-accent-badge" style="background: rgba(${hexToRgb(app.color)}, 0.15); color: ${app.color}; border: 1px solid rgba(${hexToRgb(app.color)}, 0.3);">
         <span class="badge-dot" style="background: ${app.color};"></span>
-        ${getCleanUrl(app.url)}
+        <span class="badge-text">${getCleanUrl(app.url)}</span>
       </span>
     `;
     card.appendChild(cardFooter);
