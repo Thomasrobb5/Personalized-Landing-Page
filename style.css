@@ -231,7 +231,8 @@ a {
 
 /* Dashboard Container */
 .dashboard-container {
-  max-width: 1400px;
+  max-width: 1650px;
+  width: 92%;
   margin: 0 auto;
   padding: 40px 24px 160px 24px; /* Adjusted padding since body has margin-top: 50px */
 }
@@ -326,7 +327,7 @@ a {
 /* Application Cards Grid */
 .app-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 24px;
   animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
