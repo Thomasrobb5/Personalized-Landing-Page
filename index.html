@@ -20,6 +20,24 @@
 </head>
 <body class="theme-midnight-nebula">
 
+  <!-- macOS Top Menu Bar -->
+  <div class="macos-menu-bar">
+    <div class="menu-left">
+      <i class="fa-brands fa-apple"></i>
+      <span class="workspace-label">Thomas's Workspace</span>
+      <button id="edit-mode-btn" class="menu-btn">
+        <i class="fa-solid fa-sliders"></i> Edit Workspace
+      </button>
+    </div>
+    <div class="menu-right">
+      <span id="menu-time"></span>
+      <span id="menu-date"></span>
+      <button id="quick-settings-btn" class="menu-btn" aria-label="Quick Settings">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- Animated Glassmorphic Background Blobs -->
   <div class="bg-blobs">
     <div class="blob blob-1"></div>
@@ -48,170 +66,7 @@
         </div>
 
         <!-- Applications Grid -->
-        <div class="app-grid" id="app-grid">
-          
-          <!-- Card 1: TomJRobb (FilmIQ) -->
-          <a href="https://filmiq.app" target="_blank" class="app-card" style="--accent-color-rgb: 168, 85, 247;" data-title="TomJRobb" aria-label="Open TomJRobb FilmIQ">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <img class="app-logo" src="assets/filmiq-logo.png" alt="TomJRobb logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <div class="app-fallback-logo" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(168, 85, 247, 0.15)); color: #c084fc;">
-                  <i class="fa-solid fa-film"></i>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">TomJRobb</h3>
-              <p class="app-description">Cinematic tracker and analytics dashboard.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
-                <span class="badge-dot" style="background: #a855f7;"></span>
-                filmiq.app
-              </span>
-            </div>
-          </a>
-
-          <!-- Card 2: Prism Personal Finance -->
-          <a href="https://prismpf.com" target="_blank" class="app-card" style="--accent-color-rgb: 16, 185, 129;" data-title="Prism Personal Finance" aria-label="Open Prism Personal Finance">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <img class="app-logo" src="assets/prism-logo.svg" alt="Prism logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <div class="app-fallback-logo" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.15)); color: #34d399;">
-                  <i class="fa-solid fa-chart-line"></i>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">Prism Personal Finance</h3>
-              <p class="app-description">Personal wealth tracker and budgeting system.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
-                <span class="badge-dot" style="background: #10b981;"></span>
-                prismpf.com
-              </span>
-            </div>
-          </a>
-
-          <!-- Card 3: Orbit Project Management -->
-          <a href="https://orbit-project-tracker.thomasrobb5.workers.dev/" target="_blank" class="app-card" style="--accent-color-rgb: 6, 182, 212;" data-title="Orbit Project Management" aria-label="Open Orbit Project Management">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <!-- Direct Inline SVG custom logo for Orbit as requested -->
-                <div class="app-logo-svg-wrapper">
-                  <svg viewBox="0 0 100 100" class="app-icon-svg" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="50" r="10" fill="currentColor"/>
-                    <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="currentColor" stroke-width="3" transform="rotate(30 50 50)"/>
-                    <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="currentColor" stroke-width="3" transform="rotate(90 50 50)"/>
-                    <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="currentColor" stroke-width="3" transform="rotate(150 50 50)"/>
-                  </svg>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">Orbit Project Management</h3>
-              <p class="app-description">Collaborative project tracker and workflow manager.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3);">
-                <span class="badge-dot" style="background: #06b6d4;"></span>
-                orbit-project-tracker
-              </span>
-            </div>
-          </a>
-
-          <!-- Card 4: Diablo 4 Discord Challenge -->
-          <a href="https://diablo4-hof.thomasrobb5.workers.dev/" target="_blank" class="app-card" style="--accent-color-rgb: 239, 68, 68;" data-title="Diablo 4 Discord Challenge" aria-label="Open Diablo 4 Discord Challenge">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <img class="app-logo" src="assets/diablo-logo.webp" alt="Diablo logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <div class="app-fallback-logo" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.15)); color: #f87171;">
-                  <i class="fa-solid fa-skull"></i>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">Diablo 4 Challenge</h3>
-              <p class="app-description">Discord community leaderboard and hall of fame.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
-                <span class="badge-dot" style="background: #ef4444;"></span>
-                diablo4-hof
-              </span>
-            </div>
-          </a>
-
-          <!-- Card 5: Lightz -->
-          <a href="https://lightzstocksystem.pages.dev/" target="_blank" class="app-card" style="--accent-color-rgb: 245, 158, 11;" data-title="Lightz Stock System" aria-label="Open Lightz Stock System">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <img class="app-logo" src="assets/lightz-logo.png" alt="Lightz logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <div class="app-fallback-logo" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.15)); color: #fbbf24;">
-                  <i class="fa-solid fa-bolt-lightning"></i>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">Lightz</h3>
-              <p class="app-description">Stock inventory and system management utility.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
-                <span class="badge-dot" style="background: #f59e0b;"></span>
-                lightz-stock-system
-              </span>
-            </div>
-          </a>
-
-          <!-- Card 6: Personal Blog -->
-          <a href="https://blog.tomjrobb.com/" target="_blank" class="app-card" style="--accent-color-rgb: 96, 165, 250;" data-title="Personal Blog" aria-label="Open Personal Blog">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="app-logo-container">
-                <img class="app-logo" src="assets/blog-logo.jpg" alt="Blog logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <div class="app-fallback-logo" style="background: linear-gradient(135deg, rgba(96, 165, 250, 0.3), rgba(96, 165, 250, 0.15)); color: #60a5fa;">
-                  <i class="fa-solid fa-pen-nib"></i>
-                </div>
-              </div>
-              <div class="card-action-icon">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h3 class="app-title">Personal Blog</h3>
-              <p class="app-description">Thoughts on engineering, design, and technology.</p>
-            </div>
-            <div class="card-footer">
-              <span class="app-accent-badge" style="background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3);">
-                <span class="badge-dot" style="background: #3b82f6;"></span>
-                blog.tomjrobb.com
-              </span>
-            </div>
-          </a>
-
-        </div>
+        <div class="app-grid" id="app-grid"></div>
 
         <!-- Search Empty State -->
         <div id="no-results" class="no-results-card">
@@ -261,73 +116,48 @@
 
   <!-- macOS Floating Dock Container -->
   <div class="dock-container" role="navigation" aria-label="App Dock">
-    <div class="dock">
-      
-      <!-- Dock Item 1: TomJRobb -->
-      <div class="dock-item" data-title="TomJRobb" style="--accent-color-rgb: 168, 85, 247;">
-        <a href="https://filmiq.app" target="_blank" aria-label="TomJRobb">
-          <img src="assets/filmiq-logo.png" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(168, 85, 247, 0.15)); color: #c084fc;">
-            <i class="fa-solid fa-film"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">TomJRobb</span>
-      </div>
+    <div class="dock" id="dock-container"></div>
+  </div>
 
-      <!-- Dock Item 2: Prism -->
-      <div class="dock-item" data-title="Prism Finance" style="--accent-color-rgb: 16, 185, 129;">
-        <a href="https://prismpf.com" target="_blank" aria-label="Prism Finance">
-          <img src="assets/prism-logo.svg" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.15)); color: #34d399;">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">Prism Finance</span>
-      </div>
-
-      <!-- Dock Item 3: Orbit -->
-      <div class="dock-item" data-title="Orbit" style="--accent-color-rgb: 6, 182, 212;">
-        <a href="https://orbit-project-tracker.thomasrobb5.workers.dev/" target="_blank" aria-label="Orbit">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(6, 182, 212, 0.15)); color: #22d3ee; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
-            <i class="fa-solid fa-atom"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">Orbit</span>
-      </div>
-
-      <!-- Dock Item 4: Diablo 4 -->
-      <div class="dock-item" data-title="Diablo 4 HoF" style="--accent-color-rgb: 239, 68, 68;">
-        <a href="https://diablo4-hof.thomasrobb5.workers.dev/" target="_blank" aria-label="Diablo 4 Hall of Fame">
-          <img src="assets/diablo-logo.webp" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.15)); color: #f87171;">
-            <i class="fa-solid fa-skull"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">Diablo 4 HoF</span>
-      </div>
-
-      <!-- Dock Item 5: Lightz -->
-      <div class="dock-item" data-title="Lightz System" style="--accent-color-rgb: 245, 158, 11;">
-        <a href="https://lightzstocksystem.pages.dev/" target="_blank" aria-label="Lightz Stock System">
-          <img src="assets/lightz-logo.png" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.15)); color: #fbbf24;">
-            <i class="fa-solid fa-bolt-lightning"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">Lightz System</span>
-      </div>
-
-      <!-- Dock Item 6: Blog -->
-      <div class="dock-item" data-title="Personal Blog" style="--accent-color-rgb: 96, 165, 250;">
-        <a href="https://blog.tomjrobb.com/" target="_blank" aria-label="Personal Blog">
-          <img src="assets/blog-logo.jpg" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(96, 165, 250, 0.3), rgba(96, 165, 250, 0.15)); color: #60a5fa;">
-            <i class="fa-solid fa-pen-nib"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">Personal Blog</span>
-      </div>
-
+  <!-- Customization Editor Modal (Hidden by Default) -->
+  <div id="editor-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <h3 id="modal-title">Edit Application</h3>
+      <form id="editor-form" onsubmit="event.preventDefault();">
+        <div class="form-group">
+          <label for="modal-app-title">App Title</label>
+          <input type="text" id="modal-app-title" placeholder="e.g. My Application" required>
+        </div>
+        <div class="form-group">
+          <label for="modal-app-desc">App Description</label>
+          <input type="text" id="modal-app-desc" placeholder="e.g. Live tracking and analytics dashboard" required>
+        </div>
+        <div class="form-group">
+          <label for="modal-app-url">App URL</label>
+          <input type="url" id="modal-app-url" placeholder="https://example.com" required>
+        </div>
+        <div class="form-group color-selector-wrapper">
+          <label for="modal-app-color">Accent Color</label>
+          <input type="color" id="modal-app-color" class="color-dot-input" value="#a855f7">
+        </div>
+        <div class="form-group">
+          <label for="modal-app-icon">Icon Glyph</label>
+          <select id="modal-app-icon">
+            <option value="fa-film">Film (fa-film)</option>
+            <option value="fa-chart-line">Chart (fa-chart-line)</option>
+            <option value="fa-atom">Atom (fa-atom)</option>
+            <option value="fa-skull">Skull (fa-skull)</option>
+            <option value="fa-bolt-lightning">Bolt (fa-bolt-lightning)</option>
+            <option value="fa-pen-nib">Pen (fa-pen-nib)</option>
+            <option value="fa-code">Code (fa-code)</option>
+            <option value="fa-globe">Globe (fa-globe)</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
+          <button type="submit" id="modal-save-btn" class="btn-macos btn-macos-primary">Save App</button>
+        </div>
+      </form>
     </div>
   </div>
 

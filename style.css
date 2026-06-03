@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Premium Glassmorphic Dashboard Stylesheet
+   Premium Glassmorphic Dashboard Stylesheet (macOS & iOS Redesign)
    ========================================================================== */
 
 /* Import Google Fonts */
@@ -91,6 +91,7 @@ body {
   overflow-x: hidden;
   position: relative;
   transition: background-color 0.8s ease, color 0.4s ease;
+  margin-top: 50px; /* Spacing to start below the fixed top menu bar */
 }
 
 a {
@@ -177,11 +178,62 @@ a {
   }
 }
 
+/* ==========================================================================
+   macOS Top Menu Bar Styling
+   ========================================================================== */
+.mac-menu-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 9999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-family: var(--font-body);
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  user-select: none;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mac-menu-left,
+.mac-menu-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mac-menu-item {
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.mac-menu-item:hover {
+  opacity: 1;
+}
+
+.mac-menu-item.apple-logo {
+  font-size: 0.95rem;
+}
+
+.mac-menu-item.active-app {
+  font-weight: 600;
+}
+
 /* Dashboard Container */
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 60px 24px 160px 24px; /* extra bottom padding to account for dock height */
+  padding: 40px 24px 160px 24px; /* Adjusted padding since body has margin-top: 50px */
 }
 
 /* Header Welcome */
@@ -293,7 +345,7 @@ a {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: var(--transition-smooth);
-  overflow: hidden;
+  overflow: visible; /* Changed to visible to let edit/delete badges sit on border bounds */
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
   cursor: pointer;
 }
@@ -351,23 +403,29 @@ a {
   position: relative;
 }
 
-.app-logo-container {
+/* Squircle Generic Icons & Logo Containers */
+.app-logo-container,
+.app-icon-squircle {
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: 22%; /* 22% Apple iOS shape */
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.3), rgba(var(--accent-color-rgb), 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: rgb(var(--accent-color-rgb));
+  transition: var(--transition-smooth);
 }
 
 .app-logo {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
 }
 
 .app-fallback-logo {
@@ -379,6 +437,36 @@ a {
   font-size: 1.4rem;
   border-radius: inherit;
   font-weight: 700;
+}
+
+.app-logo-container i,
+.app-logo-container svg,
+.app-icon-squircle i,
+.app-icon-squircle svg {
+  font-size: 1.45rem;
+  color: rgb(var(--accent-color-rgb));
+  transition: var(--transition-smooth);
+}
+
+/* White glyph styling on hover/active states */
+.app-card:hover .app-logo-container,
+.app-card.keyboard-active .app-logo-container,
+.app-card:hover .app-icon-squircle,
+.app-card.keyboard-active .app-icon-squircle {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 20px rgba(var(--accent-color-rgb), 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.app-card:hover .app-logo-container i,
+.app-card.keyboard-active .app-logo-container i,
+.app-card:hover .app-logo-container svg,
+.app-card.keyboard-active .app-logo-container svg,
+.app-card:hover .app-icon-squircle i,
+.app-card.keyboard-active .app-icon-squircle i,
+.app-card:hover .app-icon-squircle svg,
+.app-card.keyboard-active .app-icon-squircle svg {
+  color: #ffffff;
+  transform: scale(1.05);
 }
 
 /* Orbit Inline SVG specific container */
@@ -506,9 +594,355 @@ a {
 }
 
 /* ==========================================================================
-   Sidebar and Widget styling
+   Wiggle Edit State & Badges
    ========================================================================== */
+@keyframes wiggle {
+  0% {
+    transform: rotate(-0.5deg) translate(-0.5px, 0.5px);
+  }
+  100% {
+    transform: rotate(0.5deg) translate(0.5px, -0.5px);
+  }
+}
 
+.edit-active .app-card:not(.add-card) {
+  animation: wiggle 0.3s ease-in-out infinite alternate;
+  cursor: default;
+}
+
+/* Disable hover offset in edit mode */
+.edit-active .app-card:not(.add-card):hover {
+  transform: none;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+}
+
+.delete-badge,
+.edit-badge {
+  position: absolute;
+  top: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.delete-badge {
+  left: -8px;
+  background-color: #ff3b30; /* Apple/iOS Red */
+}
+
+.delete-badge:hover {
+  background-color: #ff453a;
+  transform: scale(1.15);
+}
+
+.edit-badge {
+  right: -8px;
+  background-color: #007aff; /* Apple/iOS Blue */
+}
+
+.edit-badge:hover {
+  background-color: #0a84ff;
+  transform: scale(1.15);
+}
+
+/* Display edit and delete badges in edit mode */
+.edit-active .app-card:not(.add-card) .delete-badge,
+.edit-active .app-card:not(.add-card) .edit-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Add App Card styling */
+.app-card.add-card {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: var(--transition-smooth);
+}
+
+.app-card.add-card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.add-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.add-card-icon {
+  font-size: 1.75rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 22%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  color: var(--text-secondary);
+}
+
+.app-card.add-card:hover .add-card-icon {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.app-card.add-card:hover .add-card-title {
+  color: var(--text-primary);
+}
+
+.add-card-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+/* ==========================================================================
+   Glassmorphic Editor Modal Styling
+   ========================================================================== */
+#editor-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99999; /* Higher than menu bar & dock */
+  display: none; /* Flex when open */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-container {
+  background: rgba(25, 25, 35, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  width: 90%;
+  max-width: 480px;
+  padding: 30px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  color: var(--text-primary);
+  transform-origin: center;
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 14px;
+}
+
+.modal-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.15rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: var(--transition-fast);
+}
+
+.modal-close-btn:hover {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Translucent macOS inputs */
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="url"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+}
+
+/* Translucent Color Selector */
+.color-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+
+.color-selector-wrapper label {
+  margin: 0;
+}
+
+.color-dot-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  outline: none;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.color-dot-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-dot-input::-webkit-color-swatch {
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-dot-input:hover {
+  transform: scale(1.1);
+}
+
+/* Actions with scale hover transitions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-macos {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+}
+
+.btn-macos:hover {
+  transform: scale(1.03);
+}
+
+.btn-macos:active {
+  transform: scale(0.97);
+}
+
+.btn-macos-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.btn-macos-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-macos-primary {
+  background: #007aff; /* macOS Blue */
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.btn-macos-primary:hover {
+  background: #0a84ff;
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Sidebar and Widget styling (iOS Desktop Redesign)
+   ========================================================================== */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -517,42 +951,48 @@ a {
 }
 
 .widget-card {
-  background: var(--widget-bg);
-  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
-  padding: 28px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-  transition: border-color 0.4s ease;
+  padding: 24px;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .widget-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
 
 .widget-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  border-bottom: none; /* Zero-divider for iOS desktop module style */
+  padding-bottom: 0;
+  margin-bottom: 20px;
 }
 
 .widget-title {
   font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .widget-title i {
   color: var(--text-secondary);
   font-size: 1rem;
+  opacity: 0.8;
 }
 
 .widget-status {
@@ -569,53 +1009,74 @@ a {
   color: #10b981;
 }
 
-/* Clock Widget */
+/* Clock Widget iOS Overhaul */
 .clock-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 34px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.clock-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .clock-time {
   font-family: var(--font-display);
-  font-size: 3.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #ffffff;
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   display: flex;
   align-items: baseline;
   line-height: 1;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .clock-seconds {
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-left: 4px;
+  font-size: 1.6rem;
+  font-weight: 300;
+  margin-left: 2px;
+  opacity: 0.7;
+  background: none;
+  -webkit-text-fill-color: var(--text-secondary);
 }
 
 .clock-date {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  font-weight: 500;
-  margin-top: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 14px;
 }
 
-/* Notepad Widget */
+/* Notepad Widget iOS Overhaul */
 .notepad-card textarea {
   width: 100%;
-  height: 180px;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
+  height: 150px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px;
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 0.925rem;
   line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: var(--transition-fast);
 }
 
 .notepad-card textarea::placeholder {
@@ -623,7 +1084,17 @@ a {
   opacity: 0.5;
 }
 
-/* Theme Picker Widget */
+.notepad-card textarea:focus {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* Theme Picker Widget iOS Overhaul */
+.theme-card {
+  padding: 24px;
+}
+
 .theme-options {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -632,28 +1103,29 @@ a {
 }
 
 .theme-btn {
-  height: 40px;
-  border-radius: 12px;
+  height: 42px;
+  border-radius: 14px; /* Shape matching squircle icons */
   border: 2px solid transparent;
   cursor: pointer;
-  transition: var(--transition-smooth);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .theme-btn:hover {
-  transform: translateY(-3px) scale(1.08);
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .theme-btn.active {
   border-color: #ffffff;
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2), 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================================================
    macOS Bottom Dock styling
    ========================================================================== */
-
 .dock-container {
   position: fixed;
   bottom: 24px;
@@ -787,12 +1259,17 @@ a {
   box-shadow: 0 0 8px rgb(var(--accent-color-rgb));
 }
 
-
 /* ==========================================================================
    Responsive Media Queries & Mobile Optimizations
    ========================================================================== */
-
 @media (max-width: 768px) {
+  .mac-menu-bar {
+    padding: 0 12px;
+  }
+  .mac-menu-left .mac-menu-item:not(.apple-logo):not(.active-app) {
+    display: none; /* Hide less important menu items on small screens */
+  }
+
   .dashboard-container {
     padding: 30px 16px 120px 16px;
   }
