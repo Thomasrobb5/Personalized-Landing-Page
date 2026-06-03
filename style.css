@@ -331,6 +331,16 @@ a {
   animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
+/* Grid Column Overrides */
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+
+/* Grid Spacing (Gap) Overrides */
+.gap-tight { gap: 14px !important; }
+.gap-comfortable { gap: 24px !important; }
+.gap-spacious { gap: 36px !important; }
+
 /* Individual App Card */
 .app-card {
   position: relative;
@@ -552,6 +562,34 @@ a {
 
 .app-card:hover .app-accent-badge, .app-card.keyboard-active .app-accent-badge {
   box-shadow: 0 4px 12px var(--badge-glow);
+}
+
+/* Card Scale/Sizing Overrides */
+.card-compact {
+  min-height: 190px !important;
+  padding: 18px !important;
+}
+.card-compact .card-content {
+  margin-top: 14px !important;
+  margin-bottom: 14px !important;
+}
+.card-compact .app-title {
+  font-size: 1.15rem !important;
+}
+.card-compact .app-description {
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+}
+
+.card-expanded {
+  min-height: 290px !important;
+  padding: 34px !important;
+}
+.card-expanded .app-title {
+  font-size: 1.45rem !important;
+}
+.card-expanded .app-description {
+  font-size: 1.0rem !important;
 }
 
 /* Search empty state styles */
@@ -1122,6 +1160,365 @@ a {
   border-color: #ffffff;
   transform: scale(1.05);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2), 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Weather Widget Overhaul */
+.weather-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.weather-sunny {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%) !important;
+  border-color: rgba(251, 191, 36, 0.25) !important;
+}
+
+.weather-cloudy {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(71, 85, 105, 0.1) 100%) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+.weather-rainy {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(30, 41, 59, 0.15) 100%) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.weather-stormy {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(15, 23, 42, 0.3) 100%) !important;
+  border-color: rgba(168, 85, 247, 0.25) !important;
+}
+
+.weather-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weather-location {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.weather-condition {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.weather-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.weather-temp-container {
+  display: flex;
+  align-items: baseline;
+}
+
+.weather-temp {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weather-unit {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.weather-icon-large {
+  font-size: 2.75rem;
+  animation: float-icon 3s infinite ease-in-out;
+}
+
+.weather-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.weather-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.weather-detail-item i {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  opacity: 0.7;
+}
+
+/* Animations */
+@keyframes float-icon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.weather-wind-icon {
+  display: inline-block;
+  animation: sway 2s infinite ease-in-out alternate;
+}
+
+@keyframes sway {
+  0% { transform: rotate(-8deg); }
+  100% { transform: rotate(8deg); }
+}
+
+.weather-rain-drops {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.weather-drop {
+  width: 2px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 1px;
+  animation: rain-fall 1s infinite linear;
+}
+
+.weather-drop:nth-child(2) { animation-delay: 0.2s; }
+.weather-drop:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes rain-fall {
+  0% { transform: translateY(-5px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(5px); opacity: 0; }
+}
+
+@media (max-width: 340px) {
+  .weather-body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* System Resource Widget Overhaul */
+.resource-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.resource-gauges-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.resource-gauge-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.resource-svg-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+
+.resource-svg-container svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.resource-circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 6;
+}
+
+.resource-circle-val {
+  fill: none;
+  stroke: rgb(var(--accent-color-rgb));
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+.resource-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.resource-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.resource-cpu .resource-circle-val {
+  stroke: #a855f7;
+}
+
+.resource-mem .resource-circle-val {
+  stroke: #10b981;
+}
+
+.resource-net .resource-circle-val {
+  stroke: #06b6d4;
+}
+
+/* Bookmarks Widget Overhaul */
+.bookmark-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bookmark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.bookmark-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 8px 12px;
+  transition: var(--transition-fast);
+}
+
+.bookmark-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(var(--accent-color-rgb), 0.2);
+  box-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.05);
+}
+
+.bookmark-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bookmark-link i {
+  color: rgba(var(--accent-color-rgb), 0.7);
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+}
+
+.bookmark-item:hover .bookmark-link i {
+  color: rgb(var(--accent-color-rgb));
+  transform: scale(1.1);
+}
+
+.bookmark-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  opacity: 0.4;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+}
+
+.bookmark-delete-btn:hover {
+  opacity: 1;
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.15);
+}
+
+.bookmark-input-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bookmark-input-group input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: var(--transition-fast);
+}
+
+.bookmark-input-group input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.bookmark-input-group input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+}
+
+.bookmark-add-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.bookmark-add-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.bookmark-add-btn:active {
+  transform: translateY(0);
 }
 
 /* ==========================================================================

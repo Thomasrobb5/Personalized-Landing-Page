@@ -7,8 +7,25 @@ let userApps = [];
 let editingAppIndex = null;
 let editModeActive = false;
 
+let workspaceConfig = {
+  gridCols: 'auto',
+  cardSize: 'balanced',
+  cardGap: 'comfortable',
+  showClock: true,
+  showNotepad: true,
+  showWeather: true,
+  showResources: true,
+  showBookmarks: true,
+  weatherCity: 'London',
+  weatherState: 'sunny'
+};
+
+let userBookmarks = [];
+
 // Storage Keys
 const STORAGE_KEY_APPS = 'launchpad_user_apps';
+const STORAGE_KEY_CONFIG = 'launchpad_workspace_config';
+const STORAGE_KEY_BOOKMARKS = 'launchpad_user_bookmarks';
 
 // Default Applications Array
 const DEFAULT_APPS = [
@@ -56,9 +73,16 @@ const DEFAULT_APPS = [
   }
 ];
 
+const DEFAULT_BOOKMARKS = [
+  { name: 'GitHub', url: 'https://github.com' },
+  { name: 'Google', url: 'https://google.com' },
+  { name: 'ChatGPT', url: 'https://chat.openai.com' }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   // Load State from LocalStorage
   userApps = loadAppsFromStorage();
+  loadWorkspaceConfig();
 
   // Render Dashboard Components
   renderAppGrid(userApps);
@@ -74,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initCardMouseGlow();
   initEditMode();
   initModalEvents();
+
+  // Initialize Custom Workspace Elements
+  applyWorkspaceConfig(workspaceConfig);
+  initSettingsModal();
+  initResourceMonitor();
+  initBookmarks();
 });
 
 /**
@@ -95,6 +125,22 @@ function loadAppsFromStorage() {
 
 function saveAppsToStorage(apps) {
   localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(apps));
+}
+
+function loadWorkspaceConfig() {
+  const data = localStorage.getItem(STORAGE_KEY_CONFIG);
+  if (!data) {
+    localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
+    return workspaceConfig;
+  }
+  try {
+    const loaded = JSON.parse(data);
+    workspaceConfig = { ...workspaceConfig, ...loaded };
+    return workspaceConfig;
+  } catch (e) {
+    console.error('Error parsing workspace config', e);
+    return workspaceConfig;
+  }
 }
 
 /**
@@ -252,6 +298,9 @@ function renderAppGrid(apps) {
     });
     grid.appendChild(addCard);
   }
+
+  // Re-apply workspace config to style the new elements
+  applyWorkspaceConfig(workspaceConfig);
 
   // Re-apply current search filter parameters on re-render
   applySearchFilter();
@@ -737,4 +786,399 @@ function openModalForEdit(index) {
 function closeModal() {
   const modal = document.getElementById('editor-modal');
   if (modal) modal.style.display = 'none';
+}
+
+
+/* ==========================================================================
+   WORKSPACE CONFIGURATION ENGINE
+   ========================================================================== */
+
+/**
+ * Applies workspace layout styles, widget visibility, and weather configurations.
+ */
+function applyWorkspaceConfig(config) {
+  const grid = document.getElementById('app-grid');
+  if (grid) {
+    // 1. Column classes
+    grid.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
+    if (config.gridCols && config.gridCols !== 'auto') {
+      grid.classList.add(`grid-cols-${config.gridCols}`);
+    }
+    
+    // 2. Gap classes
+    grid.classList.remove('gap-tight', 'gap-comfortable', 'gap-spacious');
+    if (config.cardGap) {
+      grid.classList.add(`gap-${config.cardGap}`);
+    }
+
+    // 3. Card size classes
+    const cards = grid.querySelectorAll('.app-card');
+    cards.forEach(card => {
+      card.classList.remove('card-compact', 'card-expanded');
+      if (config.cardSize === 'compact') {
+        card.classList.add('card-compact');
+      } else if (config.cardSize === 'expanded') {
+        card.classList.add('card-expanded');
+      }
+    });
+  }
+
+  // 4. Mount/unmount widgets (display: block/none)
+  const clockWidget = document.getElementById('clock-widget') || document.querySelector('.clock-card');
+  if (clockWidget) {
+    clockWidget.style.display = config.showClock ? '' : 'none';
+  }
+
+  const notepadWidget = document.getElementById('notepad-widget') || document.querySelector('.notepad-card');
+  if (notepadWidget) {
+    notepadWidget.style.display = config.showNotepad ? '' : 'none';
+  }
+
+  const weatherWidget = document.getElementById('weather-widget') || document.querySelector('.weather-card') || document.querySelector('.weather-widget');
+  if (weatherWidget) {
+    weatherWidget.style.display = config.showWeather ? '' : 'none';
+    
+    // Morphs background using weather state class
+    weatherWidget.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy', 'weather-snowy');
+    if (config.weatherState) {
+      weatherWidget.classList.add(`weather-${config.weatherState}`);
+    }
+
+    const cityEl = weatherWidget.querySelector('#weather-city') || weatherWidget.querySelector('.weather-city') || weatherWidget.querySelector('.city-label');
+    if (cityEl) {
+      cityEl.textContent = config.weatherCity || 'London';
+    }
+
+    const tempEl = weatherWidget.querySelector('#weather-temp') || weatherWidget.querySelector('.weather-temp') || weatherWidget.querySelector('.temp-value');
+    if (tempEl) {
+      let temp = '20°C';
+      if (config.weatherState === 'sunny') temp = '24°C';
+      else if (config.weatherState === 'cloudy') temp = '16°C';
+      else if (config.weatherState === 'rainy') temp = '12°C';
+      else if (config.weatherState === 'snowy') temp = '1°C';
+      tempEl.textContent = temp;
+    }
+
+    const iconEl = weatherWidget.querySelector('#weather-icon') || weatherWidget.querySelector('.weather-icon') || weatherWidget.querySelector('.weather-state-icon');
+    if (iconEl) {
+      iconEl.className = 'fa-solid';
+      if (config.weatherState === 'sunny') iconEl.classList.add('fa-sun');
+      else if (config.weatherState === 'cloudy') iconEl.classList.add('fa-cloud');
+      else if (config.weatherState === 'rainy') iconEl.classList.add('fa-cloud-showers-heavy');
+      else if (config.weatherState === 'snowy') iconEl.classList.add('fa-snowflake');
+    }
+  }
+
+  const resourcesWidget = document.getElementById('resources-widget') || document.querySelector('.resources-card') || document.querySelector('.activity-monitor-card') || document.querySelector('.resources-widget');
+  if (resourcesWidget) {
+    resourcesWidget.style.display = config.showResources ? '' : 'none';
+  }
+
+  const bookmarksWidget = document.getElementById('bookmarks-widget') || document.querySelector('.bookmarks-card') || document.querySelector('.bookmarks-widget');
+  if (bookmarksWidget) {
+    bookmarksWidget.style.display = config.showBookmarks ? '' : 'none';
+  }
+}
+
+/**
+ * Binds workspace settings modal dialog actions
+ */
+function initSettingsModal() {
+  const settingsBtn = document.getElementById('workspace-settings-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsForm = document.getElementById('settings-form');
+  const closeBtn = document.getElementById('settings-close-btn') || document.querySelector('.settings-close-btn') || document.querySelector('.close-settings');
+  const cancelBtn = document.getElementById('settings-cancel-btn') || document.querySelector('.settings-cancel-btn');
+
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      populateSettingsForm();
+      settingsModal.style.display = 'flex';
+    });
+  }
+
+  const closeModalFn = () => {
+    if (settingsModal) settingsModal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModalFn);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
+
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        closeModalFn();
+      }
+    });
+  }
+
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const getVal = (id, isCheckbox = false) => {
+        const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`) || document.querySelector(`[name="${id.replace('settings-', '')}"]`);
+        if (el) {
+          return isCheckbox ? el.checked : el.value;
+        }
+        // Fallback to current config value
+        const camelKey = id.replace('settings-', '').replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+        return workspaceConfig[camelKey];
+      };
+
+      workspaceConfig.gridCols = getVal('settings-grid-cols');
+      workspaceConfig.cardSize = getVal('settings-card-size');
+      workspaceConfig.cardGap = getVal('settings-card-gap');
+      workspaceConfig.showClock = getVal('settings-show-clock', true);
+      workspaceConfig.showNotepad = getVal('settings-show-notepad', true);
+      workspaceConfig.showWeather = getVal('settings-show-weather', true);
+      workspaceConfig.showResources = getVal('settings-show-resources', true);
+      workspaceConfig.showBookmarks = getVal('settings-show-bookmarks', true);
+      workspaceConfig.weatherCity = getVal('settings-weather-city');
+      workspaceConfig.weatherState = getVal('settings-weather-state');
+
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
+      applyWorkspaceConfig(workspaceConfig);
+      closeModalFn();
+    });
+  }
+}
+
+function populateSettingsForm() {
+  const config = workspaceConfig;
+  
+  const setVal = (id, val, isCheckbox = false) => {
+    const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`) || document.querySelector(`[name="${id.replace('settings-', '')}"]`);
+    if (el) {
+      if (isCheckbox) {
+        el.checked = !!val;
+      } else {
+        el.value = val;
+      }
+    }
+  };
+
+  setVal('settings-grid-cols', config.gridCols);
+  setVal('settings-card-size', config.cardSize);
+  setVal('settings-card-gap', config.cardGap);
+  setVal('settings-show-clock', config.showClock, true);
+  setVal('settings-show-notepad', config.showNotepad, true);
+  setVal('settings-show-weather', config.showWeather, true);
+  setVal('settings-show-resources', config.showResources, true);
+  setVal('settings-show-bookmarks', config.showBookmarks, true);
+  setVal('settings-weather-city', config.weatherCity);
+  setVal('settings-weather-state', config.weatherState);
+}
+
+
+/* ==========================================================================
+   RESOURCE MONITOR WIDGET
+   ========================================================================== */
+
+/**
+ * Updates an SVG circular gauge based on percentage and circle circumference.
+ */
+function updateCircularGauge(circleEl, percentage) {
+  if (!circleEl) return;
+  let circumference = parseFloat(circleEl.getAttribute('stroke-dasharray'));
+  if (isNaN(circumference) || circumference <= 0) {
+    try {
+      circumference = circleEl.getTotalLength();
+    } catch (e) {
+      const r = parseFloat(circleEl.getAttribute('r')) || 40;
+      circumference = 2 * Math.PI * r;
+    }
+  }
+  
+  circleEl.style.strokeDasharray = circumference;
+  const offset = circumference - (percentage / 100) * circumference;
+  circleEl.style.strokeDashoffset = offset;
+}
+
+/**
+ * Starts simulated CPU, RAM, and Network fluctuations loop.
+ */
+function initResourceMonitor() {
+  const cpuCircle = document.getElementById('cpu-circle') || document.querySelector('.cpu-circle');
+  const ramCircle = document.getElementById('ram-circle') || document.querySelector('.ram-circle');
+  const netCircle = document.getElementById('network-circle') || document.getElementById('net-circle') || document.querySelector('.network-circle') || document.querySelector('.net-circle');
+
+  const cpuLabel = document.getElementById('cpu-value') || document.querySelector('.cpu-value');
+  const ramLabel = document.getElementById('ram-value') || document.querySelector('.ram-value');
+  const netLabel = document.getElementById('network-value') || document.getElementById('net-value') || document.querySelector('.network-value') || document.querySelector('.net-value');
+
+  function updateResources() {
+    // CPU: fluctuate between 12% and 48%
+    const cpuPercent = Math.floor(12 + Math.random() * 37);
+    // RAM: steady around 56% (fluctuates slightly between 55% and 57%)
+    const ramPercent = Math.floor(55 + Math.random() * 3);
+    // Network: fluctuate between 25 Mbps and 92 Mbps
+    const netSpeed = Math.floor(25 + Math.random() * 68);
+    // Convert to visual percentage (let's assume 100 Mbps = 100%)
+    const netPercent = Math.round((netSpeed / 100) * 100);
+
+    if (cpuCircle) updateCircularGauge(cpuCircle, cpuPercent);
+    if (ramCircle) updateCircularGauge(ramCircle, ramPercent);
+    if (netCircle) updateCircularGauge(netCircle, netPercent);
+
+    if (cpuLabel) cpuLabel.textContent = `${cpuPercent}%`;
+    if (ramLabel) ramLabel.textContent = `${ramPercent}%`;
+    if (netLabel) netLabel.textContent = `${netSpeed} Mbps`;
+  }
+
+  updateResources();
+  setInterval(updateResources, 2500);
+}
+
+
+/* ==========================================================================
+   BOOKMARKS WIDGET CRUD
+   ========================================================================== */
+
+function loadBookmarks() {
+  const data = localStorage.getItem(STORAGE_KEY_BOOKMARKS);
+  if (!data) {
+    localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify(DEFAULT_BOOKMARKS));
+    return [...DEFAULT_BOOKMARKS];
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Error parsing bookmarks', e);
+    return [...DEFAULT_BOOKMARKS];
+  }
+}
+
+function saveBookmarks() {
+  localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify(userBookmarks));
+}
+
+function renderBookmarks() {
+  const listEl = document.getElementById('bookmarks-list') || document.getElementById('bookmark-list') || document.querySelector('.bookmarks-list') || document.querySelector('.bookmark-list');
+  if (!listEl) return;
+
+  listEl.innerHTML = '';
+  
+  userBookmarks.forEach((bookmark, index) => {
+    const li = document.createElement('li');
+    li.className = 'bookmark-item';
+    li.style.display = 'flex';
+    li.style.justifyContent = 'space-between';
+    li.style.alignItems = 'center';
+    li.style.padding = '8px 12px';
+    li.style.marginBottom = '8px';
+    li.style.background = 'rgba(255, 255, 255, 0.03)';
+    li.style.borderRadius = '10px';
+    li.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+
+    // Bookmark Link
+    const link = document.createElement('a');
+    link.href = bookmark.url;
+    link.target = '_blank';
+    link.className = 'bookmark-link';
+    link.style.display = 'flex';
+    link.style.alignItems = 'center';
+    link.style.gap = '8px';
+    
+    // Favicon fetch with Google Favicon service
+    const favicon = document.createElement('img');
+    favicon.src = `https://www.google.com/s2/favicons?sz=32&domain=${getCleanUrl(bookmark.url)}`;
+    favicon.alt = '';
+    favicon.style.width = '16px';
+    favicon.style.height = '16px';
+    favicon.style.borderRadius = '3px';
+    favicon.onerror = () => {
+      favicon.style.display = 'none';
+      iconFallback.style.display = 'inline-block';
+    };
+    
+    const iconFallback = document.createElement('i');
+    iconFallback.className = 'fa-solid fa-bookmark';
+    iconFallback.style.fontSize = '12px';
+    iconFallback.style.color = 'var(--text-secondary)';
+    iconFallback.style.display = 'none';
+
+    const nameText = document.createElement('span');
+    nameText.textContent = bookmark.name;
+    nameText.className = 'bookmark-name';
+    nameText.style.fontWeight = '500';
+    nameText.style.fontSize = '0.9rem';
+
+    link.appendChild(favicon);
+    link.appendChild(iconFallback);
+    link.appendChild(nameText);
+
+    // Delete Glyph Button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'bookmark-delete-btn';
+    deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    deleteBtn.style.background = 'none';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.color = '#ff453a';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.padding = '4px';
+    deleteBtn.style.opacity = '0.7';
+    deleteBtn.style.transition = 'opacity 0.2s, transform 0.2s';
+    deleteBtn.title = 'Remove Bookmark';
+
+    deleteBtn.addEventListener('mouseenter', () => {
+      deleteBtn.style.opacity = '1';
+      deleteBtn.style.transform = 'scale(1.1)';
+    });
+    deleteBtn.addEventListener('mouseleave', () => {
+      deleteBtn.style.opacity = '0.7';
+      deleteBtn.style.transform = 'none';
+    });
+
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      userBookmarks.splice(index, 1);
+      saveBookmarks();
+      renderBookmarks();
+    });
+
+    li.appendChild(link);
+    li.appendChild(deleteBtn);
+    listEl.appendChild(li);
+  });
+}
+
+function initBookmarks() {
+  userBookmarks = loadBookmarks();
+  renderBookmarks();
+
+  const bookmarkForm = document.getElementById('bookmark-form') || document.getElementById('bookmarks-form');
+  const addBtn = document.getElementById('add-bookmark-btn') || document.querySelector('.bookmark-add-btn') || document.querySelector('.add-bookmark-btn');
+  const nameInput = document.getElementById('bookmark-name') || document.querySelector('.bookmark-name-input');
+  const urlInput = document.getElementById('bookmark-url') || document.querySelector('.bookmark-url-input');
+
+  const addAction = (e) => {
+    if (e) e.preventDefault();
+    if (!nameInput || !urlInput) return;
+
+    const name = nameInput.value.trim();
+    let url = urlInput.value.trim();
+
+    if (!name || !url) return;
+
+    // Normalize URL
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+
+    userBookmarks.push({ name, url });
+    saveBookmarks();
+    renderBookmarks();
+
+    nameInput.value = '';
+    urlInput.value = '';
+  };
+
+  if (bookmarkForm) {
+    bookmarkForm.addEventListener('submit', addAction);
+  } else if (addBtn) {
+    addBtn.addEventListener('click', addAction);
+  }
 }
