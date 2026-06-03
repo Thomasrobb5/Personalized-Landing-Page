@@ -21,20 +21,17 @@
 <body class="theme-midnight-nebula">
 
   <!-- macOS Top Menu Bar -->
-  <div class="macos-menu-bar">
-    <div class="menu-left">
-      <i class="fa-brands fa-apple"></i>
-      <span class="workspace-label">Thomas's Workspace</span>
-      <button id="edit-mode-btn" class="menu-btn">
+  <div class="mac-menu-bar">
+    <div class="mac-menu-left">
+      <i class="fa-brands fa-apple mac-menu-item apple-logo"></i>
+      <span class="workspace-label mac-menu-item active-app">Thomas's Workspace</span>
+      <button id="edit-mode-btn" class="mac-menu-item" style="background: none; border: none; color: inherit; font: inherit; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 6px;">
         <i class="fa-solid fa-sliders"></i> Edit Workspace
       </button>
     </div>
-    <div class="menu-right">
-      <span id="menu-time"></span>
-      <span id="menu-date"></span>
-      <button id="quick-settings-btn" class="menu-btn" aria-label="Quick Settings">
-        <i class="fa-solid fa-sliders"></i>
-      </button>
+    <div class="mac-menu-right">
+      <span id="menu-time" class="mac-menu-item"></span>
+      <span id="menu-date" class="mac-menu-item"></span>
     </div>
   </div>
 
@@ -122,7 +119,10 @@
   <!-- Customization Editor Modal (Hidden by Default) -->
   <div id="editor-modal" class="modal-overlay" style="display: none;">
     <div class="modal-container">
-      <h3 id="modal-title">Edit Application</h3>
+      <div class="modal-header">
+        <h3 id="modal-title">Edit Application</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
       <form id="editor-form" onsubmit="event.preventDefault();">
         <div class="form-group">
           <label for="modal-app-title">App Title</label>
@@ -136,7 +136,7 @@
           <label for="modal-app-url">App URL</label>
           <input type="url" id="modal-app-url" placeholder="https://example.com" required>
         </div>
-        <div class="form-group color-selector-wrapper">
+        <div class="color-selector-wrapper">
           <label for="modal-app-color">Accent Color</label>
           <input type="color" id="modal-app-color" class="color-dot-input" value="#a855f7">
         </div>
