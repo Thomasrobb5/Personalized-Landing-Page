@@ -20,7 +20,9 @@ let workspaceConfig = {
   showResources: true,
   showBookmarks: true,
   weatherCity: 'London',
-  weatherState: 'sunny'
+  weatherState: 'sunny',
+  bgPattern: 'none',
+  showBlobs: true
 };
 
 // Storage Keys
@@ -940,6 +942,20 @@ function applyWorkspaceConfig(config) {
     
     el.style.display = isVisible ? '' : 'none';
   });
+
+  // 6. Apply Background Style Patterns and Glow Blobs toggle
+  const patternOverlay = document.getElementById('bg-pattern-overlay');
+  if (patternOverlay) {
+    patternOverlay.className = 'bg-pattern-overlay';
+    if (config.bgPattern && config.bgPattern !== 'none') {
+      patternOverlay.classList.add(`pattern-${config.bgPattern}`);
+    }
+  }
+
+  const blobs = document.getElementById('bg-blobs');
+  if (blobs) {
+    blobs.style.display = config.showBlobs === false ? 'none' : '';
+  }
 }
 
 /**
@@ -1000,6 +1016,8 @@ function initSettingsModal() {
       workspaceConfig.showBookmarks = getVal('settings-toggle-bookmarks', true);
       workspaceConfig.weatherCity = getVal('settings-weather-city');
       workspaceConfig.weatherState = getVal('settings-weather-state').toLowerCase();
+      workspaceConfig.bgPattern = getVal('settings-bg-pattern') || 'none';
+      workspaceConfig.showBlobs = getVal('settings-toggle-blobs', true);
 
       localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
       applyWorkspaceConfig(workspaceConfig);
@@ -1034,6 +1052,8 @@ function populateSettingsForm() {
   setVal('settings-toggle-bookmarks', config.showBookmarks, true);
   setVal('settings-weather-city', config.weatherCity);
   setVal('settings-weather-state', config.weatherState.charAt(0).toUpperCase() + config.weatherState.slice(1));
+  setVal('settings-bg-pattern', config.bgPattern || 'none');
+  setVal('settings-toggle-blobs', config.showBlobs, true);
 }
 
 

@@ -2076,3 +2076,43 @@ a {
   color: #10b981;
   margin-top: 6px;
 }
+
+/* ==========================================================================
+   Dynamic Background Patterns (Premium Overlays)
+   ========================================================================== */
+.bg-pattern-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* Placed above glow blobs (-2) and below dashboard elements */
+  pointer-events: none;
+  opacity: 0.75;
+  transition: opacity 0.5s ease, background 0.5s ease;
+}
+
+/* 1. Dotted Matrix Pattern */
+.bg-pattern-overlay.pattern-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
+/* 2. Cyber Grid Line Pattern */
+.bg-pattern-overlay.pattern-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* 3. Diagonal Stripes Pattern */
+.bg-pattern-overlay.pattern-stripes {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 15px,
+    rgba(255, 255, 255, 0.015) 15px,
+    rgba(255, 255, 255, 0.015) 30px
+  );
+}

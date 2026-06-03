@@ -37,11 +37,14 @@
   </div>
 
   <!-- Animated Glassmorphic Background Blobs -->
-  <div class="bg-blobs">
+  <div class="bg-blobs" id="bg-blobs">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
   </div>
+
+  <!-- Dynamic Background Pattern Overlay -->
+  <div id="bg-pattern-overlay" class="bg-pattern-overlay"></div>
 
   <div class="dashboard-container">
     <!-- Header Welcome Bar -->
@@ -197,6 +200,22 @@
             <option value="comfortable">Comfortable</option>
             <option value="spacious">Spacious</option>
           </select>
+        </div>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="settings-bg-pattern">Background Pattern</label>
+            <select id="settings-bg-pattern">
+              <option value="none">Clean Glass</option>
+              <option value="dots">Dotted Matrix</option>
+              <option value="grid">Cyber Grid Lines</option>
+              <option value="stripes">Diagonal Stripes</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content: center; display: flex; flex-direction: column;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 18px;">
+              <input type="checkbox" id="settings-toggle-blobs" checked> Glow Blobs
+            </label>
+          </div>
         </div>
         <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
