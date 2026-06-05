@@ -594,8 +594,11 @@ async function getSonarrUpcoming() {
     const json = await res.json();
     const releases = json.map(item => {
       const date = new Date(item.airDateUtc);
+      const seriesTitle = (item.series && item.series.title) ? item.series.title : 'Unknown Series';
+      const season = item.seasonNumber !== undefined ? String(item.seasonNumber).padStart(2, '0') : '01';
+      const episode = item.episodeNumber !== undefined ? String(item.episodeNumber).padStart(2, '0') : '01';
       return {
-        title: `${item.series.title} S${String(item.seasonNumber).padStart(2, '0')}E${String(item.episodeNumber).padStart(2, '0')}`,
+        title: `${seriesTitle} S${season}E${episode}`,
         date: date.toLocaleDateString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })
       };
     });
@@ -646,8 +649,9 @@ async function getOverseerrRequests() {
     });
     if (!res.ok) throw new Error();
     const json = await res.json();
-    const pending = json.results.filter(r => r.status === 1).length; // status 1 is pending
-    const approved = json.results.filter(r => r.status === 2).length; // status 2 is approved
+    const results = (json && Array.isArray(json.results)) ? json.results : [];
+    const pending = results.filter(r => r.status === 1).length; // status 1 is pending
+    const approved = results.filter(r => r.status === 2).length; // status 2 is approved
     return { pending, approved };
   } catch (e) {
     if (url && key) throw e;
