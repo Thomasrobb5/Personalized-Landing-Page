@@ -246,8 +246,8 @@ a {
 
 /* Dashboard Container */
 .dashboard-container {
-  max-width: 1650px;
-  width: 92%;
+  max-width: 2400px;
+  width: 94%;
   margin: 0 auto;
   padding: 40px 24px 160px 24px; /* Adjusted padding since body has margin-top: 50px */
 }
