@@ -352,6 +352,61 @@ function bindEvents() {
       // Reset status fields
       const services = ['plex', 'tautulli', 'sonarr', 'radarr', 'overseerr', 'qbittorrent'];
       services.forEach(s => setStatus(s, 'idle'));
+
+      // Prompt to also clear generated dashboard cards
+      if (confirm('Would you also like to remove the integration cards and categories from your dashboard?')) {
+        const STORAGE_KEY_GROUPS = 'launchpad_user_groups';
+        let groups = [];
+        const storedGroups = localStorage.getItem(STORAGE_KEY_GROUPS);
+        if (storedGroups) {
+          try {
+            groups = JSON.parse(storedGroups);
+            
+            // Remove the 'Self-Hosted Services' group
+            let filteredGroups = groups.filter(g => 
+              g.id !== 'group-self-hosted' && 
+              g.title.toLowerCase() !== 'self-hosted services' && 
+              g.title.toLowerCase() !== 'self-hosted'
+            );
+            
+            // Clean up other categories from integration cards
+            filteredGroups.forEach(g => {
+              g.apps = g.apps.filter(app => !app.integration || app.integration === 'none');
+            });
+            
+            localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(filteredGroups));
+            
+            // Notify success
+            const notify = document.createElement('div');
+            notify.style.cssText = `
+              position: fixed;
+              bottom: 24px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: rgba(239, 68, 68, 0.9);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 12px;
+              padding: 12px 24px;
+              color: #ffffff;
+              font-size: 0.9rem;
+              font-weight: 500;
+              backdrop-filter: blur(10px);
+              box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+              z-index: 1000;
+              animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            `;
+            notify.innerHTML = `<i class="fa-solid fa-trash-can"></i> Dashboard cards cleared!`;
+            document.body.appendChild(notify);
+            setTimeout(() => {
+              notify.style.animation = 'fadeOutDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+              setTimeout(() => notify.remove(), 400);
+            }, 3000);
+
+          } catch (e) {
+            console.error('Error clearing dashboard integration cards:', e);
+          }
+        }
+      }
     }
   });
 
