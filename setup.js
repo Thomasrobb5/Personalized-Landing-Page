@@ -78,9 +78,14 @@ function initClock() {
   setInterval(updateTime, 1000);
 }
 
-// Clean and normalize URLs (strips trailing slashes)
+// Clean and normalize URLs (strips trailing slashes, ensures protocol prefix)
 function cleanUrl(url) {
-  return url ? url.trim().replace(/\/+$/, '') : '';
+  if (!url) return '';
+  let cleaned = url.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(cleaned)) {
+    cleaned = 'http://' + cleaned;
+  }
+  return cleaned;
 }
 
 // Load configurations from storage and pre-fill form fields

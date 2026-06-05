@@ -300,7 +300,12 @@ function saveIntegrationConfigs(configs) {
 }
 
 function cleanUrl(url) {
-  return url ? url.trim().replace(/\/+$/, '') : '';
+  if (!url) return '';
+  let cleaned = url.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(cleaned)) {
+    cleaned = 'http://' + cleaned;
+  }
+  return cleaned;
 }
 
 /**
