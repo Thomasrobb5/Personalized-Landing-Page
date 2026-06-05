@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initWidgetModalEvents();
   initGroupModalEvents();
   initSpotlight();
+  initDetailOverlayEvents();
 
   // Initialize Custom Workspace Elements
   applyWorkspaceConfig(workspaceConfig);
@@ -864,8 +865,16 @@ function buildAppCardsForGroup(group, groupIndex, grid) {
         } catch (err) {}
       });
     } else {
-      card.href = app.url;
-      card.target = '_blank';
+      if (app.integration && app.integration !== 'none') {
+        card.href = '#';
+        card.addEventListener('click', (e) => {
+          e.preventDefault();
+          openAppDetailOverlay(app, groupIndex, appIndex);
+        });
+      } else {
+        card.href = app.url;
+        card.target = '_blank';
+      }
     }
 
     // Ping Indicator Dot HTML
@@ -974,14 +983,30 @@ function renderAppDock(groups) {
       item.setAttribute('data-title', app.title);
       item.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
 
-      item.innerHTML = `
-        <a href="${app.url}" target="_blank" aria-label="${app.title}">
-          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.3), rgba(${hexToRgb(app.color)}, 0.15)); color: ${app.color}; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
-            <i class="fa-solid ${app.icon}"></i>
-          </div>
-        </a>
-        <span class="dock-tooltip">${app.title}</span>
+      const link = document.createElement('a');
+      if (app.integration && app.integration !== 'none') {
+        link.href = '#';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          openAppDetailOverlay(app);
+        });
+      } else {
+        link.href = app.url;
+        link.target = '_blank';
+      }
+      link.setAttribute('aria-label', app.title);
+      link.innerHTML = `
+        <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.3), rgba(${hexToRgb(app.color)}, 0.15)); color: ${app.color}; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
+          <i class="fa-solid ${app.icon}"></i>
+        </div>
       `;
+      item.appendChild(link);
+
+      const tooltip = document.createElement('span');
+      tooltip.className = 'dock-tooltip';
+      tooltip.textContent = app.title;
+      item.appendChild(tooltip);
+
       dock.appendChild(item);
     });
   });
@@ -1648,7 +1673,8 @@ function querySpotlight(query) {
           desc: app.desc,
           url: app.url,
           icon: app.icon,
-          badge: group.title
+          badge: group.title,
+          appObj: app
         });
       }
     });
@@ -1703,7 +1729,11 @@ function renderSpotlightResults() {
     item.addEventListener('click', () => {
       closeSpotlight();
       if (res.type === 'app') {
-        window.open(res.url, '_blank');
+        if (res.appObj && res.appObj.integration && res.appObj.integration !== 'none') {
+          openAppDetailOverlay(res.appObj);
+        } else {
+          window.open(res.url, '_blank');
+        }
       } else if (res.type === 'cmd') {
         res.action();
       }
@@ -2890,4 +2920,1443 @@ function initWidgetModalEvents() {
   if (addWidgetBtn) {
     addWidgetBtn.addEventListener('click', openWidgetModalForCreate);
   }
+}
+
+// --------------------------------------------------------------------------
+// Phase 2: Command Center - Fullscreen Detail Overlay Logic
+// --------------------------------------------------------------------------
+let detailOverlayInterval = null;
+
+function initDetailOverlayEvents() {
+  const closeBtn = document.getElementById('detail-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeAppDetailOverlay);
+  }
+  const overlay = document.getElementById('app-detail-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeAppDetailOverlay();
+    });
+  }
+  
+  // Esc key closes detail overlay
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('app-detail-overlay');
+      if (overlay && overlay.style.display !== 'none') {
+        closeAppDetailOverlay();
+      }
+    }
+  });
+}
+
+function openAppDetailOverlay(app, groupIndex, appIndex) {
+  const overlay = document.getElementById('app-detail-overlay');
+  const titleEl = document.getElementById('detail-app-title');
+  const iconEl = document.getElementById('detail-app-icon');
+  const bodyEl = document.getElementById('app-detail-body');
+  
+  if (!overlay || !bodyEl) return;
+
+  // Set header info
+  titleEl.innerText = app.title;
+  iconEl.innerHTML = `<i class="fa-solid ${app.icon}"></i>`;
+  iconEl.style.color = app.color;
+  overlay.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
+
+  // Reset body & show overlay
+  bodyEl.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; padding:100px; font-size:1.5rem; color:var(--text-secondary);"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Loading Command Panel...</div>`;
+  overlay.style.display = 'flex';
+
+  if (detailOverlayInterval) {
+    clearInterval(detailOverlayInterval);
+    detailOverlayInterval = null;
+  }
+
+  // Render specific layout
+  renderIntegrationOverlay(app.integration, bodyEl);
+}
+
+function closeAppDetailOverlay() {
+  const overlay = document.getElementById('app-detail-overlay');
+  if (overlay) overlay.style.display = 'none';
+  if (detailOverlayInterval) {
+    clearInterval(detailOverlayInterval);
+    detailOverlayInterval = null;
+  }
+}
+
+function renderIntegrationOverlay(integration, container) {
+  if (integration === 'radarr' || integration === 'sonarr') {
+    renderRadarrSonarrOverlay(integration, container);
+  } else if (integration === 'overseerr') {
+    renderOverseerrOverlay(container);
+  } else if (integration === 'plex' || integration === 'tautulli') {
+    renderPlexOverlay(container);
+  } else if (integration === 'qbittorrent') {
+    renderQbittorrentOverlay(container);
+  } else {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px; color:var(--text-secondary);">
+        <i class="fa-solid fa-circle-exclamation" style="font-size:3rem; margin-bottom:15px; color:rgb(var(--accent-color-rgb));"></i>
+        <h3>No integration setup</h3>
+        <p style="font-size:0.9rem; margin-top:10px;">Configure this application's API details in Workspace Settings.</p>
+      </div>
+    `;
+  }
+}
+
+async function renderRadarrSonarrOverlay(integration, container) {
+  const label = integration === 'radarr' ? 'movies' : 'TV shows';
+  
+  container.innerHTML = `
+    <div class="detail-search-bar-wrapper">
+      <i class="fa-solid fa-magnifying-glass detail-search-icon"></i>
+      <input type="text" class="detail-search-input-field" placeholder="Search for ${label} to add to ${integration.toUpperCase()}..." id="detail-media-search">
+    </div>
+    
+    <div class="media-results-container" style="margin-bottom: 32px;">
+      <div class="search-results-grid" id="detail-search-results" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px;"></div>
+    </div>
+    
+    <div class="media-details-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; border-top: 1px solid rgba(255,255,255,0.08); padding-top:24px;">
+      <div class="disk-usage-section">
+        <h4 style="margin-bottom: 16px; font-size: 1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-hard-drive" style="color:rgb(var(--accent-color-rgb));"></i> Disk Storage</h4>
+        <div id="detail-disk-space" class="disk-space-container">
+          <div style="opacity:0.6; font-size:0.8rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading storage info...</div>
+        </div>
+      </div>
+      <div class="upcoming-releases-section">
+        <h4 style="margin-bottom: 16px; font-size: 1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-calendar-days" style="color:rgb(var(--accent-color-rgb));"></i> Upcoming Releases</h4>
+        <div id="detail-upcoming-releases" class="upcoming-list-container">
+          <div style="opacity:0.6; font-size:0.8rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading releases calendar...</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const searchInput = container.querySelector('#detail-media-search');
+  const resultsGrid = container.querySelector('#detail-search-results');
+  const diskSpaceContainer = container.querySelector('#detail-disk-space');
+  const upcomingContainer = container.querySelector('#detail-upcoming-releases');
+
+  loadRadarrSonarrDiskSpace(integration, diskSpaceContainer);
+  loadRadarrSonarrCalendar(integration, upcomingContainer);
+
+  if (searchInput && resultsGrid) {
+    searchInput.focus();
+    searchInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query.length === 0) return;
+        
+        resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Searching ${integration.toUpperCase()} library...</div>`;
+        
+        try {
+          await renderMediaSearchResults(integration, query, resultsGrid);
+        } catch (err) {
+          console.error(err);
+          resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading search results.</div>`;
+        }
+      }
+    });
+  }
+}
+
+async function loadRadarrSonarrDiskSpace(integration, container) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+  
+  if (!url || !key) {
+    container.innerHTML = `
+      <div class="disk-usage-item">
+        <div class="disk-usage-header">
+          <span class="disk-usage-path">/data/media</span>
+          <span>5.9 TB free / 8.0 TB total</span>
+        </div>
+        <div class="disk-progress-bar">
+          <div class="disk-progress-fill" style="width: 73.7%;"></div>
+        </div>
+      </div>
+      <div class="disk-usage-item">
+        <div class="disk-usage-header">
+          <span class="disk-usage-path">/system/root</span>
+          <span>124.0 GB free / 250.0 GB total</span>
+        </div>
+        <div class="disk-progress-bar">
+          <div class="disk-progress-fill" style="width: 49.6%; background:linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${url}/api/v3/diskspace?apikey=${key}`);
+    if (!res.ok) throw new Error();
+    const diskData = await res.json();
+    if (diskData.length === 0) {
+      container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem;">No storage paths found.</div>`;
+      return;
+    }
+    
+    let html = '';
+    diskData.forEach(d => {
+      const free = formatBytes(d.freeSpace);
+      const total = formatBytes(d.totalSpace);
+      const usedPercent = ((d.totalSpace - d.freeSpace) / d.totalSpace) * 100;
+      
+      html += `
+        <div class="disk-usage-item">
+          <div class="disk-usage-header">
+            <span class="disk-usage-path">${d.path}</span>
+            <span>${free} free / ${total} total</span>
+          </div>
+          <div class="disk-progress-bar">
+            <div class="disk-progress-fill" style="width: ${usedPercent.toFixed(1)}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#f87171; font-size:0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Could not connect to API.</div>`;
+  }
+}
+
+async function loadRadarrSonarrCalendar(integration, container) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+  
+  if (!url || !key) {
+    let html = '';
+    if (integration === 'sonarr') {
+      const mockReleases = [
+        { title: 'The Boys S04E05', date: 'Tomorrow 9:00 PM' },
+        { title: 'House of the Dragon S02E03', date: 'In 2 days 2:00 AM' },
+        { title: 'The Bear S03E01', date: 'In 4 days 8:00 AM' }
+      ];
+      mockReleases.forEach(r => {
+        html += `
+          <div class="upcoming-item">
+            <span class="upcoming-title">${r.title}</span>
+            <span class="upcoming-date">${r.date}</span>
+          </div>
+        `;
+      });
+    } else {
+      const mockReleases = [
+        { title: 'Deadpool & Wolverine', date: 'Next Friday' },
+        { title: 'Alien: Romulus', date: 'Aug 14, 2026' }
+      ];
+      mockReleases.forEach(r => {
+        html += `
+          <div class="upcoming-item">
+            <span class="upcoming-title">${r.title}</span>
+            <span class="upcoming-date">${r.date}</span>
+          </div>
+        `;
+      });
+    }
+    container.innerHTML = html;
+    return;
+  }
+
+  try {
+    let releases = [];
+    if (integration === 'sonarr') {
+      const data = await getSonarrUpcoming();
+      releases = data.releases;
+    } else {
+      const data = await getRadarrUpcoming();
+      releases = data.releases;
+    }
+    
+    if (releases.length === 0) {
+      container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem;">No releases scheduled for the next 2 weeks.</div>`;
+      return;
+    }
+    
+    let html = '';
+    releases.slice(0, 4).forEach(r => {
+      html += `
+        <div class="upcoming-item">
+          <span class="upcoming-title">${r.title}</span>
+          <span class="upcoming-date">${r.date}</span>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#f87171; font-size:0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Could not query calendar.</div>`;
+  }
+}
+
+async function renderMediaSearchResults(integration, query, resultsGrid) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+  
+  if (!url || !key) {
+    showToast("API Key empty. Displaying demo results.", "info");
+    let mockResults = [];
+    if (integration === 'radarr') {
+      mockResults = [
+        { title: 'Spider-Man: Into the Spider-Verse', year: 2018, poster: 'https://image.tmdb.org/t/p/w185/iiZZZe44P6r7532vcyfK24gPVev.jpg', added: true, tmdbId: 324857, titleSlug: 'spider-man-into-the-spider-verse' },
+        { title: 'Spider-Man: Across the Spider-Verse', year: 2023, poster: 'https://image.tmdb.org/t/p/w185/8Vtbi7ehX7S6C61rjv5hWgMzarj.jpg', added: false, tmdbId: 569094, titleSlug: 'spider-man-across-the-spider-verse' },
+        { title: 'Spider-Man: No Way Home', year: 2021, poster: 'https://image.tmdb.org/t/p/w185/1g0zzZw1jZBCVvn3fUjhv4w7Zba.jpg', added: false, tmdbId: 634649, titleSlug: 'spider-man-no-way-home' }
+      ];
+    } else {
+      mockResults = [
+        { title: 'Stranger Things', year: 2016, poster: 'https://image.tmdb.org/t/p/w185/49WJfeN0mhmmQ9R6j4qqC34FIaY.jpg', added: true, tvdbId: 305288, titleSlug: 'stranger-things' },
+        { title: 'Breaking Bad', year: 2008, poster: 'https://image.tmdb.org/t/p/w185/ztkK6o1wS6EZDw7Z65XzsIfVZPE.jpg', added: false, tvdbId: 81189, titleSlug: 'breaking-bad' },
+        { title: 'The Boys', year: 2019, poster: 'https://image.tmdb.org/t/p/w185/7NsNS8VQD1T28t3qn9d191iHOfH.jpg', added: false, tvdbId: 355511, titleSlug: 'the-boys' }
+      ];
+    }
+    
+    displayMediaResults(integration, mockResults, resultsGrid, true);
+    return;
+  }
+
+  const endpoint = integration === 'radarr' 
+    ? `${url}/api/v3/movie/lookup?term=${encodeURIComponent(query)}&apikey=${key}`
+    : `${url}/api/v3/series/lookup?term=${encodeURIComponent(query)}&apikey=${key}`;
+    
+  const res = await fetch(endpoint);
+  if (!res.ok) throw new Error();
+  const data = await res.json();
+  
+  if (data.length === 0) {
+    resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-face-frown"></i> No matching titles found.</div>`;
+    return;
+  }
+
+  const results = data.slice(0, 12).map(item => {
+    const posterObj = item.images ? item.images.find(img => img.coverType === 'poster') : null;
+    const poster = posterObj ? (posterObj.remoteUrl || posterObj.url) : '';
+    
+    return {
+      title: item.title,
+      year: item.year,
+      poster: poster,
+      added: item.added || item.id > 0,
+      itemRaw: item
+    };
+  });
+
+  displayMediaResults(integration, results, resultsGrid, false);
+}
+
+function displayMediaResults(integration, results, resultsGrid, isMock) {
+  resultsGrid.innerHTML = '';
+  
+  results.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+    
+    let posterHtml = `<div class="search-result-poster-wrapper"><i class="fa-solid fa-clapperboard search-result-poster-fallback"></i></div>`;
+    if (item.poster) {
+      posterHtml = `
+        <div class="search-result-poster-wrapper">
+          <img src="${item.poster}" alt="${item.title}" class="search-result-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="search-result-poster-fallback" style="display:none;"><i class="fa-solid fa-clapperboard"></i></div>
+        </div>
+      `;
+    }
+
+    let actionBtnHtml = '';
+    if (item.added) {
+      actionBtnHtml = `
+        <button class="btn-macos btn-macos-secondary search-result-action-btn" disabled style="opacity: 0.6; cursor: not-allowed; background:rgba(255,255,255,0.02)">
+          <i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Added
+        </button>
+      `;
+    } else {
+      actionBtnHtml = `
+        <button class="btn-macos btn-macos-primary search-result-action-btn add-media-btn">
+          <i class="fa-solid fa-plus"></i> Add to ${integration.toUpperCase()}
+        </button>
+      `;
+    }
+
+    card.innerHTML = `
+      ${posterHtml}
+      <div class="search-result-info">
+        <h4 class="search-result-title" title="${item.title}">${item.title}</h4>
+        <div class="search-result-meta">
+          <span>${item.year || 'Unknown'}</span>
+        </div>
+      </div>
+      ${actionBtnHtml}
+    `;
+
+    const addBtn = card.querySelector('.add-media-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        addBtn.disabled = true;
+        addBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Adding...`;
+        
+        try {
+          let success = false;
+          if (isMock) {
+            await new Promise(r => setTimeout(r, 1000));
+            success = true;
+          } else {
+            success = await addMediaToSystem(integration, item.itemRaw);
+          }
+
+          if (success) {
+            showToast(`"${item.title}" added successfully!`);
+            addBtn.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Added`;
+            addBtn.disabled = true;
+            addBtn.style.opacity = '0.6';
+          } else {
+            throw new Error();
+          }
+        } catch (err) {
+          showToast(`Failed to add "${item.title}". Check backend configurations.`, 'error');
+          addBtn.disabled = false;
+          addBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add to ${integration.toUpperCase()}`;
+        }
+      });
+    }
+
+    resultsGrid.appendChild(card);
+  });
+}
+
+async function addMediaToSystem(integration, itemRaw) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+  if (!url || !key) return false;
+
+  try {
+    const rootFoldersRes = await fetch(`${url}/api/v3/rootfolder?apikey=${key}`);
+    const qualityProfilesRes = await fetch(`${url}/api/v3/qualityprofile?apikey=${key}`);
+    if (!rootFoldersRes.ok || !qualityProfilesRes.ok) return false;
+
+    const rootFolders = await rootFoldersRes.json();
+    const qualityProfiles = await qualityProfilesRes.json();
+
+    if (rootFolders.length === 0 || qualityProfiles.length === 0) return false;
+
+    const rootPath = rootFolders[0].path;
+    const profileId = qualityProfiles[0].id;
+
+    let payload = {};
+    if (integration === 'radarr') {
+      payload = {
+        title: itemRaw.title,
+        qualityProfileId: profileId,
+        titleSlug: itemRaw.titleSlug,
+        images: itemRaw.images,
+        tmdbId: itemRaw.tmdbId,
+        year: itemRaw.year,
+        rootFolderPath: rootPath,
+        monitored: true,
+        addOptions: { searchForMovie: true }
+      };
+    } else {
+      payload = {
+        title: itemRaw.title,
+        qualityProfileId: profileId,
+        titleSlug: itemRaw.titleSlug,
+        images: itemRaw.images,
+        tvdbId: itemRaw.tvdbId,
+        rootFolderPath: rootPath,
+        monitored: true,
+        addOptions: { searchForMissingEpisodes: true }
+      };
+    }
+
+    const postRes = await fetch(`${url}/api/v3/${integration === 'radarr' ? 'movie' : 'series'}?apikey=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    return postRes.ok;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+async function renderOverseerrOverlay(container) {
+  container.innerHTML = `
+    <div class="detail-search-bar-wrapper">
+      <i class="fa-solid fa-magnifying-glass detail-search-icon"></i>
+      <input type="text" class="detail-search-input-field" placeholder="Search movies or TV shows to request on Overseerr..." id="detail-overseerr-search">
+    </div>
+    
+    <div class="media-results-container" style="margin-bottom: 32px;">
+      <div class="search-results-grid" id="detail-search-results" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px;"></div>
+    </div>
+    
+    <div class="pending-requests-section" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top:24px;">
+      <h4 style="margin-bottom: 16px; font-size: 1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-clock-rotate-left" style="color:rgb(var(--accent-color-rgb));"></i> Pending Approval Requests</h4>
+      <div class="overseerr-requests-grid" id="detail-overseerr-pending">
+        <div style="opacity:0.6; font-size:0.8rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading pending requests...</div>
+      </div>
+    </div>
+  `;
+
+  const searchInput = container.querySelector('#detail-overseerr-search');
+  const resultsGrid = container.querySelector('#detail-search-results');
+  const pendingContainer = container.querySelector('#detail-overseerr-pending');
+
+  loadOverseerrPendingRequests(pendingContainer);
+
+  if (searchInput && resultsGrid) {
+    searchInput.focus();
+    searchInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query.length === 0) return;
+        
+        resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> Searching TMDB via Overseerr...</div>`;
+        
+        try {
+          await renderOverseerrSearchResults(query, resultsGrid);
+        } catch (err) {
+          console.error(err);
+          resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading search results.</div>`;
+        }
+      }
+    });
+  }
+}
+
+async function loadOverseerrPendingRequests(container) {
+  const url = cleanUrl(integrationConfigs.overseerrUrl);
+  const key = integrationConfigs.overseerrKey;
+
+  if (!url || !key) {
+    container.innerHTML = `
+      <div class="overseerr-request-item-row" id="mock-req-1">
+        <div class="overseerr-request-left">
+          <img src="https://image.tmdb.org/t/p/w92/yg0tZB2suS4G92nFcBO46W7uXPI.jpg" class="overseerr-request-poster-thumb" alt="Gladiator II">
+          <div class="overseerr-request-details">
+            <span class="overseerr-request-title">Gladiator II</span>
+            <span class="overseerr-request-meta">Movie requested by <strong>Sarah</strong> &bull; Yesterday</span>
+          </div>
+        </div>
+        <div class="overseerr-request-actions">
+          <button class="request-action-btn-approve mock-approve" data-id="1" data-title="Gladiator II">Approve</button>
+          <button class="request-action-btn-deny mock-deny" data-id="1" data-title="Gladiator II">Deny</button>
+        </div>
+      </div>
+      <div class="overseerr-request-item-row" id="mock-req-2">
+        <div class="overseerr-request-left">
+          <img src="https://image.tmdb.org/t/p/w92/7NsNS8VQD1T28t3qn9d191iHOfH.jpg" class="overseerr-request-poster-thumb" alt="The Boys">
+          <div class="overseerr-request-details">
+            <span class="overseerr-request-title">The Boys - Season 4</span>
+            <span class="overseerr-request-meta">TV Show requested by <strong>Alex</strong> &bull; 2 hours ago</span>
+          </div>
+        </div>
+        <div class="overseerr-request-actions">
+          <button class="request-action-btn-approve mock-approve" data-id="2" data-title="The Boys Season 4">Approve</button>
+          <button class="request-action-btn-deny mock-deny" data-id="2" data-title="The Boys Season 4">Deny</button>
+        </div>
+      </div>
+    `;
+    
+    container.querySelectorAll('.mock-approve').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const row = e.target.closest('.overseerr-request-item-row');
+        row.style.opacity = '0.4';
+        setTimeout(() => {
+          row.remove();
+          showToast(`Approved request for "${btn.getAttribute('data-title')}"`);
+          if (container.children.length === 0) {
+            container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem; padding:10px;"><i class="fa-solid fa-circle-check" style="color:#34d399;"></i> No pending requests.</div>`;
+          }
+        }, 800);
+      });
+    });
+    container.querySelectorAll('.mock-deny').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const row = e.target.closest('.overseerr-request-item-row');
+        row.style.opacity = '0.4';
+        setTimeout(() => {
+          row.remove();
+          showToast(`Denied request for "${btn.getAttribute('data-title')}"`, 'info');
+          if (container.children.length === 0) {
+            container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem; padding:10px;"><i class="fa-solid fa-circle-check" style="color:#34d399;"></i> No pending requests.</div>`;
+          }
+        }, 800);
+      });
+    });
+    return;
+  }
+
+  try {
+    const res = await fetch(`${url}/api/v1/request?take=40&filter=pending`, {
+      headers: { 'X-Api-Key': key }
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const pendingItems = data.results || [];
+    
+    if (pendingItems.length === 0) {
+      container.innerHTML = `
+        <div style="opacity:0.6; font-size:0.85rem; padding:12px; display:flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-circle-check" style="color:#34d399; font-size:1.1rem;"></i> No pending requests.
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    pendingItems.forEach(req => {
+      const type = req.type;
+      const mediaInfo = type === 'movie' ? req.movie : req.tv;
+      if (!mediaInfo) return;
+      
+      const title = mediaInfo.title || mediaInfo.name;
+      const date = mediaInfo.releaseDate || mediaInfo.firstAirDate || '';
+      const year = date ? new Date(date).getFullYear() : '';
+      const poster = mediaInfo.posterPath ? `https://image.tmdb.org/t/p/w92${mediaInfo.posterPath}` : '';
+      const requester = req.requestedBy ? req.requestedBy.displayName : 'Unknown User';
+      const typeLabel = type === 'movie' ? 'Movie' : 'TV Show';
+      
+      html += `
+        <div class="overseerr-request-item-row" data-request-id="${req.id}">
+          <div class="overseerr-request-left">
+            ${poster ? `<img src="${poster}" class="overseerr-request-poster-thumb" alt="${title}">` : `<div class="overseerr-request-poster-thumb" style="display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3);"><i class="fa-solid fa-film"></i></div>`}
+            <div class="overseerr-request-details">
+              <span class="overseerr-request-title">${title} ${year ? `(${year})` : ''}</span>
+              <span class="overseerr-request-meta">${typeLabel} requested by <strong>${requester}</strong></span>
+            </div>
+          </div>
+          <div class="overseerr-request-actions">
+            <button class="request-action-btn-approve approve-overseerr-btn" data-id="${req.id}" data-title="${title}">Approve</button>
+            <button class="request-action-btn-deny deny-overseerr-btn" data-id="${req.id}" data-title="${title}">Deny</button>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+
+    container.querySelectorAll('.approve-overseerr-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const reqId = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        const row = e.target.closest('.overseerr-request-item-row');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+        
+        try {
+          const approveRes = await fetch(`${url}/api/v1/request/${reqId}/approve`, {
+            method: 'POST',
+            headers: { 'X-Api-Key': key }
+          });
+          if (approveRes.ok) {
+            showToast(`Approved "${title}" successfully!`);
+            row.style.opacity = '0.3';
+            setTimeout(() => {
+              row.remove();
+              if (container.children.length === 0) {
+                container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem; padding:10px;"><i class="fa-solid fa-circle-check" style="color:#34d399;"></i> No pending requests.</div>`;
+              }
+            }, 500);
+          } else {
+            throw new Error();
+          }
+        } catch (err) {
+          showToast(`Failed to approve "${title}"`, 'error');
+          btn.disabled = false;
+          btn.innerHTML = 'Approve';
+        }
+      });
+    });
+
+    container.querySelectorAll('.deny-overseerr-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const reqId = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        const row = e.target.closest('.overseerr-request-item-row');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+        
+        try {
+          const denyRes = await fetch(`${url}/api/v1/request/${reqId}/decline`, {
+            method: 'POST',
+            headers: { 'X-Api-Key': key }
+          });
+          if (denyRes.ok) {
+            showToast(`Declined "${title}"`, 'info');
+            row.style.opacity = '0.3';
+            setTimeout(() => {
+              row.remove();
+              if (container.children.length === 0) {
+                container.innerHTML = `<div style="opacity:0.6; font-size:0.8rem; padding:10px;"><i class="fa-solid fa-circle-check" style="color:#34d399;"></i> No pending requests.</div>`;
+              }
+            }, 500);
+          } else {
+            throw new Error();
+          }
+        } catch (err) {
+          showToast(`Failed to deny "${title}"`, 'error');
+          btn.disabled = false;
+          btn.innerHTML = 'Deny';
+        }
+      });
+    });
+
+  } catch (err) {
+    container.innerHTML = `<div style="color:#f87171; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error communicating with Overseerr API.</div>`;
+  }
+}
+
+async function renderOverseerrSearchResults(query, resultsGrid) {
+  const url = cleanUrl(integrationConfigs.overseerrUrl);
+  const key = integrationConfigs.overseerrKey;
+
+  if (!url || !key) {
+    showToast("API Key empty. Displaying demo search.", "info");
+    const mockResults = [
+      { id: 101, title: 'The Batman', mediaType: 'movie', year: 2022, poster: 'https://image.tmdb.org/t/p/w185/74xTEgt7R361jUNmjJHv603OInu.jpg', requested: false },
+      { id: 102, title: 'Severance', mediaType: 'tv', year: 2022, poster: 'https://image.tmdb.org/t/p/w185/8VTt0oFq932K4Baqh8L6r3C5B52.jpg', requested: true }
+    ];
+    displayOverseerrResults(mockResults, resultsGrid, true);
+    return;
+  }
+
+  const res = await fetch(`${url}/api/v1/search?query=${encodeURIComponent(query)}`, {
+    headers: { 'X-Api-Key': key }
+  });
+  if (!res.ok) throw new Error();
+  const searchData = await res.json();
+  const results = searchData.results || [];
+  
+  if (results.length === 0) {
+    resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-face-frown"></i> No matching titles found.</div>`;
+    return;
+  }
+
+  const parsed = results.slice(0, 12).map(item => {
+    const title = item.title || item.name || 'Unknown Media';
+    const date = item.releaseDate || item.firstAirDate || '';
+    const year = date ? new Date(date).getFullYear() : '';
+    const poster = item.posterPath ? `https://image.tmdb.org/t/p/w185${item.posterPath}` : '';
+    
+    let requested = false;
+    if (item.mediaInfo) {
+      requested = item.mediaInfo.status >= 2;
+    }
+
+    return {
+      id: item.id,
+      title: title,
+      mediaType: item.mediaType,
+      year: year,
+      poster: poster,
+      requested: requested
+    };
+  });
+
+  displayOverseerrResults(parsed, resultsGrid, false);
+}
+
+function displayOverseerrResults(results, resultsGrid, isMock) {
+  resultsGrid.innerHTML = '';
+  const url = cleanUrl(integrationConfigs.overseerrUrl);
+  const key = integrationConfigs.overseerrKey;
+
+  results.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+    
+    let posterHtml = `<div class="search-result-poster-wrapper"><i class="fa-solid fa-clapperboard search-result-poster-fallback"></i></div>`;
+    if (item.poster) {
+      posterHtml = `
+        <div class="search-result-poster-wrapper">
+          <img src="${item.poster}" alt="${item.title}" class="search-result-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="search-result-poster-fallback" style="display:none;"><i class="fa-solid fa-clapperboard"></i></div>
+        </div>
+      `;
+    }
+
+    let actionBtnHtml = '';
+    if (item.requested) {
+      actionBtnHtml = `
+        <button class="btn-macos btn-macos-secondary search-result-action-btn" disabled style="opacity: 0.6; cursor: not-allowed; background:rgba(255,255,255,0.02)">
+          <i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Requested / Active
+        </button>
+      `;
+    } else {
+      actionBtnHtml = `
+        <button class="btn-macos btn-macos-primary search-result-action-btn request-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Request Media
+        </button>
+      `;
+    }
+
+    card.innerHTML = `
+      ${posterHtml}
+      <div class="search-result-info">
+        <h4 class="search-result-title" title="${item.title}">${item.title}</h4>
+        <div class="search-result-meta">
+          <span>${item.mediaType === 'movie' ? 'Movie' : 'TV Show'}</span>
+          <span>${item.year || ''}</span>
+        </div>
+      </div>
+      ${actionBtnHtml}
+    `;
+
+    const requestBtn = card.querySelector('.request-btn');
+    if (requestBtn) {
+      requestBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        requestBtn.disabled = true;
+        requestBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...`;
+        
+        try {
+          let success = false;
+          if (isMock) {
+            await new Promise(r => setTimeout(r, 1000));
+            success = true;
+          } else {
+            const body = {
+              mediaType: item.mediaType,
+              mediaId: item.id
+            };
+            if (item.mediaType === 'tv') {
+              body.seasons = 'all';
+            }
+            const reqRes = await fetch(`${url}/api/v1/request`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-Api-Key': key
+              },
+              body: JSON.stringify(body)
+            });
+            success = reqRes.ok;
+          }
+
+          if (success) {
+            showToast(`Request sent for "${item.title}"!`);
+            requestBtn.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Requested`;
+            requestBtn.disabled = true;
+            requestBtn.style.opacity = '0.6';
+          } else {
+            throw new Error();
+          }
+        } catch (err) {
+          showToast(`Failed to request "${item.title}".`, 'error');
+          requestBtn.disabled = false;
+          requestBtn.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> Request Media`;
+        }
+      });
+    }
+
+    resultsGrid.appendChild(card);
+  });
+}
+
+function renderPlexOverlay(container) {
+  container.innerHTML = `
+    <h4 style="margin-bottom: 16px; font-size: 1.1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-video" style="color:rgb(var(--accent-color-rgb));"></i> Active Playback Streams</h4>
+    
+    <div class="plex-active-sessions-grid" id="detail-plex-sessions">
+      <div style="opacity:0.6; font-size:0.85rem; padding:20px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Scanning library sessions...</div>
+    </div>
+  `;
+
+  const gridContainer = container.querySelector('#detail-plex-sessions');
+  loadPlexSessions(gridContainer);
+
+  detailOverlayInterval = setInterval(() => {
+    loadPlexSessions(gridContainer);
+  }, 5000);
+}
+
+async function loadPlexSessions(container) {
+  const plexUrl = cleanUrl(integrationConfigs.plexUrl);
+  const plexToken = integrationConfigs.plexToken;
+  const tautulliUrl = cleanUrl(integrationConfigs.tautulliUrl);
+  const tautulliKey = integrationConfigs.tautulliKey;
+
+  if (tautulliUrl && tautulliKey) {
+    try {
+      const res = await fetch(`${tautulliUrl}/api/v2?apikey=${tautulliKey}&cmd=get_sessions`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const sessions = data.response.data.sessions || [];
+      
+      if (sessions.length === 0) {
+        renderPlexIdle(container);
+        return;
+      }
+
+      let html = '';
+      sessions.forEach(s => {
+        let title = s.title;
+        if (s.media_type === 'episode') {
+          title = `${s.grandparent_title} - S${String(s.parent_media_index).padStart(2,'0')}E${String(s.media_index).padStart(2,'0')} - ${s.title}`;
+        }
+        
+        const user = s.user || 'Guest';
+        const player = s.player || 'Plex Web';
+        const progress = s.progress_percent || 0;
+        const quality = s.video_decision === 'transcode' ? `Transcoding (${s.height}p)` : 'Direct Play';
+        
+        html += `
+          <div class="plex-session-card">
+            <div class="plex-session-user-row">
+              <div class="plex-session-user-info">
+                <div class="plex-session-avatar">${user.slice(0, 2).toUpperCase()}</div>
+                <span class="plex-session-username">${user}</span>
+              </div>
+              <span class="plex-session-player-tag">${player}</span>
+            </div>
+            <div class="plex-session-media-title" title="${title}">${title}</div>
+            <div class="plex-session-details">
+              <span><strong>Quality:</strong> ${quality}</span>
+              <span><strong>State:</strong> ${s.state || 'playing'}</span>
+            </div>
+            <div class="plex-session-progress-bar-bg">
+              <div class="plex-session-progress-bar-fill" style="width: ${progress}%;"></div>
+            </div>
+            <div class="plex-session-kill-row">
+              <button class="btn-macos btn-macos-secondary kill-session-btn" data-session-id="${s.session_id}" data-user="${user}" data-title="${s.title}" data-source="tautulli" style="padding: 4px 8px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); font-weight:600;"><i class="fa-solid fa-ban"></i> Kill Stream</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      bindKillSessionButtons(container);
+      return;
+    } catch (e) {
+      console.warn("Tautulli query failed, falling back to Plex direct...", e);
+    }
+  }
+
+  if (plexUrl && plexToken) {
+    try {
+      const res = await fetch(`${plexUrl}/status/sessions?X-Plex-Token=${plexToken}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      const size = json.MediaContainer.size || 0;
+      
+      if (size === 0 || !json.MediaContainer.Metadata) {
+        renderPlexIdle(container);
+        return;
+      }
+
+      const items = Array.isArray(json.MediaContainer.Metadata) ? json.MediaContainer.Metadata : [json.MediaContainer.Metadata];
+      let html = '';
+      items.forEach(m => {
+        const sessionKey = m.sessionKey;
+        let title = m.title;
+        if (m.type === 'episode') {
+          title = `${m.grandparentTitle} - S${String(m.parentIndex).padStart(2,'0')}E${String(m.index).padStart(2,'0')} - ${m.title}`;
+        }
+        
+        const user = m.User ? m.User.title : 'Guest';
+        const player = m.Player ? (m.Player.title || m.Player.product) : 'Unknown Player';
+        const state = m.Player ? m.Player.state : 'playing';
+        
+        let progress = 0;
+        if (m.viewOffset && m.duration) {
+          progress = (m.viewOffset / m.duration) * 100;
+        }
+
+        let transcode = 'Direct Play';
+        if (m.Media && m.Media[0] && m.Media[0].Part && m.Media[0].Part[0] && m.Media[0].Part[0].decision === 'transcode') {
+          transcode = 'Transcoding';
+        }
+
+        html += `
+          <div class="plex-session-card">
+            <div class="plex-session-user-row">
+              <div class="plex-session-user-info">
+                <div class="plex-session-avatar">${user.slice(0, 2).toUpperCase()}</div>
+                <span class="plex-session-username">${user}</span>
+              </div>
+              <span class="plex-session-player-tag">${player}</span>
+            </div>
+            <div class="plex-session-media-title" title="${title}">${title}</div>
+            <div class="plex-session-details">
+              <span><strong>Quality:</strong> ${transcode}</span>
+              <span><strong>State:</strong> ${state}</span>
+            </div>
+            <div class="plex-session-progress-bar-bg">
+              <div class="plex-session-progress-bar-fill" style="width: ${progress.toFixed(1)}%;"></div>
+            </div>
+            <div class="plex-session-kill-row">
+              <button class="btn-macos btn-macos-secondary kill-session-btn" data-session-id="${sessionKey}" data-user="${user}" data-title="${m.title}" data-source="plex" style="padding: 4px 8px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); font-weight:600;"><i class="fa-solid fa-ban"></i> Kill Stream</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      bindKillSessionButtons(container);
+      return;
+    } catch (e) {
+      console.warn("Plex direct failed...", e);
+    }
+  }
+
+  container.innerHTML = `
+    <div class="plex-session-card">
+      <div class="plex-session-user-row">
+        <div class="plex-session-user-info">
+          <div class="plex-session-avatar">TH</div>
+          <span class="plex-session-username">Thomas</span>
+        </div>
+        <span class="plex-session-player-tag">Apple TV</span>
+      </div>
+      <div class="plex-session-media-title">Interstellar</div>
+      <div class="plex-session-details">
+        <span><strong>Quality:</strong> Transcoding (1080p)</span>
+        <span><strong>State:</strong> playing</span>
+      </div>
+      <div class="plex-session-progress-bar-bg">
+        <div class="plex-session-progress-bar-fill" style="width: 74%;"></div>
+      </div>
+      <div class="plex-session-kill-row">
+        <button class="btn-macos btn-macos-secondary mock-kill-btn" data-session-id="mock-1" data-user="Thomas" data-title="Interstellar" style="padding: 4px 8px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); font-weight:600;"><i class="fa-solid fa-ban"></i> Kill Stream</button>
+      </div>
+    </div>
+    <div class="plex-session-card">
+      <div class="plex-session-user-row">
+        <div class="plex-session-user-info">
+          <div class="plex-session-avatar">SA</div>
+          <span class="plex-session-username">Sarah</span>
+        </div>
+        <span class="plex-session-player-tag">iPad</span>
+      </div>
+      <div class="plex-session-media-title">The Office - S05E12 - Stress Relief</div>
+      <div class="plex-session-details">
+        <span><strong>Quality:</strong> Direct Play</span>
+        <span><strong>State:</strong> paused</span>
+      </div>
+      <div class="plex-session-progress-bar-bg">
+        <div class="plex-session-progress-bar-fill" style="width: 14%;"></div>
+      </div>
+      <div class="plex-session-kill-row">
+        <button class="btn-macos btn-macos-secondary mock-kill-btn" data-session-id="mock-2" data-user="Sarah" data-title="The Office" style="padding: 4px 8px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.05); font-weight:600;"><i class="fa-solid fa-ban"></i> Kill Stream</button>
+      </div>
+    </div>
+  `;
+
+  container.querySelectorAll('.mock-kill-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const user = btn.getAttribute('data-user');
+      const title = btn.getAttribute('data-title');
+      const reason = prompt(`Reason for terminating ${user}'s stream of "${title}":`, "Shared server maintenance");
+      if (reason === null) return;
+      
+      const card = e.target.closest('.plex-session-card');
+      card.style.opacity = '0.3';
+      setTimeout(() => {
+        card.remove();
+        showToast(`Terminated stream of "${title}" for ${user}.`);
+        if (container.children.length === 0) {
+          renderPlexIdle(container);
+        }
+      }, 600);
+    });
+  });
+}
+
+function renderPlexIdle(container) {
+  container.innerHTML = `
+    <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-secondary);">
+      <i class="fa-solid fa-circle-check" style="font-size:3rem; margin-bottom:15px; color:#34d399;"></i>
+      <h4>No active playbacks</h4>
+      <p style="font-size:0.85rem; margin-top:8px;">Plex media library is currently idle.</p>
+    </div>
+  `;
+}
+
+function bindKillSessionButtons(container) {
+  container.querySelectorAll('.kill-session-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const sessionId = btn.getAttribute('data-session-id');
+      const user = btn.getAttribute('data-user');
+      const title = btn.getAttribute('data-title');
+      const source = btn.getAttribute('data-source');
+      
+      const reason = prompt(`Reason for terminating ${user}'s stream of "${title}":`, "Shared server maintenance");
+      if (reason === null) return;
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Killing...`;
+      
+      try {
+        let success = false;
+        if (source === 'tautulli') {
+          const url = cleanUrl(integrationConfigs.tautulliUrl);
+          const key = integrationConfigs.tautulliKey;
+          const killRes = await fetch(`${url}/api/v2?apikey=${key}&cmd=terminate_session&session_id=${sessionId}&message=${encodeURIComponent(reason)}`);
+          success = killRes.ok;
+        } else {
+          const url = cleanUrl(integrationConfigs.plexUrl);
+          const token = integrationConfigs.plexToken;
+          const killRes = await fetch(`${url}/status/sessions/terminate?sessionId=${sessionId}&reason=${encodeURIComponent(reason)}&X-Plex-Token=${token}`);
+          success = killRes.ok;
+        }
+        
+        if (success) {
+          showToast(`Stream terminated successfully!`);
+          loadPlexSessions(container);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        showToast(`Failed to terminate stream. Check API configuration.`, 'error');
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-ban"></i> Kill Stream`;
+      }
+    });
+  });
+}
+
+function renderQbittorrentOverlay(container) {
+  container.innerHTML = `
+    <form class="qbit-add-magnet-form" id="qbit-add-form">
+      <input type="text" class="qbit-magnet-input" placeholder="Paste torrent magnet link or .torrent file URL..." id="qbit-magnet-url" required>
+      <button class="btn-macos btn-macos-primary" type="submit" style="padding: 0 24px; border-radius:14px;"><i class="fa-solid fa-plus"></i> Add Torrent</button>
+    </form>
+    
+    <h4 style="margin-bottom: 16px; font-size: 1.1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-circle-arrow-down" style="color:rgb(var(--accent-color-rgb));"></i> Active Downloads</h4>
+    
+    <div class="torrents-table" id="detail-torrents-table">
+      <div style="opacity:0.6; font-size:0.85rem; padding:20px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Getting torrents metadata...</div>
+    </div>
+  `;
+
+  const addForm = container.querySelector('#qbit-add-form');
+  const magnetInput = container.querySelector('#qbit-magnet-url');
+  const tableContainer = container.querySelector('#detail-torrents-table');
+
+  loadQbittorrentTorrents(tableContainer);
+
+  detailOverlayInterval = setInterval(() => {
+    loadQbittorrentTorrents(tableContainer);
+  }, 3000);
+
+  if (addForm) {
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const magnetUrl = magnetInput.value.trim();
+      if (!magnetUrl) return;
+
+      const submitBtn = addForm.querySelector('button');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Adding...`;
+
+      try {
+        let success = false;
+        const qbUrl = cleanUrl(integrationConfigs.qbittorrentUrl);
+        if (!qbUrl) {
+          await new Promise(r => setTimeout(r, 1000));
+          success = true;
+          addMockTorrent(magnetUrl);
+        } else {
+          const res = await queryQbittorrent('/api/v2/torrents/add', 'POST', { urls: magnetUrl });
+          success = res && res.ok;
+        }
+
+        if (success) {
+          showToast("Torrent added successfully!");
+          magnetInput.value = '';
+          loadQbittorrentTorrents(tableContainer);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        showToast("Failed to add torrent link.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add Torrent`;
+      }
+    });
+  }
+}
+
+let mockTorrents = [
+  { hash: 'hash1', name: 'ubuntu-24.04-desktop-amd64.iso', size: 4390000000, progress: 0.825, dlspeed: 12400000, upspeed: 1200000, eta: 44, state: 'downloading' },
+  { hash: 'hash2', name: 'Big_Buck_Bunny_4K.mp4', size: 840000000, progress: 1.0, dlspeed: 0, upspeed: 840000, eta: 86400, state: 'pausedUP' }
+];
+
+function addMockTorrent(link) {
+  let name = 'custom-magnet-stream.torrent';
+  if (link.startsWith('magnet:?')) {
+    const params = new URLSearchParams(link.slice(8));
+    if (params.has('dn')) name = params.get('dn');
+  } else {
+    const parts = link.split('/');
+    name = parts[parts.length - 1] || name;
+  }
+  
+  mockTorrents.unshift({
+    hash: 'mock-' + Math.random().toString(36).slice(2, 9),
+    name: name,
+    size: 2150000000,
+    progress: 0.01,
+    dlspeed: 8400000,
+    upspeed: 200000,
+    eta: 250,
+    state: 'downloading'
+  });
+}
+
+setInterval(() => {
+  mockTorrents.forEach(t => {
+    if (t.state === 'downloading' && t.progress < 1) {
+      t.progress = Math.min(1.0, t.progress + 0.01);
+      if (t.progress === 1.0) {
+        t.state = 'seeding';
+        t.dlspeed = 0;
+        t.upspeed = 400000;
+        t.eta = 86400;
+      } else {
+        t.eta = Math.max(0, Math.round((t.size * (1 - t.progress)) / t.dlspeed));
+      }
+    }
+  });
+}, 1000);
+
+async function loadQbittorrentTorrents(container) {
+  const qbUrl = cleanUrl(integrationConfigs.qbittorrentUrl);
+
+  if (!qbUrl) {
+    renderTorrentRows(mockTorrents, container, true);
+    return;
+  }
+
+  try {
+    const res = await queryQbittorrent('/api/v2/torrents/info?filter=all');
+    if (!res || !res.ok) throw new Error();
+    const torrents = await res.json();
+    
+    if (torrents.length === 0) {
+      container.innerHTML = `<div style="opacity:0.6; font-size:0.85rem; padding:15px;"><i class="fa-solid fa-circle-info"></i> No torrents in downloads list.</div>`;
+      return;
+    }
+    
+    renderTorrentRows(torrents, container, false);
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<div style="color:#f87171; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error communicating with qBittorrent. Falling back to demo mode...</div>`;
+    setTimeout(() => {
+      renderTorrentRows(mockTorrents, container, true);
+    }, 1000);
+  }
+}
+
+function renderTorrentRows(torrents, container, isMock) {
+  let html = '';
+  torrents.forEach(t => {
+    const progressPercent = (t.progress * 100).toFixed(1);
+    const size = formatBytes(t.size);
+    const dlSpeed = t.dlspeed > 0 ? `${formatBytes(t.dlspeed)}/s` : '0 B/s';
+    const upSpeed = t.upspeed > 0 ? `${formatBytes(t.upspeed)}/s` : '0 B/s';
+    const etaStr = t.progress >= 1 ? 'Completed' : formatDuration(t.eta);
+    
+    const isPaused = t.state === 'pausedDL' || t.state === 'pausedUP' || t.state.includes('paused');
+    const playPauseIcon = isPaused ? 'fa-play' : 'fa-pause';
+    const playPauseTitle = isPaused ? 'Resume' : 'Pause';
+    const stateLabel = t.state.replace('DL', '').replace('UP', '').toUpperCase();
+
+    html += `
+      <div class="torrent-item-row" data-hash="${t.hash}">
+        <div class="torrent-row-top">
+          <span class="torrent-name" title="${t.name}">${t.name}</span>
+          <span class="torrent-percent">${progressPercent}%</span>
+        </div>
+        <div class="torrent-row-mid">
+          <div class="torrent-progress-bar-container">
+            <div class="torrent-progress-bar-fill-indicator" style="width: ${progressPercent}%; background:${progressPercent === '100.0' ? 'linear-gradient(90deg, #10b981, #34d399)' : ''}"></div>
+          </div>
+        </div>
+        <div class="torrent-row-bottom">
+          <div class="torrent-stats-left">
+            <span><i class="fa-solid fa-hard-drive"></i> ${size}</span>
+            <span><i class="fa-solid fa-cloud-arrow-down" style="color:#60a5fa"></i> ${dlSpeed}</span>
+            <span><i class="fa-solid fa-cloud-arrow-up" style="color:#34d399"></i> ${upSpeed}</span>
+            <span><i class="fa-solid fa-hourglass-half"></i> ${etaStr}</span>
+            <span class="app-accent-badge" style="padding: 2px 6px; font-size: 0.65rem; font-weight:700; margin-left:8px; border:none; background:rgba(255,255,255,0.06); color:var(--text-secondary);">${stateLabel}</span>
+          </div>
+          <div class="torrent-controls">
+            <button class="torrent-ctrl-btn toggle-torrent-btn" title="${playPauseTitle}"><i class="fa-solid ${playPauseIcon}"></i></button>
+            <button class="torrent-ctrl-btn delete-torrent-btn" title="Delete Torrent"><i class="fa-solid fa-trash-can" style="color:#f87171"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.toggle-torrent-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const row = e.target.closest('.torrent-item-row');
+      const hash = row.getAttribute('data-hash');
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+
+      try {
+        let success = false;
+        if (isMock) {
+          const item = mockTorrents.find(m => m.hash === hash);
+          if (item) {
+            item.state = item.state.includes('paused') ? 'downloading' : 'pausedDL';
+            if (item.state.includes('paused')) {
+              item.dlspeed = 0;
+              item.upspeed = 0;
+            } else {
+              item.dlspeed = item.progress >= 1 ? 0 : 8500000;
+              item.upspeed = 500000;
+            }
+          }
+          success = true;
+        } else {
+          const isCurrentlyPaused = btn.title.includes('Resume');
+          const endpoint = isCurrentlyPaused ? '/api/v2/torrents/resume' : '/api/v2/torrents/pause';
+          const res = await queryQbittorrent(endpoint, 'POST', { hashes: hash });
+          success = res && res.ok;
+        }
+
+        if (success) {
+          loadQbittorrentTorrents(container);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        showToast("Error updating torrent state", "error");
+        btn.disabled = false;
+      }
+    });
+  });
+
+  container.querySelectorAll('.delete-torrent-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const row = e.target.closest('.torrent-item-row');
+      const hash = row.getAttribute('data-hash');
+      
+      if (!confirm("Are you sure you want to remove this torrent?")) return;
+      const deleteFiles = confirm("Do you also want to DELETE the downloaded files from disk?");
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+
+      try {
+        let success = false;
+        if (isMock) {
+          mockTorrents = mockTorrents.filter(m => m.hash !== hash);
+          success = true;
+        } else {
+          const res = await queryQbittorrent('/api/v2/torrents/delete', 'POST', { 
+            hashes: hash,
+            deleteFiles: deleteFiles ? 'true' : 'false'
+          });
+          success = res && res.ok;
+        }
+
+        if (success) {
+          showToast("Torrent deleted successfully.");
+          loadQbittorrentTorrents(container);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        showToast("Error deleting torrent", "error");
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function queryQbittorrent(endpoint, method = 'GET', bodyParams = null) {
+  const url = cleanUrl(integrationConfigs.qbittorrentUrl);
+  const user = integrationConfigs.qbittorrentUser;
+  const pass = integrationConfigs.qbittorrentPass;
+  if (!url) return null;
+  
+  let options = { method };
+  if (bodyParams) {
+    options.body = new URLSearchParams(bodyParams);
+    options.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  }
+  
+  try {
+    let res = await fetch(`${url}${endpoint}`, options);
+    if (res.status === 403 && user && pass) {
+      const loginBody = new URLSearchParams();
+      loginBody.append('username', user);
+      loginBody.append('password', pass);
+      const loginRes = await fetch(`${url}/api/v2/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: loginBody
+      });
+      if (loginRes.ok) {
+        res = await fetch(`${url}${endpoint}`, options);
+      }
+    }
+    return res;
+  } catch (err) {
+    console.error("qBittorrent query error:", err);
+    throw err;
+  }
+}
+
+/**
+ * Command Center Utilities & Formatters
+ */
+function formatDuration(secs) {
+  if (!secs || secs === 86400 || secs > 100000) return '∞';
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ${secs % 60}s`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ${mins % 60}m`;
+}
+
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${type}`;
+  let icon = 'fa-circle-check';
+  if (type === 'error') icon = 'fa-circle-xmark';
+  if (type === 'info') icon = 'fa-circle-info';
+  
+  toast.innerHTML = `
+    <i class="fa-solid ${icon}"></i>
+    <span>${message}</span>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toastFadeOut 0.3s forwards';
+    setTimeout(() => {
+      toast.remove();
+      if (container.children.length === 0) {
+        container.remove();
+      }
+    }, 300);
+  }, 3000);
 }

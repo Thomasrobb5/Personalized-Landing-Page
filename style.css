@@ -2654,3 +2654,659 @@ a {
   color: var(--text-secondary);
 }
 
+/* ==========================================================================
+   Phase 2: Fullscreen Command Center Overlay & Sub-widgets Styles
+   ========================================================================== */
+.detail-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px;
+}
+
+.detail-container {
+  width: 100%;
+  max-width: 850px;
+  height: 80vh;
+  background: rgba(18, 18, 28, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5), 0 0 50px rgba(var(--accent-color-rgb), 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: detailOverlayAppear 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes detailOverlayAppear {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.detail-app-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+#detail-app-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+/* --------------------------------------------------------------------------
+   Search & Media Adder Widget (Radarr / Sonarr / Overseerr)
+   -------------------------------------------------------------------------- */
+.detail-search-bar-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.detail-search-input-field {
+  width: 100%;
+  padding: 16px 20px 16px 52px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.detail-search-input-field:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.detail-search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.search-result-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--transition-smooth);
+  position: relative;
+}
+
+.search-result-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.search-result-poster-wrapper {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.search-result-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-result-poster-fallback {
+  font-size: 2rem;
+  color: var(--text-secondary);
+  opacity: 0.4;
+}
+
+.search-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-result-title {
+  font-family: var(--font-display);
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-result-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+.search-result-action-btn {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+}
+
+/* --------------------------------------------------------------------------
+   qBittorrent Downloads Manager
+   -------------------------------------------------------------------------- */
+.qbit-add-magnet-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.qbit-magnet-input {
+  flex: 1;
+  padding: 12px 18px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.qbit-magnet-input:focus {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.torrents-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.torrent-item-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--transition-fast);
+}
+
+.torrent-item-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.torrent-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.torrent-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.torrent-row-mid {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.torrent-progress-bar-container {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.torrent-progress-bar-fill-indicator {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.torrent-percent {
+  font-size: 0.8rem;
+  font-weight: bold;
+  min-width: 36px;
+  text-align: right;
+}
+
+.torrent-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+}
+
+.torrent-stats-left {
+  display: flex;
+  gap: 12px;
+}
+
+.torrent-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.torrent-ctrl-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.torrent-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Plex & Tautulli Stream Watchers
+   -------------------------------------------------------------------------- */
+.plex-active-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.plex-session-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plex-session-user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plex-session-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plex-session-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.plex-session-username {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.plex-session-player-tag {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+
+.plex-session-media-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.plex-session-details {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plex-session-progress-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.plex-session-progress-bar-fill {
+  height: 100%;
+  background: #e5a00d; /* Plex Yellow */
+  border-radius: inherit;
+}
+
+.plex-session-kill-row {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --------------------------------------------------------------------------
+   Overseerr Requests Manager
+   -------------------------------------------------------------------------- */
+.overseerr-requests-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overseerr-request-item-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: var(--transition-fast);
+}
+
+.overseerr-request-item-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.overseerr-request-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 60%;
+}
+
+.overseerr-request-poster-thumb {
+  width: 40px;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.overseerr-request-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.overseerr-request-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overseerr-request-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.overseerr-request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.request-action-btn-approve {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: var(--transition-fast);
+}
+
+.request-action-btn-approve:hover {
+  background: #10b981;
+  color: white;
+}
+
+.request-action-btn-deny {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: var(--transition-fast);
+}
+
+.request-action-btn-deny:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* --------------------------------------------------------------------------
+   Disk Storage & Upcoming Releases Styling (Radarr / Sonarr)
+   -------------------------------------------------------------------------- */
+.disk-usage-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  transition: var(--transition-fast);
+}
+
+.disk-usage-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.disk-usage-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.825rem;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+}
+
+.disk-usage-path {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.disk-progress-bar {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.disk-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.upcoming-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition-fast);
+}
+
+.upcoming-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.upcoming-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.upcoming-date {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Toast Notifications Styling
+   -------------------------------------------------------------------------- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  background: rgba(18, 18, 28, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(20px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastFadeOut {
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+.toast-success i {
+  color: #34d399;
+}
+
+.toast-error i {
+  color: #f87171;
+}
+
+.toast-info i {
+  color: #60a5fa;
+}
+
