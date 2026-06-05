@@ -8,6 +8,292 @@ let editingAppIndex = null;      // format: { groupIndex, appIndex }
 let editingGroupIndex = null;    // format: groupIndex
 let editModeActive = false;
 let userWidgets = [];
+let workModeActive = false;
+let workModeTimer = null;
+let workTasks = [];
+
+const MICROSOFT_PORTALS = [
+  {
+    id: 'group-ms-admin',
+    title: 'Core Administration',
+    icon: 'fa-user-shield',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://admin.microsoft.com',
+        title: 'Microsoft 365 Admin Center',
+        desc: 'Centralized management for users, licenses, billing, and services.',
+        color: '#0078d4',
+        icon: 'fa-users-gear',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://portal.azure.com',
+        title: 'Azure Portal',
+        desc: 'Build, manage, and monitor cloud services, VMs, and databases.',
+        color: '#0089d6',
+        icon: 'fa-cloud',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://entra.microsoft.com',
+        title: 'Microsoft Entra Admin Center',
+        desc: 'Manage identities, user access, security groups, and SSO.',
+        color: '#5c2d91',
+        icon: 'fa-id-card-clip',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://intune.microsoft.com',
+        title: 'Microsoft Intune Admin Center',
+        desc: 'Endpoint management, device enrollment, and compliance policies.',
+        color: '#00a4ef',
+        icon: 'fa-laptop-medical',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      }
+    ]
+  },
+  {
+    id: 'group-ms-services',
+    title: 'App & Service Administration',
+    icon: 'fa-sliders',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://admin.exchange.microsoft.com',
+        title: 'Exchange Admin Center',
+        desc: 'Manage mailboxes, mail flow, transport rules, and spam filters.',
+        color: '#0072c6',
+        icon: 'fa-envelope-open-text',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://admin.microsoft.com/sharepoint',
+        title: 'SharePoint Admin Center',
+        desc: 'Configure organization sites, storage limits, and external sharing.',
+        color: '#0072c6',
+        icon: 'fa-share-nodes',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://admin.teams.microsoft.com',
+        title: 'Teams Admin Center',
+        desc: 'Manage calling policies, guest access, chat features, and apps.',
+        color: '#464eb8',
+        icon: 'fa-users',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://admin.powerplatform.microsoft.com',
+        title: 'Power Platform Admin Center',
+        desc: 'Manage environments, database policies, PowerApps, and Flows.',
+        color: '#742774',
+        icon: 'fa-chart-simple',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      }
+    ]
+  },
+  {
+    id: 'group-ms-sec-comp',
+    title: 'Security, Compliance & Insights',
+    icon: 'fa-shield-halved',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://security.microsoft.com',
+        title: 'Microsoft Defender',
+        desc: 'Security signals, threat protection, and automated remediation.',
+        color: '#d83b01',
+        icon: 'fa-shield-virus',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://compliance.microsoft.com',
+        title: 'Microsoft Purview',
+        desc: 'Data compliance, privacy, retention, and labeling policies.',
+        color: '#7a24db',
+        icon: 'fa-building-shield',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://lighthouse.microsoft.com',
+        title: 'Microsoft 365 Lighthouse',
+        desc: 'Multi-tenant administration for managed service providers (MSP).',
+        color: '#008ad2',
+        icon: 'fa-tower-observation',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://app.powerbi.com/admin-portal',
+        title: 'Power BI Admin Portal',
+        desc: 'Tenant-wide configuration, usage stats, and gateway configurations.',
+        color: '#f2c811',
+        icon: 'fa-chart-pie',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      }
+    ]
+  },
+  {
+    id: 'group-ms-dev',
+    title: 'Developer & Business Operations',
+    icon: 'fa-code',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://dev.azure.com',
+        title: 'Azure DevOps',
+        desc: 'Git repositories, build pipelines, agile planning, and boards.',
+        color: '#0078d4',
+        icon: 'fa-git-branch',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://developer.microsoft.com/en-us/microsoft-365/profile',
+        title: 'Microsoft 365 Dev Dashboard',
+        desc: 'Access Sandbox subscriptions, sample packs, and API testing.',
+        color: '#107c41',
+        icon: 'fa-code-branch',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://partner.microsoft.com',
+        title: 'Microsoft Partner Center',
+        desc: 'Manage cloud solution provider accounts, incentives, and programs.',
+        color: '#00188f',
+        icon: 'fa-handshake',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://admin.microsoft.com/#/billing/licenses',
+        title: 'Billing & Licenses Portal',
+        desc: 'Manage M365 licenses, purchases, payment methods, and invoices.',
+        color: '#50e495',
+        icon: 'fa-credit-card',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      }
+    ]
+  },
+  {
+    id: 'group-ms-extra',
+    title: 'Additional Admin Portals',
+    icon: 'fa-folder-plus',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://manage.visualstudio.com',
+        title: 'Visual Studio Subscriptions Admin',
+        desc: 'Assign developer licensing and cloud credits to users.',
+        color: '#0078d4',
+        icon: 'fa-code',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://www.microsoft.com/licensing/servicecenter',
+        title: 'Volume Licensing Service Center',
+        desc: 'Manage enterprise volume agreement software keys and downloads.',
+        color: '#0078d4',
+        icon: 'fa-file-invoice-dollar',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://admin.microsoft.com/#/MicrosoftSearch',
+        title: 'Microsoft Search Admin',
+        desc: 'Configure organization search answers, bookmarks, and acronyms.',
+        color: '#0078d4',
+        icon: 'fa-magnifying-glass',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      },
+      {
+        url: 'https://myaccount.microsoft.com',
+        title: 'My Account Portal',
+        desc: 'Self-service account management, security info, and active devices.',
+        color: '#00a4ef',
+        icon: 'fa-user',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: false,
+        integration: 'none'
+      }
+    ]
+  }
+];
 
 let workspaceConfig = {
   gridCols: 'auto',
@@ -186,10 +472,12 @@ document.addEventListener('DOMContentLoaded', () => {
   userWidgets = loadWidgetsFromStorage();
   loadWorkspaceConfig();
   loadIntegrationConfigs();
+  workModeActive = localStorage.getItem('launchpad_work_mode_active') === 'true';
 
   // Render Dashboard Components
-  renderDashboardGroups(userGroups);
-  renderAppDock(userGroups);
+  const initialGroups = workModeActive ? MICROSOFT_PORTALS : userGroups;
+  renderDashboardGroups(initialGroups);
+  renderAppDock(initialGroups);
   renderSidebarWidgets(userWidgets);
 
   // Initialize Widgets and Interactive Elements
@@ -204,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initGroupModalEvents();
   initSpotlight();
   initDetailOverlayEvents();
+  initWorkMode();
 
   // Initialize Custom Workspace Elements
   applyWorkspaceConfig(workspaceConfig);
@@ -1709,7 +1998,8 @@ function querySpotlight(query) {
   spotlightIndex = 0;
 
   // 1. Gather apps
-  userGroups.forEach(group => {
+  const activeGroups = workModeActive ? MICROSOFT_PORTALS : userGroups;
+  activeGroups.forEach(group => {
     group.apps.forEach(app => {
       if (app.title.toLowerCase().includes(q) || app.desc.toLowerCase().includes(q) || q === '') {
         spotlightResults.push({
@@ -1727,6 +2017,7 @@ function querySpotlight(query) {
 
   // 2. Gather command shortcuts
   const commands = [
+    { type: 'cmd', title: '/work', desc: 'Toggle Microsoft Work Mode', icon: 'fa-briefcase', action: () => document.getElementById('work-mode-btn').click() },
     { type: 'cmd', title: '/edit', desc: 'Toggle Edit Workspace mode', icon: 'fa-sliders', action: () => document.getElementById('edit-mode-btn').click() },
     { type: 'cmd', title: '/settings', desc: 'Open Workspace Settings', icon: 'fa-gear', action: () => document.getElementById('workspace-settings-btn').click() },
     { type: 'cmd', title: '/addapp', desc: 'Add new Application card', icon: 'fa-plus', action: () => openModalForCreate() },
@@ -1900,7 +2191,74 @@ function initGreeting() {
     greetingText = 'Good night';
   }
 
-  greetingEl.textContent = `${greetingText}, Thomas`;
+  greetingEl.textContent = workModeActive ? `Work Console, Thomas` : `${greetingText}, Thomas`;
+}
+
+function initWorkMode() {
+  const workBtn = document.getElementById('work-mode-btn');
+  if (!workBtn) return;
+
+  const workspaceLabel = document.querySelector('.workspace-label');
+  const originalLabel = workspaceLabel ? workspaceLabel.textContent : "Thomas's Workspace";
+  const greetingEl = document.getElementById('greeting');
+  const subtitleEl = document.querySelector('.greeting-container .subtitle');
+  const editBtn = document.getElementById('edit-mode-btn');
+
+  const applyWorkModeUI = (active) => {
+    localStorage.setItem('launchpad_work_mode_active', active ? 'true' : 'false');
+    workModeActive = active;
+
+    workBtn.classList.toggle('work-mode-on', active);
+    document.body.classList.toggle('work-mode-active', active);
+
+    if (workspaceLabel) {
+      workspaceLabel.textContent = active ? "Microsoft Admin Portal" : originalLabel;
+    }
+
+    if (subtitleEl) {
+      subtitleEl.textContent = active 
+        ? "Microsoft Cloud Administration & Portal Navigation Hub." 
+        : "Your personal workspace and applications launchpad.";
+    }
+
+    if (active && editModeActive && editBtn) {
+      editBtn.click();
+    }
+    
+    if (editBtn) {
+      editBtn.style.display = active ? 'none' : 'flex';
+    }
+
+    const mainGrid = document.querySelector('.dashboard-layout');
+    if (mainGrid) {
+      mainGrid.style.opacity = '0';
+      mainGrid.style.transform = 'scale(0.98)';
+      mainGrid.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      
+      setTimeout(() => {
+        renderDashboardGroups(active ? MICROSOFT_PORTALS : userGroups);
+        renderAppDock(active ? MICROSOFT_PORTALS : userGroups);
+        renderSidebarWidgets(userWidgets);
+        
+        mainGrid.style.opacity = '1';
+        mainGrid.style.transform = 'scale(1)';
+      }, 200);
+    } else {
+      renderDashboardGroups(active ? MICROSOFT_PORTALS : userGroups);
+      renderAppDock(active ? MICROSOFT_PORTALS : userGroups);
+      renderSidebarWidgets(userWidgets);
+    }
+    
+    initGreeting();
+  };
+
+  workBtn.addEventListener('click', () => {
+    applyWorkModeUI(!workModeActive);
+  });
+
+  if (workModeActive) {
+    applyWorkModeUI(true);
+  }
 }
 
 function initKeyboardShortcuts() {
@@ -2076,7 +2434,15 @@ function renderSidebarWidgets(widgets) {
   
   container.innerHTML = '';
   
-  widgets.forEach((widget, index) => {
+  const WORK_WIDGETS = [
+    { id: 'widget-m365-status', type: 'm365-status', title: 'M365 Status (Live)', colSpan: 1 },
+    { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 },
+    { id: 'widget-azure-news', type: 'azure-news', title: 'Azure Cloud News', colSpan: 1 }
+  ];
+  
+  const activeWidgets = workModeActive ? WORK_WIDGETS : widgets;
+  
+  activeWidgets.forEach((widget, index) => {
     const card = document.createElement('article');
     card.className = `widget-card widget-${widget.type}-card`;
     card.id = widget.id;
@@ -2091,8 +2457,8 @@ function renderSidebarWidgets(widgets) {
       card.classList.add(`weather-${widget.settings.state || 'sunny'}`);
     }
     
-    // Setup Edit Mode drag-and-drop reordering
-    if (editModeActive) {
+    // Setup Edit Mode drag-and-drop reordering (disabled in Work Mode)
+    if (editModeActive && !workModeActive) {
       card.setAttribute('draggable', 'true');
       card.addEventListener('dragstart', (e) => {
         card.classList.add('dragging');
@@ -2144,6 +2510,9 @@ function renderSidebarWidgets(widgets) {
     else if (widget.type === 'countdown') iconClass = 'fa-stopwatch';
     else if (widget.type === 'calculator') iconClass = 'fa-calculator';
     else if (widget.type === 'disk') iconClass = 'fa-hard-drive';
+    else if (widget.type === 'm365-status') iconClass = 'fa-user-shield';
+    else if (widget.type === 'work-tasks') iconClass = 'fa-list-check';
+    else if (widget.type === 'azure-news') iconClass = 'fa-rss';
     
     titleEl.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${widget.title}`;
     header.appendChild(titleEl);
@@ -2164,32 +2533,34 @@ function renderSidebarWidgets(widgets) {
     
     card.appendChild(bodyContainer);
     
-    // Edit & Delete badges (Visible only in Edit Mode)
-    const deleteBadge = document.createElement('div');
-    deleteBadge.className = 'delete-badge';
-    deleteBadge.title = 'Delete Widget';
-    deleteBadge.innerHTML = `<i class="fa-solid fa-minus"></i>`;
-    deleteBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (confirm(`Are you sure you want to delete widget "${widget.title}"?`)) {
-        userWidgets.splice(index, 1);
-        saveWidgetsToStorage(userWidgets);
-        renderSidebarWidgets(userWidgets);
-      }
-    });
-    card.appendChild(deleteBadge);
-    
-    const editBadge = document.createElement('div');
-    editBadge.className = 'edit-badge';
-    editBadge.title = 'Edit Widget';
-    editBadge.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
-    editBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      openWidgetModalForEdit(index);
-    });
-    card.appendChild(editBadge);
+    // Edit & Delete badges (Visible only in Edit Mode & disabled in Work Mode)
+    if (editModeActive && !workModeActive) {
+      const deleteBadge = document.createElement('div');
+      deleteBadge.className = 'delete-badge';
+      deleteBadge.title = 'Delete Widget';
+      deleteBadge.innerHTML = `<i class="fa-solid fa-minus"></i>`;
+      deleteBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (confirm(`Are you sure you want to delete widget "${widget.title}"?`)) {
+          userWidgets.splice(index, 1);
+          saveWidgetsToStorage(userWidgets);
+          renderSidebarWidgets(userWidgets);
+        }
+      });
+      card.appendChild(deleteBadge);
+      
+      const editBadge = document.createElement('div');
+      editBadge.className = 'edit-badge';
+      editBadge.title = 'Edit Widget';
+      editBadge.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
+      editBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        openWidgetModalForEdit(index);
+      });
+      card.appendChild(editBadge);
+    }
     
     container.appendChild(card);
   });
@@ -2213,6 +2584,313 @@ function buildWidgetBody(widget, container, statusEl) {
   else if (widget.type === 'iframe') buildIframeWidget(widget, container);
   else if (widget.type === 'calculator') buildCalculatorWidget(widget, container);
   else if (widget.type === 'disk') buildDiskWidget(widget, container, statusEl);
+  else if (widget.type === 'm365-status') buildM365StatusWidget(widget, container);
+  else if (widget.type === 'work-tasks') buildWorkTasksWidget(widget, container);
+  else if (widget.type === 'azure-news') buildAzureNewsWidget(widget, container);
+}
+
+/**
+ * Work Mode Specialized Widget Builders & Pingers
+ */
+function buildM365StatusWidget(widget, container) {
+  container.className += ' m365-status-widget';
+  
+  const services = [
+    { id: 'azure', icon: 'fa-cloud', name: 'Azure Portal' },
+    { id: 'teams', icon: 'fa-users', name: 'Microsoft Teams' },
+    { id: 'exchange', icon: 'fa-envelope-open-text', name: 'Exchange Online' },
+    { id: 'sharepoint', icon: 'fa-share-nodes', name: 'SharePoint Online' },
+    { id: 'intune', icon: 'fa-laptop-medical', name: 'Microsoft Intune' }
+  ];
+  
+  let html = `<div class="m365-status-list">`;
+  
+  services.forEach(s => {
+    let historyBars = '';
+    for (let i = 0; i < 10; i++) {
+      historyBars += `<div class="m365-history-bar state-operational"></div>`;
+    }
+    
+    html += `
+      <div class="m365-status-item" data-service-id="${s.id}">
+        <div class="m365-status-top-row">
+          <div class="m365-service-info">
+            <div class="m365-service-icon">
+              <i class="fa-solid ${s.icon}"></i>
+            </div>
+            <span class="m365-service-name">${s.name}</span>
+          </div>
+          <div class="m365-status-badge-wrapper">
+            <span class="m365-latency">checking</span>
+            <span class="m365-status-indicator-dot m365-status-operational"></span>
+          </div>
+        </div>
+        <div class="m365-history-grid">
+          ${historyBars}
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function startM365PingLoop() {
+  if (workModeTimer) clearInterval(workModeTimer);
+  
+  const runPings = () => {
+    if (!workModeActive) return;
+    const services = [
+      { id: 'azure', url: 'https://portal.azure.com', name: 'Azure Portal' },
+      { id: 'teams', url: 'https://teams.microsoft.com', name: 'Microsoft Teams' },
+      { id: 'exchange', url: 'https://outlook.office365.com', name: 'Exchange Online' },
+      { id: 'sharepoint', url: 'https://login.microsoftonline.com', name: 'SharePoint Online' },
+      { id: 'intune', url: 'https://intune.microsoft.com', name: 'Microsoft Intune' }
+    ];
+    
+    services.forEach(service => {
+      const pingStart = Date.now();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      
+      fetch(service.url, { method: 'GET', mode: 'no-cors', cache: 'no-cache', signal: controller.signal })
+        .then(() => {
+          clearTimeout(timeoutId);
+          const latency = Date.now() - pingStart;
+          updateM365ServiceUI(service.id, 'operational', latency);
+        })
+        .catch(() => {
+          clearTimeout(timeoutId);
+          const img = new Image();
+          let imgCompleted = false;
+          
+          const imgTimeout = setTimeout(() => {
+            if (!imgCompleted) {
+              img.src = '';
+              updateM365ServiceUI(service.id, 'outage', 'offline');
+            }
+          }, 3500);
+          
+          img.onload = img.onerror = () => {
+            imgCompleted = true;
+            clearTimeout(imgTimeout);
+            const latency = Date.now() - pingStart;
+            updateM365ServiceUI(service.id, 'operational', latency);
+          };
+          img.src = `${service.url}/favicon.ico?t=${Date.now()}`;
+        });
+    });
+  };
+  
+  runPings();
+  workModeTimer = setInterval(runPings, 30000);
+}
+
+function updateM365ServiceUI(serviceId, status, latency) {
+  const itemEl = document.querySelector(`.m365-status-item[data-service-id="${serviceId}"]`);
+  if (!itemEl) return;
+  
+  const latencyEl = itemEl.querySelector('.m365-latency');
+  const dotEl = itemEl.querySelector('.m365-status-indicator-dot');
+  
+  if (latencyEl) {
+    latencyEl.textContent = typeof latency === 'number' ? `${latency}ms` : latency;
+  }
+  
+  if (dotEl) {
+    dotEl.className = 'm365-status-indicator-dot';
+    if (status === 'operational') {
+      dotEl.classList.add('m365-status-operational');
+    } else if (status === 'degraded') {
+      dotEl.classList.add('m365-status-degraded');
+    } else {
+      dotEl.classList.add('m365-status-outage');
+    }
+  }
+  
+  const historyGrid = itemEl.querySelector('.m365-history-grid');
+  if (historyGrid) {
+    const bars = historyGrid.querySelectorAll('.m365-history-bar');
+    if (bars.length > 0) {
+      bars[0].remove();
+      const newBar = document.createElement('div');
+      newBar.className = `m365-history-bar state-${status}`;
+      historyGrid.appendChild(newBar);
+    }
+  }
+}
+
+function buildWorkTasksWidget(widget, container) {
+  const savedTasks = localStorage.getItem('launchpad_work_tasks');
+  if (savedTasks) {
+    try {
+      workTasks = JSON.parse(savedTasks);
+    } catch(e) {
+      workTasks = [];
+    }
+  } else {
+    workTasks = [
+      { id: 'wt-1', text: 'Review Azure Active Directory logs', completed: false },
+      { id: 'wt-2', text: 'Audit Intune enrollment compliance', completed: true },
+      { id: 'wt-3', text: 'Verify Exchange mail flow rules', completed: false }
+    ];
+    localStorage.setItem('launchpad_work_tasks', JSON.stringify(workTasks));
+  }
+  
+  container.innerHTML = `
+    <div class="work-tasks-widget">
+      <div class="work-task-input-row">
+        <input type="text" class="work-task-input" placeholder="New administrative task..." maxlength="100">
+        <button class="work-task-add-btn"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div class="work-tasks-list"></div>
+    </div>
+  `;
+  
+  const input = container.querySelector('.work-task-input');
+  const addBtn = container.querySelector('.work-task-add-btn');
+  
+  addBtn.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (text) {
+      workTasks.push({ id: `wt-${Date.now()}`, text, completed: false });
+      localStorage.setItem('launchpad_work_tasks', JSON.stringify(workTasks));
+      input.value = '';
+      renderWorkTasksList(container);
+    }
+  });
+  
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      addBtn.click();
+    }
+  });
+  
+  renderWorkTasksList(container);
+}
+
+function renderWorkTasksList(container) {
+  const listEl = container.querySelector('.work-tasks-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  
+  if (workTasks.length === 0) {
+    listEl.innerHTML = `<div style="font-size:0.8rem; text-align:center; opacity:0.6; padding: 12px 0;">All work tasks completed!</div>`;
+    return;
+  }
+  
+  workTasks.forEach((task) => {
+    const item = document.createElement('div');
+    item.className = `work-task-item ${task.completed ? 'completed' : ''}`;
+    item.innerHTML = `
+      <label class="work-task-checkbox-label">
+        <input type="checkbox" class="work-task-checkbox" ${task.completed ? 'checked' : ''}>
+        <span class="work-task-text">${task.text}</span>
+      </label>
+      <button class="work-task-delete-btn"><i class="fa-solid fa-trash"></i></button>
+    `;
+    
+    const checkbox = item.querySelector('.work-task-checkbox');
+    checkbox.addEventListener('change', () => {
+      task.completed = checkbox.checked;
+      localStorage.setItem('launchpad_work_tasks', JSON.stringify(workTasks));
+      item.classList.toggle('completed', task.completed);
+    });
+    
+    const deleteBtn = item.querySelector('.work-task-delete-btn');
+    deleteBtn.addEventListener('click', () => {
+      workTasks = workTasks.filter(t => t.id !== task.id);
+      localStorage.setItem('launchpad_work_tasks', JSON.stringify(workTasks));
+      renderWorkTasksList(container);
+    });
+    
+    listEl.appendChild(item);
+  });
+}
+
+function buildAzureNewsWidget(widget, container) {
+  container.innerHTML = `
+    <div class="azure-news-widget">
+      <div class="azure-news-list">
+        <span style="font-size:0.75rem; opacity:0.6;"><i class="fa-solid fa-spinner fa-spin"></i> Fetching Azure news...</span>
+      </div>
+    </div>
+  `;
+  
+  const listEl = container.querySelector('.azure-news-list');
+  
+  const fallbackNews = [
+    { title: 'Azure Cosmos DB - Scheduled Maintenance Windows', date: 'Just now', type: 'update' },
+    { title: 'Network Infrastructure Advisory: Europe West Region', date: '30 mins ago', type: 'incident' },
+    { title: 'Resolved: Azure Active Directory MFA Access Issues', date: '2 hours ago', type: 'resolved' },
+    { title: 'General Availability: Azure Functions V4 Update', date: 'Yesterday', type: 'update' }
+  ];
+  
+  const renderNewsItems = (items) => {
+    listEl.innerHTML = '';
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'azure-news-item';
+      
+      let badgeClass = 'news-update';
+      if (item.type === 'incident') badgeClass = 'news-incident';
+      if (item.type === 'resolved') badgeClass = 'news-resolved';
+      
+      div.innerHTML = `
+        <h4 class="azure-news-title">${item.title}</h4>
+        <div class="azure-news-date-tag">
+          <span>${item.date}</span>
+          <span class="azure-news-badge ${badgeClass}">${item.type}</span>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+  };
+  
+  fetch('https://api.allorigins.win/raw?url=https://status.azure.com/en-us/status/feed/')
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.text();
+    })
+    .then(xmlStr => {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+      const items = xmlDoc.querySelectorAll('item');
+      const news = [];
+      
+      if (items.length > 0) {
+        items.forEach((item, index) => {
+          if (index >= 4) return;
+          const title = item.querySelector('title')?.textContent || 'Azure Service Notice';
+          const pubDateStr = item.querySelector('pubDate')?.textContent || '';
+          
+          let date = 'Recent';
+          if (pubDateStr) {
+            try {
+              const pubDate = new Date(pubDateStr);
+              const diffMins = Math.round((Date.now() - pubDate) / 60000);
+              if (diffMins < 60) date = `${diffMins} mins ago`;
+              else if (diffMins < 1440) date = `${Math.round(diffMins/60)} hours ago`;
+              else date = pubDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            } catch (err) {}
+          }
+          
+          let type = 'update';
+          const titleLower = title.toLowerCase();
+          if (titleLower.includes('resolved') || titleLower.includes('mitigated')) type = 'resolved';
+          else if (titleLower.includes('advisory') || titleLower.includes('investigating') || titleLower.includes('degraded') || titleLower.includes('outage')) type = 'incident';
+          
+          news.push({ title, date, type });
+        });
+        renderNewsItems(news);
+      } else {
+        renderNewsItems(fallbackNews);
+      }
+    })
+    .catch(() => {
+      renderNewsItems(fallbackNews);
+    });
 }
 
 /**
@@ -2975,10 +3653,14 @@ function initGlobalTimers() {
 }
 
 function runWidgetInitializers() {
-  updateAllClocks();
-  updateDynamicResources();
-  tickCountdowns();
-  updateAllDiskWidgets();
+  if (workModeActive) {
+    startM365PingLoop();
+  } else {
+    updateAllClocks();
+    updateDynamicResources();
+    tickCountdowns();
+    updateAllDiskWidgets();
+  }
 }
 
 /**

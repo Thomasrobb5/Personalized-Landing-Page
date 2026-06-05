@@ -3452,3 +3452,309 @@ a {
   color: white;
 }
 
+/* ==========================================================================
+   Work Mode & M365 Status Panel Styles
+   ========================================================================== */
+
+/* Microsoft Azure Work Mode Color Overrides */
+body.work-mode-active {
+  --bg-color: #070e17 !important;
+  --blob-1: #0078d4 !important; /* Azure Blue */
+  --blob-2: #5c2d91 !important; /* Microsoft Purple */
+  --blob-3: #00bcf2 !important; /* Microsoft Cyan */
+  --card-bg: rgba(11, 22, 38, 0.45) !important;
+  --card-border: rgba(0, 120, 212, 0.15) !important;
+  --card-border-hover: rgba(0, 120, 212, 0.5) !important;
+  --widget-bg: rgba(11, 22, 38, 0.35) !important;
+  --input-bg: rgba(11, 22, 38, 0.25) !important;
+  --badge-glow: rgba(0, 120, 212, 0.2) !important;
+}
+
+/* Work Mode Toggle in Menu Bar */
+.mac-menu-item.work-mode-on {
+  color: #00a4ef !important; /* Microsoft Cyan Blue */
+  font-weight: 600;
+}
+
+.mac-menu-item.work-mode-on .work-mode-dot {
+  background: #10b981 !important; /* Vibrant green active state */
+  box-shadow: 0 0 8px #10b981, 0 0 2px #10b981;
+}
+
+/* M365 Service Status Widget Card */
+.m365-status-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.m365-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.m365-status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.m365-status-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 120, 212, 0.2);
+}
+
+.m365-status-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.m365-service-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.m365-service-icon {
+  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(0, 120, 212, 0.1);
+  color: #0078d4;
+}
+
+.m365-service-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.m365-status-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.m365-latency {
+  font-size: 0.725rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.m365-status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.m365-status-operational {
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.m365-status-degraded {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.m365-status-outage {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* Sparkline for historical health state */
+.m365-history-grid {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.m365-history-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 1px;
+  background-color: rgba(16, 185, 129, 0.3);
+}
+
+.m365-history-bar.state-operational {
+  background-color: #10b981;
+}
+
+.m365-history-bar.state-degraded {
+  background-color: #f59e0b;
+}
+
+.m365-history-bar.state-outage {
+  background-color: #ef4444;
+}
+
+/* Work Tasks Checklist Widget */
+.work-tasks-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.work-task-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.work-task-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.825rem;
+  transition: border-color 0.2s ease;
+}
+
+.work-task-input:focus {
+  outline: none;
+  border-color: rgba(0, 120, 212, 0.4);
+}
+
+.work-task-add-btn {
+  padding: 8px 12px;
+  background: rgba(0, 120, 212, 0.15);
+  border: 1px solid rgba(0, 120, 212, 0.3);
+  color: #00bcff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.825rem;
+  transition: all 0.2s ease;
+}
+
+.work-task-add-btn:hover {
+  background: rgba(0, 120, 212, 0.25);
+  transform: translateY(-1px);
+}
+
+.work-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.work-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.work-task-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.825rem;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.work-task-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: #0078d4;
+  cursor: pointer;
+}
+
+.work-task-item.completed .work-task-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.work-task-delete-btn {
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 0.775rem;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  padding: 2px 4px;
+}
+
+.work-task-item:hover .work-task-delete-btn {
+  opacity: 1;
+}
+
+/* Azure Update News Feed */
+.azure-news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.azure-news-item {
+  padding: 10px;
+  border-left: 2.5px solid #0078d4;
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 0 8px 8px 0;
+  transition: background 0.2s ease;
+}
+
+.azure-news-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.azure-news-title {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.azure-news-date-tag {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.azure-news-badge {
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.azure-news-badge.news-update {
+  background: rgba(0, 120, 212, 0.15);
+  color: #00bcff;
+}
+
+.azure-news-badge.news-incident {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.azure-news-badge.news-resolved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
