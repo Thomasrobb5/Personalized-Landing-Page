@@ -269,6 +269,9 @@ function bindEvents() {
 
     localStorage.setItem(STORAGE_KEY_INTEGRATIONS, JSON.stringify(configs));
     
+    // Automatically map integration credentials to dashboard cards and create them if missing
+    syncDashboardCards();
+    
     // Smooth redirect back to dashboard
     window.location.href = 'index.html';
   });
@@ -370,4 +373,116 @@ function bindEvents() {
       }
     });
   });
+}
+
+// Automatically map integrations credentials to dashboard app cards, creating them if missing
+function syncDashboardCards() {
+  const STORAGE_KEY_GROUPS = 'launchpad_user_groups';
+  let groups = [];
+  const storedGroups = localStorage.getItem(STORAGE_KEY_GROUPS);
+  if (storedGroups) {
+    try {
+      groups = JSON.parse(storedGroups);
+    } catch (e) {
+      console.error('Failed to parse groups:', e);
+    }
+  }
+
+  // If no groups exist in local storage, start with an empty list
+  if (!groups || !Array.isArray(groups)) {
+    groups = [];
+  }
+
+  // Schema for each self-hosted integration card
+  const integrations = [
+    { key: 'plex', title: 'Plex', desc: 'Media streaming library server', color: '#e5a00d', icon: 'fa-play' },
+    { key: 'tautulli', title: 'Tautulli', desc: 'Plex stream stats and active watcher dashboard', color: '#d97706', icon: 'fa-chart-pie' },
+    { key: 'sonarr', title: 'Sonarr', desc: 'TV shows tracker and downloads manager', color: '#00b4e5', icon: 'fa-download' },
+    { key: 'radarr', title: 'Radarr', desc: 'Movies tracker and downloads manager', color: '#ffc107', icon: 'fa-film' },
+    { key: 'overseerr', title: 'Overseerr', desc: 'Request media files on Plex library', color: '#e27522', icon: 'fa-user-plus' },
+    { key: 'qbittorrent', title: 'qBittorrent', desc: 'Active torrent downloading client', color: '#3b82f6', icon: 'fa-arrow-down-up-lock' }
+  ];
+
+  let selfHostedGroup = null;
+
+  integrations.forEach(item => {
+    const configUrl = configs[`${item.key}Url`].trim();
+    if (!configUrl) return; // Skip if URL is empty
+
+    let foundCard = null;
+
+    // 1. Search for card by exact integration type
+    for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+      const grp = groups[gIdx];
+      for (let aIdx = 0; aIdx < grp.apps.length; aIdx++) {
+        const app = grp.apps[aIdx];
+        if (app.integration === item.key) {
+          foundCard = app;
+          break;
+        }
+      }
+      if (foundCard) break;
+    }
+
+    // 2. Search for card by matching title (case-insensitive) if not found by type
+    if (!foundCard) {
+      for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+        const grp = groups[gIdx];
+        for (let aIdx = 0; aIdx < grp.apps.length; aIdx++) {
+          const app = grp.apps[aIdx];
+          if (app.title && app.title.toLowerCase() === item.title.toLowerCase()) {
+            foundCard = app;
+            break;
+          }
+        }
+        if (foundCard) break;
+      }
+    }
+
+    if (foundCard) {
+      // Update the URL and ensure integration status is configured
+      foundCard.url = configUrl;
+      foundCard.integration = item.key;
+    } else {
+      // Create new dashboard app card
+      const newCard = {
+        url: configUrl,
+        title: item.title,
+        desc: item.desc,
+        color: item.color,
+        icon: item.icon,
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: item.key
+      };
+
+      // Find or create 'Self-Hosted Services' group
+      if (!selfHostedGroup) {
+        selfHostedGroup = groups.find(g => 
+          g.id === 'group-self-hosted' || 
+          g.title.toLowerCase() === 'self-hosted services' || 
+          g.title.toLowerCase() === 'self-hosted'
+        );
+        
+        if (!selfHostedGroup) {
+          selfHostedGroup = {
+            id: 'group-self-hosted',
+            title: 'Self-Hosted Services',
+            icon: 'fa-server',
+            collapsed: false,
+            apps: []
+          };
+          groups.push(selfHostedGroup);
+        }
+      }
+      selfHostedGroup.apps.push(newCard);
+    }
+  });
+
+  // Save changes back to local storage
+  if (groups.length > 0) {
+    localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(groups));
+  }
 }
