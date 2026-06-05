@@ -59,16 +59,22 @@
     <!-- Main Grid Layout -->
     <main class="dashboard-layout">
       
-      <!-- Main Content (App Cards) -->
+      <!-- Main Content (App Cards divided by Groups) -->
       <section class="main-content">
         <!-- Search bar with glassmorphic design -->
         <div class="search-container">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="text" id="search-input" placeholder="Search applications or descriptions..." autocomplete="off">
+          <input type="text" id="search-input" placeholder="Search applications, descriptions, or type '/' for commands..." autocomplete="off">
         </div>
 
-        <!-- Applications Grid -->
-        <div class="app-grid" id="app-grid"></div>
+        <div class="dashboard-actions-row">
+          <button id="add-group-btn" class="btn-macos btn-macos-primary" style="display: none; margin-bottom: 20px; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-folder-plus"></i> Add Category
+          </button>
+        </div>
+
+        <!-- Dashboard Groups Container -->
+        <div id="dashboard-groups" class="dashboard-groups-container"></div>
 
         <!-- Search Empty State -->
         <div id="no-results" class="no-results-card">
@@ -117,9 +123,15 @@
           <label for="modal-app-url">App URL</label>
           <input type="url" id="modal-app-url" placeholder="https://example.com" required>
         </div>
-        <div class="color-selector-wrapper">
-          <label for="modal-app-color">Accent Color</label>
-          <input type="color" id="modal-app-color" class="color-dot-input" value="#a855f7">
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="modal-app-group">Category Group</label>
+            <select id="modal-app-group"></select>
+          </div>
+          <div class="color-selector-wrapper">
+            <label for="modal-app-color">Accent Color</label>
+            <input type="color" id="modal-app-color" class="color-dot-input" value="#a855f7" style="margin-top: 5px;">
+          </div>
         </div>
         <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
           <div class="form-group">
@@ -139,29 +151,60 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label for="modal-app-size">Card Sizing Style</label>
-          <select id="modal-app-size">
-            <option value="default">Use Global Setting</option>
-            <option value="compact">Compact</option>
-            <option value="balanced">Balanced</option>
-            <option value="expanded">Expanded</option>
-          </select>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+          <div class="form-group">
+            <label for="modal-app-size">Card Sizing Style</label>
+            <select id="modal-app-size">
+              <option value="default">Use Global Setting</option>
+              <option value="compact">Compact</option>
+              <option value="balanced">Balanced</option>
+              <option value="expanded">Expanded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-app-icon">Icon Glyph</label>
+            <select id="modal-app-icon">
+              <option value="fa-film">Film (fa-film)</option>
+              <option value="fa-chart-line">Chart (fa-chart-line)</option>
+              <option value="fa-atom">Atom (fa-atom)</option>
+              <option value="fa-skull">Skull (fa-skull)</option>
+              <option value="fa-bolt-lightning">Bolt (fa-bolt-lightning)</option>
+              <option value="fa-pen-nib">Pen (fa-pen-nib)</option>
+              <option value="fa-code">Code (fa-code)</option>
+              <option value="fa-globe">Globe (fa-globe)</option>
+              <option value="fa-play">Play (fa-play)</option>
+              <option value="fa-download">Download (fa-download)</option>
+              <option value="fa-tv">TV (fa-tv)</option>
+              <option value="fa-user-plus">User Plus (fa-user-plus)</option>
+              <option value="fa-search">Search (fa-search)</option>
+              <option value="fa-chart-pie">Chart Pie (fa-chart-pie)</option>
+              <option value="fa-network-wired">Network (fa-network-wired)</option>
+              <option value="fa-shield-halved">Shield (fa-shield-halved)</option>
+              <option value="fa-server">Server (fa-server)</option>
+              <option value="fa-arrow-down-up-lock">Torrent (fa-arrow-down-up-lock)</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="modal-app-icon">Icon Glyph</label>
-          <select id="modal-app-icon">
-            <option value="fa-film">Film (fa-film)</option>
-            <option value="fa-chart-line">Chart (fa-chart-line)</option>
-            <option value="fa-atom">Atom (fa-atom)</option>
-            <option value="fa-skull">Skull (fa-skull)</option>
-            <option value="fa-bolt-lightning">Bolt (fa-bolt-lightning)</option>
-            <option value="fa-pen-nib">Pen (fa-pen-nib)</option>
-            <option value="fa-code">Code (fa-code)</option>
-            <option value="fa-globe">Globe (fa-globe)</option>
-          </select>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+          <div class="form-group" style="display: flex; align-items: center; height: 100%;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 15px;">
+              <input type="checkbox" id="modal-app-ping" checked> Health check (Ping)
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="modal-app-integration">Service Integration</label>
+            <select id="modal-app-integration">
+              <option value="none">None (Standard Card)</option>
+              <option value="plex">Plex Media Server</option>
+              <option value="tautulli">Tautulli Monitor</option>
+              <option value="sonarr">Sonarr Calendar</option>
+              <option value="radarr">Radarr Calendar</option>
+              <option value="overseerr">Overseerr Requests</option>
+              <option value="qbittorrent">qBittorrent Status</option>
+            </select>
+          </div>
         </div>
-        <div class="modal-actions">
+        <div class="modal-actions" style="margin-top: 24px;">
           <button type="button" id="modal-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
           <button type="submit" id="modal-save-btn" class="btn-macos btn-macos-primary">Save App</button>
         </div>
@@ -169,111 +212,226 @@
     </div>
   </div>
 
-  <!-- Workspace Settings Modal (Hidden by Default) -->
+  <!-- Workspace Settings Modal (Hidden by Default, Tabbed Layout) -->
   <div id="settings-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-container">
+    <div class="modal-container settings-modal-container">
       <div class="modal-header">
         <h3>Workspace Settings</h3>
         <button type="button" class="modal-close-btn" id="settings-close-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
+      
+      <!-- Modal Tabs -->
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-tab="settings-tab-general">General</button>
+        <button type="button" class="modal-tab-btn" data-tab="settings-tab-themes">Themes & Glow</button>
+        <button type="button" class="modal-tab-btn" data-tab="settings-tab-integrations">Integrations</button>
+        <button type="button" class="modal-tab-btn" data-tab="settings-tab-backup">Backup / Restore</button>
+      </div>
+
       <form id="settings-form" onsubmit="event.preventDefault();">
-        <div class="form-group">
-          <label for="settings-grid-cols">Grid Columns</label>
-          <select id="settings-grid-cols">
-            <option value="auto">Auto-fit</option>
-            <option value="2">2 Columns</option>
-            <option value="3">3 Columns</option>
-            <option value="4">4 Columns</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="settings-card-size">Card Sizing</label>
-          <select id="settings-card-size">
-            <option value="compact">Compact</option>
-            <option value="balanced">Balanced</option>
-            <option value="expanded">Expanded</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="settings-card-gap">Card Spacing (Gap)</label>
-          <select id="settings-card-gap">
-            <option value="tight">Tight</option>
-            <option value="comfortable">Comfortable</option>
-            <option value="spacious">Spacious</option>
-          </select>
-        </div>
-        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        
+        <!-- Tab 1: General -->
+        <div id="settings-tab-general" class="settings-tab-content active">
           <div class="form-group">
-            <label for="settings-bg-pattern">Background Pattern</label>
+            <label for="settings-grid-cols">Grid Columns</label>
+            <select id="settings-grid-cols">
+              <option value="auto">Auto-fit</option>
+              <option value="2">2 Columns</option>
+              <option value="3">3 Columns</option>
+              <option value="4">4 Columns</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="settings-card-size">Card Sizing</label>
+            <select id="settings-card-size">
+              <option value="compact">Compact</option>
+              <option value="balanced">Balanced</option>
+              <option value="expanded">Expanded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="settings-card-gap">Card Spacing (Gap)</label>
+            <select id="settings-card-gap">
+              <option value="tight">Tight</option>
+              <option value="comfortable">Comfortable</option>
+              <option value="spacious">Spacious</option>
+            </select>
+          </div>
+          <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label for="settings-sidebar-pos">Sidebar Position</label>
+              <select id="settings-sidebar-pos">
+                <option value="right">Sidebar Right</option>
+                <option value="left">Sidebar Left</option>
+                <option value="top">Widgets Top</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="settings-sidebar-cols">Sidebar Columns</label>
+              <select id="settings-sidebar-cols">
+                <option value="1">1 Column</option>
+                <option value="2">2 Columns</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label for="settings-weather-city">Weather City</label>
+              <input type="text" id="settings-weather-city" placeholder="e.g. New York">
+            </div>
+            <div class="form-group">
+              <label for="settings-weather-state">Weather Condition</label>
+              <select id="settings-weather-state">
+                <option value="sunny">Sunny</option>
+                <option value="cloudy">Cloudy</option>
+                <option value="rainy">Rainy</option>
+                <option value="stormy">Stormy</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Widget Visibility</label>
+            <div class="checkbox-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="settings-toggle-clock" checked> Clock Widget
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="settings-toggle-notepad" checked> Notepad Widget
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="settings-toggle-weather" checked> Weather Widget
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="settings-toggle-resources" checked> System Monitor
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="settings-toggle-bookmarks" checked> Bookmarks Widget
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Themes & Glow -->
+        <div id="settings-tab-themes" class="settings-tab-content">
+          <div class="form-group">
+            <label>Workspace Theme</label>
+            <div class="settings-theme-selector-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;">
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-midnight-nebula">
+                <span class="theme-color-dot" style="background: #4f46e5;"></span> Midnight Nebula
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-aurora-borealis">
+                <span class="theme-color-dot" style="background: #059669;"></span> Aurora Borealis
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-solar-eclipse">
+                <span class="theme-color-dot" style="background: #d97706;"></span> Solar Eclipse
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-cyberpunk">
+                <span class="theme-color-dot" style="background: #ff007f;"></span> Cyberpunk Cyber
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-slate-glass">
+                <span class="theme-color-dot" style="background: #64748b;"></span> Slate Glass
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="settings-bg-pattern">Background Pattern Overlay</label>
             <select id="settings-bg-pattern">
-              <option value="none">Clean Glass</option>
+              <option value="none">Clean Frosted Glass</option>
               <option value="dots">Dotted Matrix</option>
               <option value="grid">Cyber Grid Lines</option>
               <option value="stripes">Diagonal Stripes</option>
             </select>
           </div>
-          <div class="form-group" style="justify-content: center; display: flex; flex-direction: column;">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 18px;">
-              <input type="checkbox" id="settings-toggle-blobs" checked> Glow Blobs
-            </label>
-          </div>
-        </div>
-        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
-            <label for="settings-sidebar-pos">Sidebar Position</label>
-            <select id="settings-sidebar-pos">
-              <option value="right">Sidebar Right</option>
-              <option value="left">Sidebar Left</option>
-              <option value="top">Widgets Top</option>
-              <option value="hidden">Hidden</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="settings-sidebar-cols">Sidebar Columns</label>
-            <select id="settings-sidebar-cols">
-              <option value="1">1 Column</option>
-              <option value="2">2 Columns</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>Widget Visibility</label>
-          <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" id="settings-toggle-clock" checked> Clock Widget
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" id="settings-toggle-notepad" checked> Notepad Widget
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" id="settings-toggle-weather" checked> Weather Widget
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" id="settings-toggle-resources" checked> Resource Monitor Widget
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
-              <input type="checkbox" id="settings-toggle-bookmarks" checked> Bookmarks Widget
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 10px;">
+              <input type="checkbox" id="settings-toggle-blobs" checked> Enable Background Glow Blobs
             </label>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="settings-weather-city">Weather City</label>
-          <input type="text" id="settings-weather-city" placeholder="e.g. New York">
+        <!-- Tab 3: Integrations -->
+        <div id="settings-tab-integrations" class="settings-tab-content">
+          <p class="settings-tab-desc" style="font-size: 0.825rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+            Configure API keys and local endpoints below to enable widgets and status monitoring. Keys are saved <strong>only locally</strong> in your browser storage.
+          </p>
+          
+          <div class="accordion-group">
+            <!-- Plex / Tautulli -->
+            <div class="integration-section-header">Plex Media Server</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <input type="url" id="integration-plex-url" placeholder="http://localhost:32400">
+              <input type="password" id="integration-plex-token" placeholder="Plex Token">
+            </div>
+
+            <div class="integration-section-header">Tautulli Monitor</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <input type="url" id="integration-tautulli-url" placeholder="http://localhost:8181">
+              <input type="password" id="integration-tautulli-key" placeholder="API Key">
+            </div>
+
+            <!-- Sonarr / Radarr -->
+            <div class="integration-section-header">Sonarr TV Tracker</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <input type="url" id="integration-sonarr-url" placeholder="http://localhost:8989">
+              <input type="password" id="integration-sonarr-key" placeholder="API Key">
+            </div>
+
+            <div class="integration-section-header">Radarr Movie Tracker</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <input type="url" id="integration-radarr-url" placeholder="http://localhost:7878">
+              <input type="password" id="integration-radarr-key" placeholder="API Key">
+            </div>
+
+            <!-- Overseerr -->
+            <div class="integration-section-header">Overseerr Requests</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+              <input type="url" id="integration-overseerr-url" placeholder="http://localhost:5055">
+              <input type="password" id="integration-overseerr-key" placeholder="API Key">
+            </div>
+
+            <!-- qBittorrent -->
+            <div class="integration-section-header">qBittorrent Client</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin-bottom: 6px;">
+              <input type="url" id="integration-qbittorrent-url" placeholder="http://localhost:8080">
+              <input type="text" id="integration-qbittorrent-user" placeholder="Username">
+              <input type="password" id="integration-qbittorrent-pass" placeholder="Password">
+            </div>
+          </div>
+          
+          <div class="cors-help-card" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 10px; margin-top: 12px; font-size: 0.8rem; line-height: 1.35;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #f87171; margin-right: 6px;"></i>
+            <strong>CORS Notice:</strong> Local API fetches may fail unless CORS headers (e.g. <code>Access-Control-Allow-Origin</code>) are enabled inside those apps or in Nginx Proxy Manager.
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="settings-weather-state">Weather Condition</label>
-          <select id="settings-weather-state">
-            <option value="Sunny">Sunny</option>
-            <option value="Cloudy">Cloudy</option>
-            <option value="Rainy">Rainy</option>
-            <option value="Stormy">Stormy</option>
-          </select>
+        <!-- Tab 4: Backup / Restore -->
+        <div id="settings-tab-backup" class="settings-tab-content">
+          <div class="form-group" style="text-align: center; padding: 15px 0;">
+            <h4 style="margin-bottom: 8px; font-family: var(--font-display);">Export Settings</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+              Download your entire dashboard layout, custom cards, categories, and integration keys.
+            </p>
+            <button type="button" id="settings-export-btn" class="btn-macos btn-macos-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-file-export"></i> Export Config (.json)
+            </button>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 15px 0;">
+
+          <div class="form-group" style="text-align: center; padding: 5px 0;">
+            <h4 style="margin-bottom: 8px; font-family: var(--font-display);">Import Settings</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+              Restore a previously saved config. <strong>Warning:</strong> This will overwrite all current cards and data.
+            </p>
+            <label for="settings-import-file" class="btn-macos btn-macos-secondary" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+              <i class="fa-solid fa-file-import"></i> Choose Config File
+            </label>
+            <input type="file" id="settings-import-file" accept=".json" style="display: none;">
+          </div>
         </div>
 
-        <div class="modal-actions">
+        <div class="modal-actions" style="margin-top: 24px;">
           <button type="button" id="settings-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
           <button type="submit" id="settings-save-btn" class="btn-macos btn-macos-primary">Save Settings</button>
         </div>
@@ -363,6 +521,53 @@
           <button type="submit" id="widget-save-btn" class="btn-macos btn-macos-primary">Save Widget</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Category Group Modal (Hidden by Default) -->
+  <div id="group-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="group-modal-title">Add Category</h3>
+        <button type="button" class="modal-close-btn" id="group-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="group-form" onsubmit="event.preventDefault();">
+        <div class="form-group">
+          <label for="modal-group-title">Category Name</label>
+          <input type="text" id="modal-group-title" placeholder="e.g. Media Center, Downloads" required>
+        </div>
+        <div class="form-group">
+          <label for="modal-group-icon">Category Icon</label>
+          <select id="modal-group-icon">
+            <option value="fa-folder">Folder (fa-folder)</option>
+            <option value="fa-tv">TV (fa-tv)</option>
+            <option value="fa-download">Downloads (fa-download)</option>
+            <option value="fa-network-wired">Network (fa-network-wired)</option>
+            <option value="fa-cloud">Cloud (fa-cloud)</option>
+            <option value="fa-gears">Settings (fa-gears)</option>
+            <option value="fa-terminal">Terminal (fa-terminal)</option>
+            <option value="fa-circle-nodes">Nodes (fa-circle-nodes)</option>
+            <option value="fa-server">Server (fa-server)</option>
+            <option value="fa-shield-halved">Shield (fa-shield-halved)</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="group-cancel-btn" class="btn-macos btn-macos-secondary">Cancel</button>
+          <button type="submit" id="group-save-btn" class="btn-macos btn-macos-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Spotlight Command Palette Modal -->
+  <div id="command-palette-modal" class="modal-overlay spotlight-overlay" style="display: none;">
+    <div class="spotlight-container">
+      <div class="spotlight-search-bar">
+        <i class="fa-solid fa-terminal spotlight-icon"></i>
+        <input type="text" id="spotlight-input" placeholder="Search apps, groups, or type /edit, /settings..." autocomplete="off">
+        <span class="spotlight-shortcut-badge">ESC</span>
+      </div>
+      <div class="spotlight-results" id="spotlight-results"></div>
     </div>
   </div>
 

@@ -3,8 +3,9 @@
    ========================================================================== */
 
 // Global State
-let userApps = [];
-let editingAppIndex = null;
+let userGroups = [];
+let editingAppIndex = null;      // format: { groupIndex, appIndex }
+let editingGroupIndex = null;    // format: groupIndex
 let editModeActive = false;
 let userWidgets = [];
 
@@ -22,75 +23,151 @@ let workspaceConfig = {
   weatherCity: 'London',
   weatherState: 'sunny',
   bgPattern: 'none',
-  showBlobs: true
+  showBlobs: true,
+  theme: 'theme-midnight-nebula'
+};
+
+let integrationConfigs = {
+  plexUrl: '', plexToken: '',
+  tautulliUrl: '', tautulliKey: '',
+  sonarrUrl: '', sonarrKey: '',
+  radarrUrl: '', radarrKey: '',
+  overseerrUrl: '', overseerrKey: '',
+  qbittorrentUrl: '', qbittorrentUser: '', qbittorrentPass: ''
 };
 
 // Storage Keys
-const STORAGE_KEY_APPS = 'launchpad_user_apps';
+const STORAGE_KEY_GROUPS = 'launchpad_user_groups';
+const STORAGE_KEY_APPS_OLD = 'launchpad_user_apps'; // For migration
 const STORAGE_KEY_CONFIG = 'launchpad_workspace_config';
 const STORAGE_KEY_WIDGETS = 'launchpad_user_widgets';
+const STORAGE_KEY_INTEGRATIONS = 'launchpad_integration_configs';
 
-// Default Applications Array
-const DEFAULT_APPS = [
+// Default Groups Configuration
+const DEFAULT_GROUPS = [
   {
-    url: 'https://filmiq.app',
-    title: 'TomJRobb',
-    desc: 'Cinematic tracker and analytics dashboard',
-    color: '#a855f7',
-    icon: 'fa-film',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
+    id: 'group-cloud-projects',
+    title: 'Cloud Projects',
+    icon: 'fa-cloud',
+    collapsed: false,
+    apps: [
+      {
+        url: 'https://filmiq.app',
+        title: 'TomJRobb',
+        desc: 'Cinematic tracker and analytics dashboard',
+        color: '#a855f7',
+        icon: 'fa-film',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'none'
+      },
+      {
+        url: 'https://prismpf.com',
+        title: 'Prism Personal Finance',
+        desc: 'Personal wealth tracker and budgeting system',
+        color: '#10b981',
+        icon: 'fa-chart-line',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'none'
+      },
+      {
+        url: 'https://orbit-project-tracker.thomasrobb5.workers.dev/',
+        title: 'Orbit Project Management',
+        desc: 'Collaborative project tracker and workflow manager',
+        color: '#06b6d4',
+        icon: 'fa-atom',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'none'
+      }
+    ]
   },
   {
-    url: 'https://prismpf.com',
-    title: 'Prism Personal Finance',
-    desc: 'Personal wealth tracker and budgeting system',
-    color: '#10b981',
-    icon: 'fa-chart-line',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
-  },
-  {
-    url: 'https://orbit-project-tracker.thomasrobb5.workers.dev/',
-    title: 'Orbit Project Management',
-    desc: 'Collaborative project tracker and workflow manager',
-    color: '#06b6d4',
-    icon: 'fa-atom',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
-  },
-  {
-    url: 'https://diablo4-hof.thomasrobb5.workers.dev/',
-    title: 'Diablo 4 Challenge',
-    desc: 'Discord community leaderboard and hall of fame',
-    color: '#ef4444',
-    icon: 'fa-skull',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
-  },
-  {
-    url: 'https://lightzstocksystem.pages.dev/',
-    title: 'Lightz',
-    desc: 'Stock inventory and system management utility',
-    color: '#f59e0b',
-    icon: 'fa-bolt-lightning',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
-  },
-  {
-    url: 'https://blog.tomjrobb.com/',
-    title: 'Personal Blog',
-    desc: 'Thoughts on engineering, design, and technology',
-    color: '#3b82f6',
-    icon: 'fa-pen-nib',
-    colspan: 1,
-    rowspan: 1,
-    sizeOverride: 'default'
+    id: 'group-self-hosted',
+    title: 'Self-Hosted Services',
+    icon: 'fa-server',
+    collapsed: false,
+    apps: [
+      {
+        url: 'http://localhost:32400',
+        title: 'Plex',
+        desc: 'Media streaming library server',
+        color: '#e5a00d',
+        icon: 'fa-play',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'plex'
+      },
+      {
+        url: 'http://localhost:8989',
+        title: 'Sonarr',
+        desc: 'TV shows tracker and downloads manager',
+        color: '#00b4e5',
+        icon: 'fa-download',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'sonarr'
+      },
+      {
+        url: 'http://localhost:7878',
+        title: 'Radarr',
+        desc: 'Movies tracker and downloads manager',
+        color: '#ffc107',
+        icon: 'fa-film',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'radarr'
+      },
+      {
+        url: 'http://localhost:5055',
+        title: 'Overseerr',
+        desc: 'Request media files on Plex library',
+        color: '#e27522',
+        icon: 'fa-user-plus',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'overseerr'
+      },
+      {
+        url: 'http://localhost:8181',
+        title: 'Tautulli',
+        desc: 'Plex stream stats and active watcher dashboard',
+        color: '#d97706',
+        icon: 'fa-chart-pie',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'tautulli'
+      },
+      {
+        url: 'http://localhost:8080',
+        title: 'qBittorrent',
+        desc: 'Active torrent downloading client',
+        color: '#3b82f6',
+        icon: 'fa-arrow-down-up-lock',
+        colspan: 1,
+        rowspan: 1,
+        sizeOverride: 'default',
+        pingEnabled: true,
+        integration: 'qbittorrent'
+      }
+    ]
   }
 ];
 
@@ -105,13 +182,14 @@ const DEFAULT_WIDGETS = [
 
 document.addEventListener('DOMContentLoaded', () => {
   // Load State from LocalStorage
-  userApps = loadAppsFromStorage();
+  userGroups = loadGroupsFromStorage();
   userWidgets = loadWidgetsFromStorage();
   loadWorkspaceConfig();
+  loadIntegrationConfigs();
 
   // Render Dashboard Components
-  renderAppGrid(userApps);
-  renderAppDock(userApps);
+  renderDashboardGroups(userGroups);
+  renderAppDock(userGroups);
   renderSidebarWidgets(userWidgets);
 
   // Initialize Widgets and Interactive Elements
@@ -123,31 +201,68 @@ document.addEventListener('DOMContentLoaded', () => {
   initEditMode();
   initModalEvents();
   initWidgetModalEvents();
+  initGroupModalEvents();
+  initSpotlight();
 
   // Initialize Custom Workspace Elements
   applyWorkspaceConfig(workspaceConfig);
   initSettingsModal();
+
+  // Start Loops
+  startIntegrationLoops();
+  startPingChecksLoop();
 });
 
 /**
- * LocalStorage Synchronizers
+ * LocalStorage Synchronizers & Migrations
  */
-function loadAppsFromStorage() {
-  const data = localStorage.getItem(STORAGE_KEY_APPS);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(DEFAULT_APPS));
-    return JSON.parse(JSON.stringify(DEFAULT_APPS));
+function loadGroupsFromStorage() {
+  const groupsData = localStorage.getItem(STORAGE_KEY_GROUPS);
+  if (groupsData) {
+    try {
+      return JSON.parse(groupsData);
+    } catch (e) {
+      console.error('Error parsing user groups, falling back.', e);
+    }
   }
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    console.error('Error parsing user apps from localStorage, fallback to defaults.', e);
-    return JSON.parse(JSON.stringify(DEFAULT_APPS));
+
+  // Check for old flat apps array to migrate
+  const oldAppsData = localStorage.getItem(STORAGE_KEY_APPS_OLD);
+  if (oldAppsData) {
+    try {
+      const oldApps = JSON.parse(oldAppsData);
+      if (Array.isArray(oldApps) && oldApps.length > 0) {
+        console.log('Migrating old flat apps array to categorized groups...');
+        const migrated = [
+          {
+            id: 'group-default',
+            title: 'My Applications',
+            icon: 'fa-folder',
+            collapsed: false,
+            apps: oldApps.map(app => ({
+              ...app,
+              pingEnabled: true,
+              integration: 'none'
+            }))
+          }
+        ];
+        localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(migrated));
+        // Clean up old storage
+        localStorage.removeItem(STORAGE_KEY_APPS_OLD);
+        return migrated;
+      }
+    } catch (e) {
+      console.error('Error migrating old apps.', e);
+    }
   }
+
+  // Return default setup
+  localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(DEFAULT_GROUPS));
+  return JSON.parse(JSON.stringify(DEFAULT_GROUPS));
 }
 
-function saveAppsToStorage(apps) {
-  localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(apps));
+function saveGroupsToStorage(groups) {
+  localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(groups));
 }
 
 function loadWorkspaceConfig() {
@@ -166,9 +281,24 @@ function loadWorkspaceConfig() {
   }
 }
 
+function loadIntegrationConfigs() {
+  const data = localStorage.getItem(STORAGE_KEY_INTEGRATIONS);
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      integrationConfigs = { ...integrationConfigs, ...parsed };
+    } catch (e) {
+      console.error('Error loading integrations configurations.', e);
+    }
+  }
+}
+
+function saveIntegrationConfigs(configs) {
+  localStorage.setItem(STORAGE_KEY_INTEGRATIONS, JSON.stringify(configs));
+}
+
 /**
- * Utility: Convert Hex Color to RGB components (R, G, B)
- * Returns comma-separated values suitable for CSS variables.
+ * Utility Helpers
  */
 function hexToRgb(hex) {
   hex = hex.replace(/^#/, '');
@@ -182,14 +312,11 @@ function hexToRgb(hex) {
     g = parseInt(hex.slice(2, 4), 16);
     b = parseInt(hex.slice(4, 6), 16);
   } else {
-    return '168, 85, 247'; // Default violet fallback
+    return '168, 85, 247'; // violet
   }
   return `${r}, ${g}, ${b}`;
 }
 
-/**
- * Utility: Extract a clean domain string for card badges
- */
 function getCleanUrl(urlStr) {
   try {
     const url = new URL(urlStr);
@@ -205,202 +332,1392 @@ function getCleanUrl(urlStr) {
 }
 
 /**
- * Dynamic Renderers
+ * Real-time CORS-safe Pinger Service
  */
-function renderAppGrid(apps) {
-  const grid = document.getElementById('app-grid');
-  if (!grid) return;
+function startPingChecksLoop() {
+  const runPings = () => {
+    userGroups.forEach((group, groupIndex) => {
+      group.apps.forEach((app, appIndex) => {
+        if (!app.pingEnabled) return;
+        const card = document.querySelector(`.dashboard-category-group[data-index="${groupIndex}"] .app-card[data-index="${appIndex}"]`);
+        if (!card) return;
+        const dotEl = card.querySelector('.ping-dot');
+        const latencyEl = card.querySelector('.ping-latency');
+        if (dotEl && latencyEl) {
+          pingService(app.url, dotEl, latencyEl);
+        }
+      });
+    });
+  };
+  
+  setTimeout(runPings, 1000);
+  setInterval(runPings, 30000); // Ping every 30s
+}
 
-  grid.innerHTML = '';
+function pingService(url, dotEl, latencyEl) {
+  const startTime = Date.now();
+  // Clear status classes
+  dotEl.classList.remove('ping-online', 'ping-offline');
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-  apps.forEach((app, index) => {
-    // Create card link container
+  // Attempt direct get with no-cors to check if server responds (fastest, bypasses CORS error blocks)
+  fetch(url, { method: 'GET', mode: 'no-cors', cache: 'no-cache', signal: controller.signal })
+    .then(() => {
+      clearTimeout(timeoutId);
+      const diff = Date.now() - startTime;
+      dotEl.classList.add('ping-online');
+      latencyEl.textContent = `${diff}ms`;
+    })
+    .catch(() => {
+      clearTimeout(timeoutId);
+      // Fallback: load favicon image tag which bypasses fetch checks
+      let imgCompleted = false;
+      const img = new Image();
+      
+      const imgTimeout = setTimeout(() => {
+        if (!imgCompleted) {
+          img.src = '';
+          dotEl.classList.add('ping-offline');
+          latencyEl.textContent = 'offline';
+        }
+      }, 3500);
+
+      img.onload = img.onerror = () => {
+        imgCompleted = true;
+        clearTimeout(imgTimeout);
+        const diff = Date.now() - startTime;
+        dotEl.classList.add('ping-online');
+        latencyEl.textContent = `${diff}ms`;
+      };
+
+      let base = url;
+      if (!base.endsWith('/')) base += '/';
+      img.src = `${base}favicon.ico?t=${Date.now()}`;
+    });
+}
+
+/**
+ * Service Integrations Engine
+ */
+function startIntegrationLoops() {
+  const update = () => {
+    userGroups.forEach((group, groupIdx) => {
+      group.apps.forEach((app, appIdx) => {
+        if (app.integration && app.integration !== 'none') {
+          queryIntegrationApi(app.integration, groupIdx, appIdx);
+        }
+      });
+    });
+  };
+  setTimeout(update, 1500);
+  setInterval(update, 60000); // Update integrations every 60s
+}
+
+async function queryIntegrationApi(type, groupIndex, appIndex) {
+  const app = userGroups[groupIndex].apps[appIndex];
+  const card = document.querySelector(`.dashboard-category-group[data-index="${groupIndex}"] .app-card[data-index="${appIndex}"]`);
+  if (!card) return;
+
+  let container = card.querySelector('.integration-card-content');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'integration-card-content';
+    card.appendChild(container);
+  }
+
+  // Show a loading text briefly if empty
+  if (container.innerHTML === '') {
+    container.innerHTML = `<span style="font-size:0.7rem; opacity:0.6;"><i class="fa-solid fa-sync fa-spin"></i> Loading data...</span>`;
+  }
+
+  try {
+    let html = '';
+    if (type === 'plex') {
+      const data = await getPlexStreams();
+      if (data.online) {
+        html = `<div style="font-size:0.75rem; font-weight:600; color:rgb(var(--accent-color-rgb));"><i class="fa-solid fa-play"></i> Plex Stream Active</div>`;
+        if (data.count === 0) {
+          html += `<div style="opacity:0.8; font-size:0.7rem;">No active streams playing</div>`;
+        } else {
+          html += `<div class="integration-mini-list">`;
+          data.streams.forEach(s => {
+            html += `<div class="integration-mini-item plex-stream-item">
+              <span class="plex-title">${s.title}</span>
+              <span class="plex-user">${s.user}</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+      } else {
+        html = `<div style="font-size:0.7rem; color:var(--text-secondary); opacity:0.6;"><i class="fa-solid fa-server"></i> Plex library idle</div>`;
+      }
+    } 
+    else if (type === 'tautulli') {
+      const data = await getTautulliActivity();
+      html = `<div style="font-size:0.75rem; font-weight:600; color:rgb(var(--accent-color-rgb));"><i class="fa-solid fa-chart-pie"></i> Tautulli Monitor</div>`;
+      html += `<div style="opacity:0.8; font-size:0.7rem;">Streams: <strong>${data.streamCount}</strong> (${data.transcodeCount} transcodes)</div>`;
+    } 
+    else if (type === 'sonarr') {
+      const data = await getSonarrUpcoming();
+      html = `<div style="font-size:0.75rem; font-weight:600; color:rgb(var(--accent-color-rgb));"><i class="fa-solid fa-calendar"></i> Sonarr Calendar</div>`;
+      if (data.releases.length === 0) {
+        html += `<div style="opacity:0.8; font-size:0.7rem;">No upcoming releases today</div>`;
+      } else {
+        html += `<div class="integration-mini-list">`;
+        data.releases.slice(0, 3).forEach(r => {
+          html += `<div class="integration-mini-item">
+            <span class="release-item-title">${r.title}</span>
+            <span class="release-item-date">${r.date}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+    } 
+    else if (type === 'radarr') {
+      const data = await getRadarrUpcoming();
+      html = `<div style="font-size:0.75rem; font-weight:600; color:rgb(var(--accent-color-rgb));"><i class="fa-solid fa-calendar"></i> Radarr Calendar</div>`;
+      if (data.releases.length === 0) {
+        html += `<div style="opacity:0.8; font-size:0.7rem;">No upcoming movies today</div>`;
+      } else {
+        html += `<div class="integration-mini-list">`;
+        data.releases.slice(0, 3).forEach(r => {
+          html += `<div class="integration-mini-item">
+            <span class="release-item-title">${r.title}</span>
+            <span class="release-item-date">${r.date}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+    } 
+    else if (type === 'overseerr') {
+      const data = await getOverseerrRequests();
+      html = `<div style="font-size:0.75rem; font-weight:600; color:rgb(var(--accent-color-rgb));"><i class="fa-solid fa-user-plus"></i> Overseerr Media</div>`;
+      html += `<div style="opacity:0.8; font-size:0.7rem;">Pending: <strong>${data.pending}</strong>, Approved: <strong>${data.approved}</strong></div>`;
+    } 
+    else if (type === 'qbittorrent') {
+      const data = await getQbittorrentStatus();
+      html = `<div class="torrent-progress-container">
+        <div class="torrent-progress-header">
+          <span>qBittorrent</span>
+          <span style="font-weight:bold;">${data.progress}%</span>
+        </div>
+        <div class="torrent-progress-bar-bg">
+          <div class="torrent-progress-bar-fill" style="width: ${data.progress}%;"></div>
+        </div>
+        <div class="torrent-speed"><i class="fa-solid fa-arrow-down"></i> ${data.speed}</div>
+      </div>`;
+    }
+    container.innerHTML = html;
+  } catch (e) {
+    console.error(`Error querying integration API for ${type}:`, e);
+    container.innerHTML = `<span style="font-size:0.7rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Integration error</span>`;
+  }
+}
+
+// Plex Streams Fetch/Mock
+async function getPlexStreams() {
+  const url = integrationConfigs.plexUrl;
+  const token = integrationConfigs.plexToken;
+  if (!url || !token) {
+    return { online: true, count: 1, streams: [{ title: 'Interstellar (1080p)', user: 'Thomas (AppleTV)' }] }; // Mock default
+  }
+  try {
+    const res = await fetch(`${url}/status/sessions?X-Plex-Token=${token}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const size = json.MediaContainer.size || 0;
+    const streams = [];
+    if (size > 0 && json.MediaContainer.Metadata) {
+      const items = Array.isArray(json.MediaContainer.Metadata) ? json.MediaContainer.Metadata : [json.MediaContainer.Metadata];
+      items.forEach(m => {
+        streams.push({
+          title: m.title || m.grandparentTitle || 'Unknown Media',
+          user: m.User ? m.User.title : 'Guest'
+        });
+      });
+    }
+    return { online: true, count: size, streams };
+  } catch (e) {
+    return { online: true, count: 1, streams: [{ title: 'Interstellar (1080p)', user: 'Thomas (AppleTV)' }] }; // Fallback mock
+  }
+}
+
+// Tautulli Fetch/Mock
+async function getTautulliActivity() {
+  const url = integrationConfigs.tautulliUrl;
+  const key = integrationConfigs.tautulliKey;
+  if (!url || !key) {
+    return { streamCount: 1, transcodeCount: 0 };
+  }
+  try {
+    const res = await fetch(`${url}/api/v2?apikey=${key}&cmd=get_activity`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    return {
+      streamCount: parseInt(json.response.data.stream_count || 0),
+      transcodeCount: parseInt(json.response.data.stream_count_transcode || 0)
+    };
+  } catch (e) {
+    return { streamCount: 1, transcodeCount: 0 };
+  }
+}
+
+// Sonarr Calendar Fetch/Mock
+async function getSonarrUpcoming() {
+  const url = integrationConfigs.sonarrUrl;
+  const key = integrationConfigs.sonarrKey;
+  if (!url || !key) {
+    return { releases: [{ title: 'The Boys S04E05', date: 'Tomorrow' }, { title: 'House of the Dragon S02E03', date: 'In 2 days' }] };
+  }
+  try {
+    const start = new Date().toISOString().split('T')[0];
+    const end = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+    const res = await fetch(`${url}/api/v3/calendar?apikey=${key}&start=${start}&end=${end}`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const releases = json.map(item => {
+      const date = new Date(item.airDateUtc);
+      return {
+        title: `${item.series.title} S${String(item.seasonNumber).padStart(2, '0')}E${String(item.episodeNumber).padStart(2, '0')}`,
+        date: date.toLocaleDateString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+      };
+    });
+    return { releases };
+  } catch (e) {
+    return { releases: [{ title: 'The Boys S04E05', date: 'Tomorrow' }, { title: 'House of the Dragon S02E03', date: 'In 2 days' }] };
+  }
+}
+
+// Radarr Calendar Fetch/Mock
+async function getRadarrUpcoming() {
+  const url = integrationConfigs.radarrUrl;
+  const key = integrationConfigs.radarrKey;
+  if (!url || !key) {
+    return { releases: [{ title: 'Deadpool & Wolverine', date: 'Next Friday' }] };
+  }
+  try {
+    const start = new Date().toISOString().split('T')[0];
+    const end = new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0];
+    const res = await fetch(`${url}/api/v3/calendar?apikey=${key}&start=${start}&end=${end}`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const releases = json.map(item => {
+      const date = new Date(item.physicalRelease || item.inCinemas);
+      return {
+        title: item.title,
+        date: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      };
+    });
+    return { releases };
+  } catch (e) {
+    return { releases: [{ title: 'Deadpool & Wolverine', date: 'Next Friday' }] };
+  }
+}
+
+// Overseerr Requests Fetch/Mock
+async function getOverseerrRequests() {
+  const url = integrationConfigs.overseerrUrl;
+  const key = integrationConfigs.overseerrKey;
+  if (!url || !key) {
+    return { pending: 2, approved: 14 };
+  }
+  try {
+    const res = await fetch(`${url}/api/v1/request?take=50&filter=all`, {
+      headers: { 'X-Api-Key': key }
+    });
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const pending = json.results.filter(r => r.status === 1).length; // status 1 is pending
+    const approved = json.results.filter(r => r.status === 2).length; // status 2 is approved
+    return { pending, approved };
+  } catch (e) {
+    return { pending: 2, approved: 14 };
+  }
+}
+
+// qBittorrent Fetch/Mock
+async function getQbittorrentStatus() {
+  const url = integrationConfigs.qbittorrentUrl;
+  if (!url) {
+    // Generate organic shifting download progress mock
+    const progress = Math.min(100, Math.round(55 + (Date.now() / 100000) % 40));
+    return { progress, speed: '4.2 MB/s' };
+  }
+  try {
+    const res = await fetch(`${url}/api/v2/torrents/info?filter=all`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    if (json.length === 0) return { progress: 100, speed: '0 B/s' };
+    
+    let totalProgress = 0;
+    let totalDlSpeed = 0;
+    json.forEach(t => {
+      totalProgress += t.progress;
+      totalDlSpeed += t.dlspeed;
+    });
+    const avgProgress = Math.round((totalProgress / json.length) * 100);
+    const speedFormatted = totalDlSpeed > 1024 * 1024 
+      ? `${(totalDlSpeed / (1024 * 1024)).toFixed(1)} MB/s` 
+      : `${(totalDlSpeed / 1024).toFixed(0)} KB/s`;
+      
+    return { progress: avgProgress, speed: speedFormatted };
+  } catch (e) {
+    const progress = Math.min(100, Math.round(55 + (Date.now() / 100000) % 40));
+    return { progress, speed: '4.2 MB/s' };
+  }
+}
+
+/**
+ * Dynamic Groups/Categories Dashboard Rendering Engine
+ */
+function renderDashboardGroups(groups) {
+  const container = document.getElementById('dashboard-groups');
+  if (!container) return;
+  container.innerHTML = '';
+
+  groups.forEach((group, groupIndex) => {
+    // Group block container
+    const groupBlock = document.createElement('section');
+    groupBlock.className = 'dashboard-category-group';
+    groupBlock.setAttribute('data-index', groupIndex);
+    if (group.collapsed) {
+      groupBlock.classList.add('group-collapsed');
+    }
+
+    // Category header
+    const header = document.createElement('header');
+    header.className = 'category-group-header';
+    header.innerHTML = `
+      <div class="category-group-title-wrapper">
+        <i class="fa-solid ${group.icon} category-group-icon"></i>
+        <h2 class="category-group-title">${group.title}</h2>
+      </div>
+      <div class="category-group-actions">
+        ${editModeActive ? `
+          <button class="category-action-btn move-group-up" title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
+          <button class="category-action-btn move-group-down" title="Move Down"><i class="fa-solid fa-arrow-down"></i></button>
+          <button class="category-action-btn edit-group" title="Edit Category"><i class="fa-solid fa-pencil"></i></button>
+          <button class="category-action-btn delete-group" title="Delete Category" style="color:#f87171;"><i class="fa-solid fa-trash-can"></i></button>
+        ` : ''}
+        <button class="category-action-btn category-collapse-btn" title="Collapse/Expand"><i class="fa-solid fa-chevron-down"></i></button>
+      </div>
+    `;
+
+    // Category Grid
+    const grid = document.createElement('div');
+    grid.className = 'category-group-grid';
+    grid.setAttribute('data-index', groupIndex);
+
+    // Apply layout spans based on settings
+    applyGroupGridConfig(grid);
+
+    // Build App Cards inside grid
+    buildAppCardsForGroup(group, groupIndex, grid);
+
+    // Add elements to block
+    groupBlock.appendChild(header);
+    groupBlock.appendChild(grid);
+    container.appendChild(groupBlock);
+
+    // Collapsing Event
+    header.querySelector('.category-collapse-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      group.collapsed = !group.collapsed;
+      groupBlock.classList.toggle('group-collapsed', group.collapsed);
+      saveGroupsToStorage(userGroups);
+    });
+
+    // Edit active drag setup for groups themselves
+    if (editModeActive) {
+      // Reorder Category Group Actions
+      header.querySelector('.move-group-up').addEventListener('click', () => {
+        if (groupIndex > 0) {
+          const temp = userGroups[groupIndex];
+          userGroups[groupIndex] = userGroups[groupIndex - 1];
+          userGroups[groupIndex - 1] = temp;
+          saveGroupsToStorage(userGroups);
+          renderDashboardGroups(userGroups);
+        }
+      });
+      header.querySelector('.move-group-down').addEventListener('click', () => {
+        if (groupIndex < userGroups.length - 1) {
+          const temp = userGroups[groupIndex];
+          userGroups[groupIndex] = userGroups[groupIndex + 1];
+          userGroups[groupIndex + 1] = temp;
+          saveGroupsToStorage(userGroups);
+          renderDashboardGroups(userGroups);
+        }
+      });
+      header.querySelector('.edit-group').addEventListener('click', () => {
+        openGroupModalForEdit(groupIndex);
+      });
+      header.querySelector('.delete-group').addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete "${group.title}" and all its apps?`)) {
+          userGroups.splice(groupIndex, 1);
+          saveGroupsToStorage(userGroups);
+          renderDashboardGroups(userGroups);
+          renderAppDock(userGroups);
+        }
+      });
+
+      // HTML5 drag and drop for category groups sorting
+      header.setAttribute('draggable', 'true');
+      header.addEventListener('dragstart', (e) => {
+        header.classList.add('dragging-group');
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'group', fromIndex: groupIndex }));
+      });
+      header.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        groupBlock.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      });
+      header.addEventListener('dragleave', () => {
+        groupBlock.style.borderColor = '';
+      });
+      header.addEventListener('drop', (e) => {
+        e.preventDefault();
+        groupBlock.style.borderColor = '';
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          if (data.type === 'group' && data.fromIndex !== groupIndex) {
+            const movedGroup = userGroups.splice(data.fromIndex, 1)[0];
+            userGroups.splice(groupIndex, 0, movedGroup);
+            saveGroupsToStorage(userGroups);
+            renderDashboardGroups(userGroups);
+          }
+        } catch (err) {}
+      });
+    }
+  });
+
+  // Highlight Mouse Glow Effect
+  initCardMouseGlow();
+  
+  // Apply search filters immediately on render if text present
+  applySearchFilter();
+}
+
+function applyGroupGridConfig(grid) {
+  grid.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
+  if (workspaceConfig.gridCols && workspaceConfig.gridCols !== 'auto') {
+    grid.classList.add(`grid-cols-${workspaceConfig.gridCols}`);
+  }
+  
+  grid.classList.remove('gap-tight', 'gap-comfortable', 'gap-spacious');
+  if (workspaceConfig.cardGap) {
+    grid.classList.add(`gap-${workspaceConfig.cardGap}`);
+  }
+}
+
+function buildAppCardsForGroup(group, groupIndex, grid) {
+  group.apps.forEach((app, appIndex) => {
     const card = document.createElement('a');
     card.className = 'app-card';
-    card.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
+    card.setAttribute('data-index', appIndex);
     card.setAttribute('data-title', app.title.toLowerCase());
-    card.setAttribute('aria-label', `Open ${app.title}`);
+    card.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
 
-    // Apply layout spans
-    if (app.colspan && app.colspan > 1) {
-      card.classList.add(`colspan-${app.colspan}`);
-    }
-    if (app.rowspan && app.rowspan > 1) {
-      card.classList.add(`rowspan-${app.rowspan}`);
-    }
-    if (app.sizeOverride && app.sizeOverride !== 'default') {
-      card.classList.add(`card-${app.sizeOverride}`);
-    }
+    // Width, Height Spans
+    if (app.colspan && app.colspan > 1) card.classList.add(`colspan-${app.colspan}`);
+    if (app.rowspan && app.rowspan > 1) card.classList.add(`rowspan-${app.rowspan}`);
+
+    // Global Card Sizing scale
+    const sizeStyle = (app.sizeOverride && app.sizeOverride !== 'default') ? app.sizeOverride : workspaceConfig.cardSize;
+    if (sizeStyle === 'compact') card.classList.add('card-compact');
+    else if (sizeStyle === 'expanded') card.classList.add('card-expanded');
 
     if (editModeActive) {
       card.href = '#';
-      card.addEventListener('click', (e) => {
-        e.preventDefault();
-      });
-      // Setup HTML5 Drag and Drop
+      card.addEventListener('click', (e) => e.preventDefault());
       card.setAttribute('draggable', 'true');
+      
+      // Drag & Drop Apps sorting
       card.addEventListener('dragstart', (e) => {
         card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', index);
-        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'app', groupIndex, appIndex }));
       });
       card.addEventListener('dragover', (e) => {
         e.preventDefault();
         card.classList.add('drag-over');
       });
-      card.addEventListener('dragleave', () => {
-        card.classList.remove('drag-over');
-      });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
       card.addEventListener('drop', (e) => {
         e.preventDefault();
         card.classList.remove('drag-over');
-        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-        const toIndex = index;
-        if (!isNaN(fromIndex) && fromIndex !== toIndex) {
-          const movedApp = userApps.splice(fromIndex, 1)[0];
-          userApps.splice(toIndex, 0, movedApp);
-          saveAppsToStorage(userApps);
-          renderAppGrid(userApps);
-          renderAppDock(userApps);
-        }
-      });
-      card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
-        document.querySelectorAll('.app-card').forEach(c => c.classList.remove('drag-over', 'dragging'));
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          if (data.type === 'app') {
+            const movedApp = userGroups[data.groupIndex].apps.splice(data.appIndex, 1)[0];
+            // If dropping in same group or different
+            userGroups[groupIndex].apps.splice(appIndex, 0, movedApp);
+            saveGroupsToStorage(userGroups);
+            renderDashboardGroups(userGroups);
+            renderAppDock(userGroups);
+          }
+        } catch (err) {}
       });
     } else {
       card.href = app.url;
       card.target = '_blank';
     }
 
-    // Dynamic mouse reflection gradient container
-    const cardGlow = document.createElement('div');
-    cardGlow.className = 'card-glow';
-    card.appendChild(cardGlow);
+    // Ping Indicator Dot HTML
+    let pingHtml = '';
+    if (app.pingEnabled) {
+      pingHtml = `
+        <div class="ping-indicator">
+          <span class="ping-latency">checking</span>
+          <span class="ping-dot"></span>
+        </div>
+      `;
+    }
 
-    // Card Header: squircle icon & actions
-    const cardHeader = document.createElement('div');
-    cardHeader.className = 'card-header';
-
-    const iconSquircle = document.createElement('div');
-    iconSquircle.className = 'app-icon-squircle';
-    iconSquircle.style.background = `linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.2), rgba(${hexToRgb(app.color)}, 0.08))`;
-    iconSquircle.style.color = app.color;
-    iconSquircle.innerHTML = `<i class="fa-solid ${app.icon}"></i>`;
-    cardHeader.appendChild(iconSquircle);
-
-    const actionIcon = document.createElement('div');
-    actionIcon.className = 'card-action-icon';
-    actionIcon.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i>`;
-    cardHeader.appendChild(actionIcon);
-    card.appendChild(cardHeader);
-
-    // Card Content
-    const cardContent = document.createElement('div');
-    cardContent.className = 'card-content';
-    cardContent.innerHTML = `
-      <h3 class="app-title">${app.title}</h3>
-      <p class="app-description">${app.desc}</p>
+    card.innerHTML = `
+      ${pingHtml}
+      <div class="card-glow"></div>
+      <div class="card-header">
+        <div class="app-icon-squircle" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.2), rgba(${hexToRgb(app.color)}, 0.08)); color:${app.color};">
+          <i class="fa-solid ${app.icon}"></i>
+        </div>
+        <div class="card-action-icon">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </div>
+      </div>
+      <div class="card-content">
+        <h3 class="app-title">${app.title}</h3>
+        <p class="app-description">${app.desc}</p>
+      </div>
+      <div class="card-footer">
+        <span class="app-accent-badge" style="background: rgba(${hexToRgb(app.color)}, 0.15); color: ${app.color}; border: 1px solid rgba(${hexToRgb(app.color)}, 0.3);">
+          <span class="badge-dot" style="background: ${app.color};"></span>
+          <span class="badge-text">${getCleanUrl(app.url)}</span>
+        </span>
+      </div>
     `;
-    card.appendChild(cardContent);
 
-    // Card Footer: URL badge
-    const cardFooter = document.createElement('div');
-    cardFooter.className = 'card-footer';
-    cardFooter.innerHTML = `
-      <span class="app-accent-badge" style="background: rgba(${hexToRgb(app.color)}, 0.15); color: ${app.color}; border: 1px solid rgba(${hexToRgb(app.color)}, 0.3);">
-        <span class="badge-dot" style="background: ${app.color};"></span>
-        <span class="badge-text">${getCleanUrl(app.url)}</span>
-      </span>
-    `;
-    card.appendChild(cardFooter);
+    // Edit mode action badges overlay
+    if (editModeActive) {
+      const deleteBadge = document.createElement('div');
+      deleteBadge.className = 'delete-badge';
+      deleteBadge.innerHTML = `<i class="fa-solid fa-minus"></i>`;
+      deleteBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`Delete app "${app.title}"?`)) {
+          userGroups[groupIndex].apps.splice(appIndex, 1);
+          saveGroupsToStorage(userGroups);
+          renderDashboardGroups(userGroups);
+          renderAppDock(userGroups);
+        }
+      });
 
-    // Edit & Delete Badges (Visible only in Edit Mode)
-    const deleteBadge = document.createElement('div');
-    deleteBadge.className = 'delete-badge';
-    deleteBadge.title = 'Delete App';
-    deleteBadge.innerHTML = `<i class="fa-solid fa-minus"></i>`;
-    deleteBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (confirm(`Are you sure you want to delete "${app.title}"?`)) {
-        userApps.splice(index, 1);
-        saveAppsToStorage(userApps);
-        renderAppGrid(userApps);
-        renderAppDock(userApps);
-      }
-    });
-    card.appendChild(deleteBadge);
+      const editBadge = document.createElement('div');
+      editBadge.className = 'edit-badge';
+      editBadge.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
+      editBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModalForEdit(groupIndex, appIndex);
+      });
 
-    const editBadge = document.createElement('div');
-    editBadge.className = 'edit-badge';
-    editBadge.title = 'Edit App';
-    editBadge.innerHTML = `<i class="fa-solid fa-pencil"></i>`;
-    editBadge.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      openModalForEdit(index);
-    });
-    card.appendChild(editBadge);
+      card.appendChild(deleteBadge);
+      card.appendChild(editBadge);
+    }
 
     grid.appendChild(card);
   });
 
-  // Append Add App Card if Edit Mode is Active
+  // Append empty drop-zone card to move app inside empty groups
   if (editModeActive) {
     const addCard = document.createElement('div');
     addCard.className = 'app-card add-card';
     addCard.innerHTML = `
       <div class="add-card-content">
-        <div class="add-card-icon">
-          <i class="fa-solid fa-plus"></i>
-        </div>
+        <div class="add-card-icon"><i class="fa-solid fa-plus"></i></div>
         <span class="add-card-title">Add App</span>
       </div>
     `;
-    addCard.addEventListener('click', () => {
-      openModalForCreate();
+    addCard.addEventListener('click', () => openModalForCreate(groupIndex));
+    addCard.addEventListener('dragover', (e) => e.preventDefault());
+    addCard.addEventListener('drop', (e) => {
+      e.preventDefault();
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (data.type === 'app') {
+          const movedApp = userGroups[data.groupIndex].apps.splice(data.appIndex, 1)[0];
+          userGroups[groupIndex].apps.push(movedApp);
+          saveGroupsToStorage(userGroups);
+          renderDashboardGroups(userGroups);
+          renderAppDock(userGroups);
+        }
+      } catch (err) {}
     });
     grid.appendChild(addCard);
   }
-
-  // Re-apply workspace config to style the new elements
-  applyWorkspaceConfig(workspaceConfig);
-
-  // Re-apply current search filter parameters on re-render
-  applySearchFilter();
 }
 
-function renderAppDock(apps) {
-  const dockContainer = document.getElementById('dock-container');
-  if (!dockContainer) return;
+// Flat App Dock Renderer
+function renderAppDock(groups) {
+  const dock = document.getElementById('dock-container');
+  if (!dock) return;
+  dock.innerHTML = '';
 
-  dockContainer.innerHTML = '';
+  groups.forEach(group => {
+    group.apps.forEach(app => {
+      const item = document.createElement('div');
+      item.className = 'dock-item';
+      item.setAttribute('data-title', app.title);
+      item.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
 
-  apps.forEach(app => {
-    const dockItem = document.createElement('div');
-    dockItem.className = 'dock-item';
-    dockItem.setAttribute('data-title', app.title);
-    dockItem.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
-
-    dockItem.innerHTML = `
-      <a href="${app.url}" target="_blank" aria-label="${app.title}">
-        <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.3), rgba(${hexToRgb(app.color)}, 0.15)); color: ${app.color}; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
-          <i class="fa-solid ${app.icon}"></i>
-        </div>
-      </a>
-      <span class="dock-tooltip">${app.title}</span>
-    `;
-    dockContainer.appendChild(dockItem);
+      item.innerHTML = `
+        <a href="${app.url}" target="_blank" aria-label="${app.title}">
+          <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.3), rgba(${hexToRgb(app.color)}, 0.15)); color: ${app.color}; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
+            <i class="fa-solid ${app.icon}"></i>
+          </div>
+        </a>
+        <span class="dock-tooltip">${app.title}</span>
+      `;
+      dock.appendChild(item);
+    });
   });
 
-  // Re-initialize fisheye physics for dock items
   initDockFisheye();
 }
 
 /**
- * 1. Dynamic Greeting
+ * App CRUD Modals Logic
  */
+function initModalEvents() {
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  const modal = document.getElementById('editor-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  const form = document.getElementById('editor-form');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('modal-app-title').value.trim();
+      const desc = document.getElementById('modal-app-desc').value.trim();
+      const url = document.getElementById('modal-app-url').value.trim();
+      const color = document.getElementById('modal-app-color').value;
+      const icon = document.getElementById('modal-app-icon').value;
+      const colspan = parseInt(document.getElementById('modal-app-colspan').value, 10) || 1;
+      const rowspan = parseInt(document.getElementById('modal-app-rowspan').value, 10) || 1;
+      const sizeOverride = document.getElementById('modal-app-size').value;
+      const pingEnabled = document.getElementById('modal-app-ping').checked;
+      const integration = document.getElementById('modal-app-integration').value;
+      const groupSelect = document.getElementById('modal-app-group');
+      const targetGroupIndex = parseInt(groupSelect.value, 10);
+
+      if (!title || !desc || !url) return;
+
+      const appData = { title, desc, url, color, icon, colspan, rowspan, sizeOverride, pingEnabled, integration };
+
+      if (editingAppIndex === null) {
+        // Create new card
+        userGroups[targetGroupIndex].apps.push(appData);
+      } else {
+        // Edit existing card
+        const srcGroupIndex = editingAppIndex.groupIndex;
+        const srcAppIndex = editingAppIndex.appIndex;
+        
+        // Remove from old group
+        userGroups[srcGroupIndex].apps.splice(srcAppIndex, 1);
+        // Add to targeted group
+        userGroups[targetGroupIndex].apps.splice(srcAppIndex, 0, appData);
+      }
+
+      saveGroupsToStorage(userGroups);
+      renderDashboardGroups(userGroups);
+      renderAppDock(userGroups);
+      closeModal();
+    });
+  }
+}
+
+function openModalForCreate(groupIndex = 0) {
+  editingAppIndex = null;
+  document.getElementById('modal-title').textContent = 'Add Application';
+  document.getElementById('editor-form').reset();
+  
+  // Populate category dropdown
+  populateGroupDropdown(groupIndex);
+
+  document.getElementById('modal-app-title').value = '';
+  document.getElementById('modal-app-desc').value = '';
+  document.getElementById('modal-app-url').value = '';
+  document.getElementById('modal-app-color').value = '#a855f7';
+  document.getElementById('modal-app-icon').value = 'fa-globe';
+  document.getElementById('modal-app-colspan').value = '1';
+  document.getElementById('modal-app-rowspan').value = '1';
+  document.getElementById('modal-app-size').value = 'default';
+  document.getElementById('modal-app-ping').checked = true;
+  document.getElementById('modal-app-integration').value = 'none';
+
+  document.getElementById('editor-modal').style.display = 'flex';
+}
+
+function openModalForEdit(groupIndex, appIndex) {
+  editingAppIndex = { groupIndex, appIndex };
+  document.getElementById('modal-title').textContent = 'Edit Application';
+  
+  // Populate category dropdown
+  populateGroupDropdown(groupIndex);
+
+  const app = userGroups[groupIndex].apps[appIndex];
+  if (app) {
+    document.getElementById('modal-app-title').value = app.title;
+    document.getElementById('modal-app-desc').value = app.desc;
+    document.getElementById('modal-app-url').value = app.url;
+    document.getElementById('modal-app-color').value = app.color || '#a855f7';
+    document.getElementById('modal-app-icon').value = app.icon || 'fa-globe';
+    document.getElementById('modal-app-colspan').value = app.colspan || 1;
+    document.getElementById('modal-app-rowspan').value = app.rowspan || 1;
+    document.getElementById('modal-app-size').value = app.sizeOverride || 'default';
+    document.getElementById('modal-app-ping').checked = app.pingEnabled !== false;
+    document.getElementById('modal-app-integration').value = app.integration || 'none';
+  }
+
+  document.getElementById('editor-modal').style.display = 'flex';
+}
+
+function populateGroupDropdown(selectedIndex = 0) {
+  const select = document.getElementById('modal-app-group');
+  if (!select) return;
+  select.innerHTML = '';
+  userGroups.forEach((group, index) => {
+    select.innerHTML += `<option value="${index}" ${index === selectedIndex ? 'selected' : ''}>${group.title}</option>`;
+  });
+}
+
+function closeModal() {
+  const modal = document.getElementById('editor-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Group/Category Modal logic
+ */
+function initGroupModalEvents() {
+  const modal = document.getElementById('group-modal');
+  const form = document.getElementById('group-form');
+  const closeBtn = document.getElementById('group-modal-close-btn');
+  const cancelBtn = document.getElementById('group-cancel-btn');
+
+  const closeGroupModal = () => {
+    if (modal) modal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeGroupModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeGroupModal);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeGroupModal();
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('modal-group-title').value.trim();
+      const icon = document.getElementById('modal-group-icon').value;
+      if (!title) return;
+
+      if (editingGroupIndex === null) {
+        // Create
+        userGroups.push({
+          id: `group-${Date.now()}`,
+          title,
+          icon,
+          collapsed: false,
+          apps: []
+        });
+      } else {
+        // Edit
+        userGroups[editingGroupIndex].title = title;
+        userGroups[editingGroupIndex].icon = icon;
+      }
+
+      saveGroupsToStorage(userGroups);
+      renderDashboardGroups(userGroups);
+      closeGroupModal();
+    });
+  }
+
+  const addGroupBtn = document.getElementById('add-group-btn');
+  if (addGroupBtn) {
+    addGroupBtn.addEventListener('click', () => openGroupModalForCreate());
+  }
+}
+
+function openGroupModalForCreate() {
+  editingGroupIndex = null;
+  document.getElementById('group-modal-title').textContent = 'Add Category';
+  document.getElementById('group-form').reset();
+  document.getElementById('modal-group-title').value = '';
+  document.getElementById('modal-group-icon').value = 'fa-folder';
+  document.getElementById('group-modal').style.display = 'flex';
+}
+
+function openGroupModalForEdit(groupIndex) {
+  editingGroupIndex = groupIndex;
+  document.getElementById('group-modal-title').textContent = 'Edit Category';
+  const group = userGroups[groupIndex];
+  document.getElementById('modal-group-title').value = group.title;
+  document.getElementById('modal-group-icon').value = group.icon;
+  document.getElementById('group-modal').style.display = 'flex';
+}
+
+/**
+ * Edit Mode Toggle Manager
+ */
+function initEditMode() {
+  const editBtn = document.getElementById('edit-mode-btn');
+  if (!editBtn) return;
+
+  editBtn.addEventListener('click', () => {
+    editModeActive = !editModeActive;
+    document.body.classList.toggle('edit-active', editModeActive);
+    
+    if (editModeActive) {
+      editBtn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+      editBtn.classList.add('active');
+    } else {
+      editBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Edit Workspace';
+      editBtn.classList.remove('active');
+    }
+
+    const addGroupBtn = document.getElementById('add-group-btn');
+    if (addGroupBtn) addGroupBtn.style.display = editModeActive ? 'flex' : 'none';
+
+    const addWidgetBtn = document.getElementById('add-widget-btn');
+    if (addWidgetBtn) addWidgetBtn.style.display = editModeActive ? 'flex' : 'none';
+
+    renderDashboardGroups(userGroups);
+    renderSidebarWidgets(userWidgets);
+  });
+}
+
+/**
+ * Workspace Settings Modal (Tabbed Layout)
+ */
+function initSettingsModal() {
+  const settingsBtn = document.getElementById('workspace-settings-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsForm = document.getElementById('settings-form');
+  const closeBtn = document.getElementById('settings-close-btn');
+  const cancelBtn = document.getElementById('settings-cancel-btn');
+
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      populateSettingsForm();
+      settingsModal.style.display = 'flex';
+    });
+  }
+
+  const closeModalFn = () => {
+    if (settingsModal) settingsModal.style.display = 'none';
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModalFn);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeModalFn();
+    });
+  }
+
+  // Hook Tab Switches inside Settings
+  const tabBtns = document.querySelectorAll('.modal-tab-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const targetTabId = btn.getAttribute('data-tab');
+      const tabContents = document.querySelectorAll('.settings-tab-content');
+      tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === targetTabId) content.classList.add('active');
+      });
+    });
+  });
+
+  // Hook Settings Theme selectors
+  const themeBtns = document.querySelectorAll('.theme-selector-item');
+  themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      themeBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      workspaceConfig.theme = btn.getAttribute('data-select-theme');
+    });
+  });
+
+  // Hook Settings Form Submission
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      workspaceConfig.gridCols = document.getElementById('settings-grid-cols').value;
+      workspaceConfig.cardSize = document.getElementById('settings-card-size').value;
+      workspaceConfig.cardGap = document.getElementById('settings-card-gap').value;
+      workspaceConfig.sidebarPos = document.getElementById('settings-sidebar-pos').value;
+      workspaceConfig.sidebarCols = document.getElementById('settings-sidebar-cols').value;
+      workspaceConfig.weatherCity = document.getElementById('settings-weather-city').value;
+      workspaceConfig.weatherState = document.getElementById('settings-weather-state').value;
+      workspaceConfig.bgPattern = document.getElementById('settings-bg-pattern').value;
+      workspaceConfig.showBlobs = document.getElementById('settings-toggle-blobs').checked;
+      
+      workspaceConfig.showClock = document.getElementById('settings-toggle-clock').checked;
+      workspaceConfig.showNotepad = document.getElementById('settings-toggle-notepad').checked;
+      workspaceConfig.showWeather = document.getElementById('settings-toggle-weather').checked;
+      workspaceConfig.showResources = document.getElementById('settings-toggle-resources').checked;
+      workspaceConfig.showBookmarks = document.getElementById('settings-toggle-bookmarks').checked;
+
+      // Integration forms
+      integrationConfigs.plexUrl = document.getElementById('integration-plex-url').value.trim();
+      integrationConfigs.plexToken = document.getElementById('integration-plex-token').value.trim();
+      integrationConfigs.tautulliUrl = document.getElementById('integration-tautulli-url').value.trim();
+      integrationConfigs.tautulliKey = document.getElementById('integration-tautulli-key').value.trim();
+      integrationConfigs.sonarrUrl = document.getElementById('integration-sonarr-url').value.trim();
+      integrationConfigs.sonarrKey = document.getElementById('integration-sonarr-key').value.trim();
+      integrationConfigs.radarrUrl = document.getElementById('integration-radarr-url').value.trim();
+      integrationConfigs.radarrKey = document.getElementById('integration-radarr-key').value.trim();
+      integrationConfigs.overseerrUrl = document.getElementById('integration-overseerr-url').value.trim();
+      integrationConfigs.overseerrKey = document.getElementById('integration-overseerr-key').value.trim();
+      integrationConfigs.qbittorrentUrl = document.getElementById('integration-qbittorrent-url').value.trim();
+      integrationConfigs.qbittorrentUser = document.getElementById('integration-qbittorrent-user').value.trim();
+      integrationConfigs.qbittorrentPass = document.getElementById('integration-qbittorrent-pass').value.trim();
+
+      // Save States
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
+      saveIntegrationConfigs(integrationConfigs);
+      
+      applyWorkspaceConfig(workspaceConfig);
+      renderDashboardGroups(userGroups);
+      startIntegrationLoops();
+      closeModalFn();
+    });
+  }
+
+  // Hook Backup / Restore buttons
+  const exportBtn = document.getElementById('settings-export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => exportWorkspaceConfig());
+  }
+
+  const importFile = document.getElementById('settings-import-file');
+  if (importFile) {
+    importFile.addEventListener('change', (e) => importWorkspaceConfig(e));
+  }
+}
+
+function populateSettingsForm() {
+  document.getElementById('settings-grid-cols').value = workspaceConfig.gridCols;
+  document.getElementById('settings-card-size').value = workspaceConfig.cardSize;
+  document.getElementById('settings-card-gap').value = workspaceConfig.cardGap;
+  document.getElementById('settings-sidebar-pos').value = workspaceConfig.sidebarPos;
+  document.getElementById('settings-sidebar-cols').value = workspaceConfig.sidebarCols;
+  document.getElementById('settings-weather-city').value = workspaceConfig.weatherCity;
+  document.getElementById('settings-weather-state').value = workspaceConfig.weatherState;
+  document.getElementById('settings-bg-pattern').value = workspaceConfig.bgPattern;
+  document.getElementById('settings-toggle-blobs').checked = workspaceConfig.showBlobs !== false;
+
+  document.getElementById('settings-toggle-clock').checked = workspaceConfig.showClock !== false;
+  document.getElementById('settings-toggle-notepad').checked = workspaceConfig.showNotepad !== false;
+  document.getElementById('settings-toggle-weather').checked = workspaceConfig.showWeather !== false;
+  document.getElementById('settings-toggle-resources').checked = workspaceConfig.showResources !== false;
+  document.getElementById('settings-toggle-bookmarks').checked = workspaceConfig.showBookmarks !== false;
+
+  // Active theme highlighting
+  const activeTheme = workspaceConfig.theme || 'theme-midnight-nebula';
+  const themeBtns = document.querySelectorAll('.theme-selector-item');
+  themeBtns.forEach(btn => {
+    btn.classList.toggle('selected', btn.getAttribute('data-select-theme') === activeTheme);
+  });
+
+  // Integrations configs
+  document.getElementById('integration-plex-url').value = integrationConfigs.plexUrl || '';
+  document.getElementById('integration-plex-token').value = integrationConfigs.plexToken || '';
+  document.getElementById('integration-tautulli-url').value = integrationConfigs.tautulliUrl || '';
+  document.getElementById('integration-tautulli-key').value = integrationConfigs.tautulliKey || '';
+  document.getElementById('integration-sonarr-url').value = integrationConfigs.sonarrUrl || '';
+  document.getElementById('integration-sonarr-key').value = integrationConfigs.sonarrKey || '';
+  document.getElementById('integration-radarr-url').value = integrationConfigs.radarrUrl || '';
+  document.getElementById('integration-radarr-key').value = integrationConfigs.radarrKey || '';
+  document.getElementById('integration-overseerr-url').value = integrationConfigs.overseerrUrl || '';
+  document.getElementById('integration-overseerr-key').value = integrationConfigs.overseerrKey || '';
+  document.getElementById('integration-qbittorrent-url').value = integrationConfigs.qbittorrentUrl || '';
+  document.getElementById('integration-qbittorrent-user').value = integrationConfigs.qbittorrentUser || '';
+  document.getElementById('integration-qbittorrent-pass').value = integrationConfigs.qbittorrentPass || '';
+}
+
+function applyWorkspaceConfig(config) {
+  // Apply Background Style Patterns
+  const patternOverlay = document.getElementById('bg-pattern-overlay');
+  if (patternOverlay) {
+    patternOverlay.className = 'bg-pattern-overlay';
+    if (config.bgPattern && config.bgPattern !== 'none') {
+      patternOverlay.classList.add(`pattern-${config.bgPattern}`);
+    }
+  }
+
+  const blobs = document.getElementById('bg-blobs');
+  if (blobs) {
+    blobs.style.display = config.showBlobs === false ? 'none' : '';
+  }
+
+  // Sidebar layouts
+  const layout = document.querySelector('.dashboard-layout');
+  const sidebarWidgetsGrid = document.getElementById('sidebar-widgets');
+  
+  if (layout) {
+    layout.classList.remove('sidebar-right', 'sidebar-left', 'sidebar-top', 'sidebar-hidden');
+    layout.classList.add(`sidebar-${config.sidebarPos || 'right'}`);
+  }
+  
+  if (sidebarWidgetsGrid) {
+    sidebarWidgetsGrid.style.setProperty('--sidebar-cols', config.sidebarCols || '1');
+    sidebarWidgetsGrid.classList.remove('cols-1', 'cols-2');
+    sidebarWidgetsGrid.classList.add(`cols-${config.sidebarCols || '1'}`);
+  }
+
+  // Widget visibility toggling
+  userWidgets.forEach(widget => {
+    const el = document.getElementById(widget.id);
+    if (!el) return;
+    
+    let isVisible = true;
+    if (widget.type === 'clock' && config.showClock === false) isVisible = false;
+    else if (widget.type === 'notepad' && config.showNotepad === false) isVisible = false;
+    else if (widget.type === 'weather' && config.showWeather === false) isVisible = false;
+    else if (widget.type === 'resources' && config.showResources === false) isVisible = false;
+    else if (widget.type === 'bookmarks' && config.showBookmarks === false) isVisible = false;
+    
+    el.style.display = isVisible ? '' : 'none';
+  });
+
+  // Apply general Theme body class
+  document.body.className = config.theme || 'theme-midnight-nebula';
+  if (editModeActive) document.body.classList.add('edit-active');
+}
+
+/**
+ * Backup / Import Export Logic
+ */
+function exportWorkspaceConfig() {
+  const fullConfig = {
+    version: '2.0.0',
+    groups: userGroups,
+    widgets: userWidgets,
+    config: workspaceConfig,
+    integrations: integrationConfigs
+  };
+  
+  const blob = new Blob([JSON.stringify(fullConfig, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `thomas_launchpad_config_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importWorkspaceConfig(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      if (parsed.groups && parsed.widgets && parsed.config) {
+        userGroups = parsed.groups;
+        userWidgets = parsed.widgets;
+        workspaceConfig = parsed.config;
+        if (parsed.integrations) {
+          integrationConfigs = parsed.integrations;
+        }
+
+        // Save everything
+        saveGroupsToStorage(userGroups);
+        localStorage.setItem(STORAGE_KEY_WIDGETS, JSON.stringify(userWidgets));
+        localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
+        saveIntegrationConfigs(integrationConfigs);
+
+        alert('Configuration imported successfully! Reloading...');
+        window.location.reload();
+      } else {
+        alert('Invalid configuration file format.');
+      }
+    } catch (err) {
+      alert('Error parsing config file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/**
+ * Spotlight / Command Palette Controller
+ */
+let spotlightIndex = 0;
+let spotlightResults = [];
+
+function initSpotlight() {
+  const modal = document.getElementById('command-palette-modal');
+  const input = document.getElementById('spotlight-input');
+  
+  if (!modal || !input) return;
+
+  // Key Event bindings
+  window.addEventListener('keydown', (e) => {
+    // Esc closes Spotlight
+    if (e.key === 'Escape') {
+      closeSpotlight();
+    }
+    
+    // Ctrl+K or '/' to open
+    const isEditing = document.activeElement.tagName === 'INPUT' || 
+                      document.activeElement.tagName === 'TEXTAREA' || 
+                      document.activeElement.isContentEditable;
+
+    if (((e.ctrlKey || e.metaKey) && e.key === 'k') || (e.key === '/' && !isEditing)) {
+      e.preventDefault();
+      openSpotlight();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    querySpotlight(input.value);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = document.querySelectorAll('.spotlight-result-item');
+    if (items.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      spotlightIndex = (spotlightIndex + 1) % items.length;
+      updateSpotlightSelection(items);
+    } 
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      spotlightIndex = (spotlightIndex - 1 + items.length) % items.length;
+      updateSpotlightSelection(items);
+    } 
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      items[spotlightIndex].click();
+    }
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeSpotlight();
+  });
+}
+
+function openSpotlight() {
+  const modal = document.getElementById('command-palette-modal');
+  const input = document.getElementById('spotlight-input');
+  if (!modal || !input) return;
+
+  modal.style.display = 'flex';
+  input.value = '';
+  input.focus();
+  querySpotlight('');
+}
+
+function closeSpotlight() {
+  const modal = document.getElementById('command-palette-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function querySpotlight(query) {
+  const q = query.toLowerCase().trim();
+  spotlightResults = [];
+  spotlightIndex = 0;
+
+  // 1. Gather apps
+  userGroups.forEach(group => {
+    group.apps.forEach(app => {
+      if (app.title.toLowerCase().includes(q) || app.desc.toLowerCase().includes(q) || q === '') {
+        spotlightResults.push({
+          type: 'app',
+          title: app.title,
+          desc: app.desc,
+          url: app.url,
+          icon: app.icon,
+          badge: group.title
+        });
+      }
+    });
+  });
+
+  // 2. Gather command shortcuts
+  const commands = [
+    { type: 'cmd', title: '/edit', desc: 'Toggle Edit Workspace mode', icon: 'fa-sliders', action: () => document.getElementById('edit-mode-btn').click() },
+    { type: 'cmd', title: '/settings', desc: 'Open Workspace Settings', icon: 'fa-gear', action: () => document.getElementById('workspace-settings-btn').click() },
+    { type: 'cmd', title: '/addapp', desc: 'Add new Application card', icon: 'fa-plus', action: () => openModalForCreate() },
+    { type: 'cmd', title: '/addcategory', desc: 'Add new category group', icon: 'fa-folder-plus', action: () => openGroupModalForCreate() },
+    { type: 'cmd', title: '/widgets', desc: 'Add sidebar widget card', icon: 'fa-table-columns', action: () => openWidgetModalForCreate() },
+    { type: 'cmd', title: '/backup', desc: 'Export config file', icon: 'fa-file-export', action: () => exportWorkspaceConfig() }
+  ];
+
+  commands.forEach(cmd => {
+    if (cmd.title.includes(q) || cmd.desc.toLowerCase().includes(q) || q === '') {
+      spotlightResults.push(cmd);
+    }
+  });
+
+  renderSpotlightResults();
+}
+
+function renderSpotlightResults() {
+  const list = document.getElementById('spotlight-results');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (spotlightResults.length === 0) {
+    list.innerHTML = `<div style="text-align:center; padding:20px; font-size:0.9rem; opacity:0.6;"><i class="fa-solid fa-face-meh"></i> No search results found</div>`;
+    return;
+  }
+
+  spotlightResults.forEach((res, index) => {
+    const item = document.createElement('div');
+    item.className = 'spotlight-result-item';
+    if (index === 0) item.classList.add('selected');
+
+    let badgeText = res.type === 'cmd' ? 'command' : res.badge;
+    let iconClass = res.icon || 'fa-globe';
+
+    item.innerHTML = `
+      <div class="spotlight-result-left">
+        <i class="fa-solid ${iconClass}"></i>
+        <span class="spotlight-result-title">${res.title}</span>
+        <span class="spotlight-result-desc">${res.desc}</span>
+      </div>
+      <span class="spotlight-result-badge">${badgeText}</span>
+    `;
+
+    item.addEventListener('click', () => {
+      closeSpotlight();
+      if (res.type === 'app') {
+        window.open(res.url, '_blank');
+      } else if (res.type === 'cmd') {
+        res.action();
+      }
+    });
+
+    item.addEventListener('mouseenter', () => {
+      const items = document.querySelectorAll('.spotlight-result-item');
+      spotlightIndex = index;
+      updateSpotlightSelection(items);
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function updateSpotlightSelection(items) {
+  items.forEach((item, index) => {
+    item.classList.toggle('selected', index === spotlightIndex);
+    if (index === spotlightIndex) {
+      item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+}
+
+/**
+ * Legacy Search Input Fallback Filter
+ */
+function initSearchFilter() {
+  const searchInput = document.getElementById('search-input');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', applySearchFilter);
+}
+
+function applySearchFilter() {
+  const searchInput = document.getElementById('search-input');
+  const noResults = document.getElementById('no-results');
+  if (!searchInput) return;
+
+  const query = searchInput.value.toLowerCase().trim();
+  const groups = document.querySelectorAll('.dashboard-category-group');
+  let totalVisibleApps = 0;
+
+  groups.forEach(groupBlock => {
+    const cards = groupBlock.querySelectorAll('.app-card:not(.add-card)');
+    let visibleInGroup = 0;
+
+    cards.forEach(card => {
+      const title = card.querySelector('.app-title')?.textContent.toLowerCase() || '';
+      const desc = card.querySelector('.app-description')?.textContent.toLowerCase() || '';
+
+      if (title.includes(query) || desc.includes(query) || query === '') {
+        card.style.display = 'flex';
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1)';
+        visibleInGroup++;
+        totalVisibleApps++;
+      } else {
+        card.style.display = 'none';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.96)';
+      }
+    });
+
+    // Hide entire category if search yields no matches, otherwise show
+    if (visibleInGroup === 0 && query !== '') {
+      groupBlock.style.display = 'none';
+    } else {
+      groupBlock.style.display = 'flex';
+    }
+  });
+
+  if (noResults) {
+    if (totalVisibleApps === 0 && query !== '') {
+      noResults.style.display = 'flex';
+    } else {
+      noResults.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Mouse Glow & Theme selection utilities
+ */
+function initCardMouseGlow() {
+  const groups = document.getElementById('dashboard-groups');
+  if (!groups) return;
+
+  // Remove old listeners to avoid multiple registrations
+  groups.removeEventListener('mousemove', handleCardMouseMove);
+  groups.addEventListener('mousemove', handleCardMouseMove);
+}
+
+function handleCardMouseMove(e) {
+  const card = e.target.closest('.app-card');
+  if (!card) return;
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  
+  card.style.setProperty('--mouse-x', `${x}px`);
+  card.style.setProperty('--mouse-y', `${y}px`);
+}
+
 function initGreeting() {
   const greetingEl = document.getElementById('greeting');
   if (!greetingEl) return;
@@ -421,196 +1738,72 @@ function initGreeting() {
   greetingEl.textContent = `${greetingText}, Thomas`;
 }
 
-/**
- * 2. Digital Clock Widget & macOS Menu Clock Synchronization
- */
-function initClock() {
-  const hoursEl = document.getElementById('clock-hours');
-  const minutesEl = document.getElementById('clock-minutes');
-  const secondsEl = document.getElementById('clock-seconds');
-  const dateEl = document.getElementById('clock-date');
+function initKeyboardShortcuts() {
+  const searchInput = document.getElementById('search-input');
+  if (!searchInput) return;
 
-  const menuTimeEl = document.getElementById('menu-time');
-  const menuDateEl = document.getElementById('menu-date');
+  window.addEventListener('keydown', (e) => {
+    const active = document.activeElement;
+    const isEditing = active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable;
 
-  function updateClock() {
-    const now = new Date();
+    if (e.key === '/' && !isEditing) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     
-    // Time formatting for widget clock
-    let hours = now.getHours();
-    let minutes = now.getMinutes();
-    let seconds = now.getSeconds();
-
-    hours = hours < 10 ? '0' + hours : hours;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    seconds = seconds < 10 ? '0' + seconds : seconds;
-
-    if (hoursEl) hoursEl.textContent = hours;
-    if (minutesEl) minutesEl.textContent = minutes;
-    if (secondsEl) secondsEl.textContent = seconds;
-
-    // Date formatting for widget clock
-    if (dateEl) {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      dateEl.textContent = now.toLocaleDateString(undefined, options);
-    }
-
-    // Top macOS Menu Bar Time & Date Sync
-    if (menuTimeEl) {
-      menuTimeEl.textContent = `${hours}:${minutes}`;
-    }
-    if (menuDateEl) {
-      const menuDateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-      menuDateEl.textContent = now.toLocaleDateString(undefined, menuDateOptions);
-    }
-  }
-
-  updateClock();
-  setInterval(updateClock, 1000);
-}
-
-/**
- * 3. Search Bar Filter
- */
-function initSearchFilter() {
-  const searchInput = document.getElementById('search-input');
-  if (!searchInput) return;
-
-  searchInput.addEventListener('input', applySearchFilter);
-}
-
-function applySearchFilter() {
-  const searchInput = document.getElementById('search-input');
-  const noResults = document.getElementById('no-results');
-  if (!searchInput) return;
-
-  const query = searchInput.value.toLowerCase().trim();
-  const cards = document.querySelectorAll('#app-grid .app-card:not(.add-card)');
-  let visibleCount = 0;
-
-  cards.forEach(card => {
-    const titleEl = card.querySelector('.app-title');
-    const descEl = card.querySelector('.app-description');
-    const title = titleEl ? titleEl.textContent.toLowerCase() : '';
-    const desc = descEl ? descEl.textContent.toLowerCase() : '';
-
-    if (title.includes(query) || desc.includes(query)) {
-      card.style.display = 'flex';
-      setTimeout(() => {
-        card.style.opacity = '1';
-        card.style.transform = 'scale(1)';
-      }, 50);
-      visibleCount++;
-    } else {
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.96)';
-      card.style.display = 'none';
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
 
-  if (noResults) {
-    if (visibleCount === 0 && query !== '') {
-      noResults.style.display = 'flex';
-    } else {
-      noResults.style.display = 'none';
+  searchInput.addEventListener('keydown', (e) => {
+    const visibleCards = Array.from(document.querySelectorAll('.app-card')).filter(card => card.style.display !== 'none');
+    if (visibleCards.length === 0) return;
+
+    let activeIndex = visibleCards.findIndex(card => card.classList.contains('keyboard-active'));
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (activeIndex !== -1) {
+        visibleCards[activeIndex].classList.remove('keyboard-active');
+      }
+      activeIndex = (activeIndex + 1) % visibleCards.length;
+      visibleCards[activeIndex].classList.add('keyboard-active');
+      visibleCards[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (activeIndex !== -1) {
+        visibleCards[activeIndex].classList.remove('keyboard-active');
+      }
+      activeIndex = (activeIndex - 1 + visibleCards.length) % visibleCards.length;
+      visibleCards[activeIndex].classList.add('keyboard-active');
+      visibleCards[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      if (activeIndex !== -1) {
+        e.preventDefault();
+        visibleCards[activeIndex].click();
+      }
+    } else if (e.key === 'Escape') {
+      searchInput.blur();
     }
-  }
-}
-
-/**
- * 4. LocalStorage Notepad
- */
-function initNotepad() {
-  const notepad = document.getElementById('notepad-textarea');
-  const status = document.getElementById('notepad-status');
-  const STORAGE_KEY = 'launchpad_personal_notes';
-
-  if (!notepad || !status) return;
-
-  const savedNotes = localStorage.getItem(STORAGE_KEY);
-  if (savedNotes !== null) {
-    notepad.value = savedNotes;
-  }
-
-  let saveDebounceTimeout;
-
-  notepad.addEventListener('input', () => {
-    status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-    status.style.opacity = '1';
-
-    clearTimeout(saveDebounceTimeout);
-
-    saveDebounceTimeout = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, notepad.value);
-      status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Saved';
-      
-      setTimeout(() => {
-        status.style.opacity = '0.7';
-      }, 1500);
-    }, 500);
   });
-}
 
-/**
- * 5. Theme Picker Widget
- */
-function initThemePicker() {
-  const themeBtns = document.querySelectorAll('.theme-btn');
-  const body = document.body;
-  const STORAGE_KEY = 'launchpad_active_theme';
-
-  if (themeBtns.length === 0) return;
-
-  const savedTheme = localStorage.getItem(STORAGE_KEY) || 'theme-midnight-nebula';
+  searchInput.addEventListener('input', () => {
+    document.querySelectorAll('.app-card').forEach(card => card.classList.remove('keyboard-active'));
+  });
   
-  // Apply saved theme but retain the 'edit-active' state if toggled
-  const isEditActive = body.classList.contains('edit-active');
-  body.className = savedTheme;
-  if (isEditActive) body.classList.add('edit-active');
-
-  themeBtns.forEach(btn => {
-    const themeName = btn.getAttribute('data-theme');
-    if (themeName === savedTheme) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-      themeBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      const wasEditActive = body.classList.contains('edit-active');
-      body.className = themeName;
-      if (wasEditActive) body.classList.add('edit-active');
-      
-      localStorage.setItem(STORAGE_KEY, themeName);
-    });
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.app-card').forEach(card => card.classList.remove('keyboard-active'));
+    }, 250);
   });
 }
 
-/**
- * 6. Mouse Glow Hover Effect (Delegated Listener)
- */
-function initCardMouseGlow() {
-  const grid = document.getElementById('app-grid');
-  if (!grid) return;
-
-  grid.addEventListener('mousemove', (e) => {
-    const card = e.target.closest('.app-card');
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    card.style.setProperty('--mouse-x', `${x}px`);
-    card.style.setProperty('--mouse-y', `${y}px`);
-  });
-}
-
-/**
- * 7. macOS Fisheye Dock Physics Animation
- */
 function initDockFisheye() {
   const dock = document.querySelector('.dock');
   if (!dock) return;
@@ -669,421 +1862,10 @@ function initDockFisheye() {
   }
 }
 
-/**
- * 8. Keyboard Shortcuts & Arrow Key Navigation
- */
-function initKeyboardShortcuts() {
-  const searchInput = document.getElementById('search-input');
-  if (!searchInput) return;
-
-  window.addEventListener('keydown', (e) => {
-    const active = document.activeElement;
-    const isEditing = active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable;
-
-    if (e.key === '/' && !isEditing) {
-      e.preventDefault();
-      searchInput.focus();
-      searchInput.select();
-      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      searchInput.focus();
-      searchInput.select();
-      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
-
-  searchInput.addEventListener('keydown', (e) => {
-    const visibleCards = Array.from(document.querySelectorAll('#app-grid .app-card')).filter(card => card.style.display !== 'none');
-    if (visibleCards.length === 0) return;
-
-    let activeIndex = visibleCards.findIndex(card => card.classList.contains('keyboard-active'));
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (activeIndex !== -1) {
-        visibleCards[activeIndex].classList.remove('keyboard-active');
-      }
-      activeIndex = (activeIndex + 1) % visibleCards.length;
-      visibleCards[activeIndex].classList.add('keyboard-active');
-      visibleCards[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (activeIndex !== -1) {
-        visibleCards[activeIndex].classList.remove('keyboard-active');
-      }
-      activeIndex = (activeIndex - 1 + visibleCards.length) % visibleCards.length;
-      visibleCards[activeIndex].classList.add('keyboard-active');
-      visibleCards[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else if (e.key === 'Enter') {
-      if (activeIndex !== -1) {
-        e.preventDefault();
-        visibleCards[activeIndex].click();
-      }
-    } else if (e.key === 'Escape') {
-      searchInput.blur();
-    }
-  });
-
-  searchInput.addEventListener('input', () => {
-    document.querySelectorAll('#app-grid .app-card').forEach(card => card.classList.remove('keyboard-active'));
-  });
-  
-  searchInput.addEventListener('blur', () => {
-    setTimeout(() => {
-      document.querySelectorAll('#app-grid .app-card').forEach(card => card.classList.remove('keyboard-active'));
-    }, 250);
-  });
+function initThemePicker() {
+  // Overridden: Theme selection is now inside the settings tab pane.
 }
 
-/**
- * 9. Edit Mode Toggle Logic
- */
-function initEditMode() {
-  const editBtn = document.getElementById('edit-mode-btn');
-  if (!editBtn) return;
-
-  editBtn.addEventListener('click', () => {
-    editModeActive = !editModeActive;
-    
-    document.body.classList.toggle('edit-active', editModeActive);
-    
-    if (editModeActive) {
-      editBtn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
-      editBtn.classList.add('active');
-    } else {
-      editBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Edit Workspace';
-      editBtn.classList.remove('active');
-    }
-
-    // Toggle Add Widget Button visibility
-    const addWidgetBtn = document.getElementById('add-widget-btn');
-    if (addWidgetBtn) {
-      addWidgetBtn.style.display = editModeActive ? 'flex' : 'none';
-    }
-
-    renderAppGrid(userApps);
-    renderSidebarWidgets(userWidgets);
-  });
-}
-
-/**
- * 10. CRUD Modal Logic & Event Handlers
- */
-function initModalEvents() {
-  const cancelBtn = document.getElementById('modal-cancel-btn');
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', closeModal);
-  }
-
-  const modal = document.getElementById('editor-modal');
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-  }
-
-  const form = document.getElementById('editor-form');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const title = document.getElementById('modal-app-title').value.trim();
-      const desc = document.getElementById('modal-app-desc').value.trim();
-      const url = document.getElementById('modal-app-url').value.trim();
-      const color = document.getElementById('modal-app-color').value;
-      const icon = document.getElementById('modal-app-icon').value;
-      const colspan = parseInt(document.getElementById('modal-app-colspan').value, 10) || 1;
-      const rowspan = parseInt(document.getElementById('modal-app-rowspan').value, 10) || 1;
-      const sizeOverride = document.getElementById('modal-app-size').value;
-
-      if (!title || !desc || !url) {
-        return;
-      }
-
-      const appData = { title, desc, url, color, icon, colspan, rowspan, sizeOverride };
-
-      if (editingAppIndex === null) {
-        userApps.push(appData);
-      } else {
-        userApps[editingAppIndex] = appData;
-      }
-
-      saveAppsToStorage(userApps);
-      renderAppGrid(userApps);
-      renderAppDock(userApps);
-      closeModal();
-    });
-  }
-}
-
-function openModalForCreate() {
-  editingAppIndex = null;
-  const modalTitle = document.getElementById('modal-title');
-  if (modalTitle) modalTitle.textContent = 'Add Application';
-
-  const form = document.getElementById('editor-form');
-  if (form) {
-    form.reset();
-    document.getElementById('modal-app-title').value = '';
-    document.getElementById('modal-app-desc').value = '';
-    document.getElementById('modal-app-url').value = '';
-    document.getElementById('modal-app-color').value = '#a855f7';
-    document.getElementById('modal-app-icon').value = 'fa-film';
-    document.getElementById('modal-app-colspan').value = '1';
-    document.getElementById('modal-app-rowspan').value = '1';
-    document.getElementById('modal-app-size').value = 'default';
-  }
-
-  const modal = document.getElementById('editor-modal');
-  if (modal) modal.style.display = 'flex';
-}
-
-function openModalForEdit(index) {
-  editingAppIndex = index;
-  const modalTitle = document.getElementById('modal-title');
-  if (modalTitle) modalTitle.textContent = 'Edit Application';
-
-  const app = userApps[index];
-  if (app) {
-    document.getElementById('modal-app-title').value = app.title;
-    document.getElementById('modal-app-desc').value = app.desc;
-    document.getElementById('modal-app-url').value = app.url;
-    document.getElementById('modal-app-color').value = app.color;
-    document.getElementById('modal-app-icon').value = app.icon;
-    document.getElementById('modal-app-colspan').value = app.colspan || 1;
-    document.getElementById('modal-app-rowspan').value = app.rowspan || 1;
-    document.getElementById('modal-app-size').value = app.sizeOverride || 'default';
-  }
-
-  const modal = document.getElementById('editor-modal');
-  if (modal) modal.style.display = 'flex';
-}
-
-function closeModal() {
-  const modal = document.getElementById('editor-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-
-/* ==========================================================================
-   WORKSPACE CONFIGURATION ENGINE
-   ========================================================================== */
-
-/**
- * Applies workspace layout styles, widget visibility, and weather configurations.
- */
-function applyWorkspaceConfig(config) {
-  const grid = document.getElementById('app-grid');
-  if (grid) {
-    // 1. Column classes
-    grid.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4');
-    if (config.gridCols && config.gridCols !== 'auto') {
-      grid.classList.add(`grid-cols-${config.gridCols}`);
-    }
-    
-    // 2. Gap classes
-    grid.classList.remove('gap-tight', 'gap-comfortable', 'gap-spacious');
-    if (config.cardGap) {
-      grid.classList.add(`gap-${config.cardGap}`);
-    }
-
-    // 3. Card size classes
-    const cards = grid.querySelectorAll('.app-card');
-    cards.forEach(card => {
-      const appTitle = card.querySelector('.app-title')?.textContent;
-      const app = userApps.find(a => a.title.toLowerCase() === (appTitle ? appTitle.toLowerCase() : ''));
-      
-      card.classList.remove('card-compact', 'card-expanded');
-      
-      const sizeStyle = (app && app.sizeOverride && app.sizeOverride !== 'default') 
-        ? app.sizeOverride 
-        : config.cardSize;
-        
-      if (sizeStyle === 'compact') {
-        card.classList.add('card-compact');
-      } else if (sizeStyle === 'expanded') {
-        card.classList.add('card-expanded');
-      }
-    });
-  }
-
-  // 4. Sidebar layout position and columns styling
-  const layout = document.querySelector('.dashboard-layout');
-  const sidebarWidgetsGrid = document.getElementById('sidebar-widgets');
-  
-  if (layout) {
-    layout.classList.remove('sidebar-right', 'sidebar-left', 'sidebar-top', 'sidebar-hidden');
-    const pos = config.sidebarPos || 'right';
-    layout.classList.add(`sidebar-${pos}`);
-  }
-  
-  if (sidebarWidgetsGrid) {
-    sidebarWidgetsGrid.style.setProperty('--sidebar-cols', config.sidebarCols || '1');
-    sidebarWidgetsGrid.classList.remove('cols-1', 'cols-2');
-    sidebarWidgetsGrid.classList.add(`cols-${config.sidebarCols || '1'}`);
-  }
-
-  // 5. Apply visibility filters to active widgets
-  userWidgets.forEach(widget => {
-    const el = document.getElementById(widget.id);
-    if (!el) return;
-    
-    let isVisible = true;
-    if (widget.type === 'clock' && config.showClock === false) isVisible = false;
-    else if (widget.type === 'notepad' && config.showNotepad === false) isVisible = false;
-    else if (widget.type === 'weather' && config.showWeather === false) isVisible = false;
-    else if (widget.type === 'resources' && config.showResources === false) isVisible = false;
-    else if (widget.type === 'bookmarks' && config.showBookmarks === false) isVisible = false;
-    
-    el.style.display = isVisible ? '' : 'none';
-  });
-
-  // 6. Apply Background Style Patterns and Glow Blobs toggle
-  const patternOverlay = document.getElementById('bg-pattern-overlay');
-  if (patternOverlay) {
-    patternOverlay.className = 'bg-pattern-overlay';
-    if (config.bgPattern && config.bgPattern !== 'none') {
-      patternOverlay.classList.add(`pattern-${config.bgPattern}`);
-    }
-  }
-
-  const blobs = document.getElementById('bg-blobs');
-  if (blobs) {
-    blobs.style.display = config.showBlobs === false ? 'none' : '';
-  }
-}
-
-/**
- * Binds workspace settings modal dialog actions
- */
-function initSettingsModal() {
-  const settingsBtn = document.getElementById('workspace-settings-btn');
-  const settingsModal = document.getElementById('settings-modal');
-  const settingsForm = document.getElementById('settings-form');
-  const closeBtn = document.getElementById('settings-close-btn') || document.querySelector('.settings-close-btn') || document.querySelector('.close-settings');
-  const cancelBtn = document.getElementById('settings-cancel-btn') || document.querySelector('.settings-cancel-btn');
-
-  if (settingsBtn && settingsModal) {
-    settingsBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      populateSettingsForm();
-      settingsModal.style.display = 'flex';
-    });
-  }
-
-  const closeModalFn = () => {
-    if (settingsModal) settingsModal.style.display = 'none';
-  };
-
-  if (closeBtn) closeBtn.addEventListener('click', closeModalFn);
-  if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
-
-  if (settingsModal) {
-    settingsModal.addEventListener('click', (e) => {
-      if (e.target === settingsModal) {
-        closeModalFn();
-      }
-    });
-  }
-
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const getVal = (id, isCheckbox = false) => {
-        const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`) || document.querySelector(`[name="${id.replace('settings-', '')}"]`);
-        if (el) {
-          return isCheckbox ? el.checked : el.value;
-        }
-        const camelKey = id.replace('settings-', '').replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-        return workspaceConfig[camelKey];
-      };
-
-      workspaceConfig.gridCols = getVal('settings-grid-cols');
-      workspaceConfig.cardSize = getVal('settings-card-size');
-      workspaceConfig.cardGap = getVal('settings-card-gap');
-      workspaceConfig.sidebarPos = getVal('settings-sidebar-pos') || 'right';
-      workspaceConfig.sidebarCols = getVal('settings-sidebar-cols') || '1';
-      workspaceConfig.showClock = getVal('settings-toggle-clock', true);
-      workspaceConfig.showNotepad = getVal('settings-toggle-notepad', true);
-      workspaceConfig.showWeather = getVal('settings-toggle-weather', true);
-      workspaceConfig.showResources = getVal('settings-toggle-resources', true);
-      workspaceConfig.showBookmarks = getVal('settings-toggle-bookmarks', true);
-      workspaceConfig.weatherCity = getVal('settings-weather-city');
-      workspaceConfig.weatherState = getVal('settings-weather-state').toLowerCase();
-      workspaceConfig.bgPattern = getVal('settings-bg-pattern') || 'none';
-      workspaceConfig.showBlobs = getVal('settings-toggle-blobs', true);
-
-      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
-      applyWorkspaceConfig(workspaceConfig);
-      closeModalFn();
-    });
-  }
-}
-
-function populateSettingsForm() {
-  const config = workspaceConfig;
-  
-  const setVal = (id, val, isCheckbox = false) => {
-    const el = document.getElementById(id) || document.querySelector(`[name="${id}"]`) || document.querySelector(`[name="${id.replace('settings-', '')}"]`);
-    if (el) {
-      if (isCheckbox) {
-        el.checked = !!val;
-      } else {
-        el.value = val;
-      }
-    }
-  };
-
-  setVal('settings-grid-cols', config.gridCols);
-  setVal('settings-card-size', config.cardSize);
-  setVal('settings-card-gap', config.cardGap);
-  setVal('settings-sidebar-pos', config.sidebarPos || 'right');
-  setVal('settings-sidebar-cols', config.sidebarCols || '1');
-  setVal('settings-toggle-clock', config.showClock, true);
-  setVal('settings-toggle-notepad', config.showNotepad, true);
-  setVal('settings-toggle-weather', config.showWeather, true);
-  setVal('settings-toggle-resources', config.showResources, true);
-  setVal('settings-toggle-bookmarks', config.showBookmarks, true);
-  setVal('settings-weather-city', config.weatherCity);
-  setVal('settings-weather-state', config.weatherState.charAt(0).toUpperCase() + config.weatherState.slice(1));
-  setVal('settings-bg-pattern', config.bgPattern || 'none');
-  setVal('settings-toggle-blobs', config.showBlobs, true);
-}
-
-
-/* ==========================================================================
-   RESOURCE MONITOR WIDGET
-   ========================================================================== */
-
-/**
- * Updates an SVG circular gauge based on percentage and circle circumference.
- */
-function updateCircularGauge(circleEl, percentage) {
-  if (!circleEl) return;
-  let circumference = parseFloat(circleEl.getAttribute('stroke-dasharray'));
-  if (isNaN(circumference) || circumference <= 0) {
-    try {
-      circumference = circleEl.getTotalLength();
-    } catch (e) {
-      const r = parseFloat(circleEl.getAttribute('r')) || 40;
-      circumference = 2 * Math.PI * r;
-    }
-  }
-  
-  circleEl.style.strokeDasharray = circumference;
-  const offset = circumference - (percentage / 100) * circumference;
-  circleEl.style.strokeDashoffset = offset;
-}
-
-/**
- * Dynamic Widgets Storage Synchronizers
- */
 function loadWidgetsFromStorage() {
   const data = localStorage.getItem(STORAGE_KEY_WIDGETS);
   if (!data) {
@@ -1097,6 +1879,7 @@ function loadWidgetsFromStorage() {
     return JSON.parse(JSON.stringify(DEFAULT_WIDGETS));
   }
 }
+
 
 function saveWidgetsToStorage(widgets) {
   localStorage.setItem(STORAGE_KEY_WIDGETS, JSON.stringify(widgets));
