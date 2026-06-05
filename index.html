@@ -359,35 +359,55 @@
           <div class="accordion-group">
             <!-- Plex / Tautulli -->
             <div class="integration-section-header">Plex Media Server</div>
-            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 6px;">
               <input type="url" id="integration-plex-url" placeholder="http://localhost:32400">
               <input type="password" id="integration-plex-token" placeholder="Plex Token">
             </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="plex" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-plex" style="font-size:0.75rem; font-weight:500;"></span>
+            </div>
 
             <div class="integration-section-header">Tautulli Monitor</div>
-            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 6px;">
               <input type="url" id="integration-tautulli-url" placeholder="http://localhost:8181">
               <input type="password" id="integration-tautulli-key" placeholder="API Key">
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="tautulli" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-tautulli" style="font-size:0.75rem; font-weight:500;"></span>
             </div>
 
             <!-- Sonarr / Radarr -->
             <div class="integration-section-header">Sonarr TV Tracker</div>
-            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 6px;">
               <input type="url" id="integration-sonarr-url" placeholder="http://localhost:8989">
               <input type="password" id="integration-sonarr-key" placeholder="API Key">
             </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="sonarr" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-sonarr" style="font-size:0.75rem; font-weight:500;"></span>
+            </div>
 
             <div class="integration-section-header">Radarr Movie Tracker</div>
-            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 6px;">
               <input type="url" id="integration-radarr-url" placeholder="http://localhost:7878">
               <input type="password" id="integration-radarr-key" placeholder="API Key">
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="radarr" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-radarr" style="font-size:0.75rem; font-weight:500;"></span>
             </div>
 
             <!-- Overseerr -->
             <div class="integration-section-header">Overseerr Requests</div>
-            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 6px;">
               <input type="url" id="integration-overseerr-url" placeholder="http://localhost:5055">
               <input type="password" id="integration-overseerr-key" placeholder="API Key">
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="overseerr" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-overseerr" style="font-size:0.75rem; font-weight:500;"></span>
             </div>
 
             <!-- qBittorrent -->
@@ -396,6 +416,10 @@
               <input type="url" id="integration-qbittorrent-url" placeholder="http://localhost:8080">
               <input type="text" id="integration-qbittorrent-user" placeholder="Username">
               <input type="password" id="integration-qbittorrent-pass" placeholder="Password">
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 6px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="qbittorrent" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-qbittorrent" style="font-size:0.75rem; font-weight:500;"></span>
             </div>
           </div>
           

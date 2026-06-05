@@ -297,6 +297,10 @@ function saveIntegrationConfigs(configs) {
   localStorage.setItem(STORAGE_KEY_INTEGRATIONS, JSON.stringify(configs));
 }
 
+function cleanUrl(url) {
+  return url ? url.trim().replace(/\/+$/, '') : '';
+}
+
 /**
  * Utility Helpers
  */
@@ -518,7 +522,7 @@ async function queryIntegrationApi(type, groupIndex, appIndex) {
 
 // Plex Streams Fetch/Mock
 async function getPlexStreams() {
-  const url = integrationConfigs.plexUrl;
+  const url = cleanUrl(integrationConfigs.plexUrl);
   const token = integrationConfigs.plexToken;
   if (!url || !token) {
     return { online: true, count: 1, streams: [{ title: 'Interstellar (1080p)', user: 'Thomas (AppleTV)' }] }; // Mock default
@@ -548,7 +552,7 @@ async function getPlexStreams() {
 
 // Tautulli Fetch/Mock
 async function getTautulliActivity() {
-  const url = integrationConfigs.tautulliUrl;
+  const url = cleanUrl(integrationConfigs.tautulliUrl);
   const key = integrationConfigs.tautulliKey;
   if (!url || !key) {
     return { streamCount: 1, transcodeCount: 0 };
@@ -568,7 +572,7 @@ async function getTautulliActivity() {
 
 // Sonarr Calendar Fetch/Mock
 async function getSonarrUpcoming() {
-  const url = integrationConfigs.sonarrUrl;
+  const url = cleanUrl(integrationConfigs.sonarrUrl);
   const key = integrationConfigs.sonarrKey;
   if (!url || !key) {
     return { releases: [{ title: 'The Boys S04E05', date: 'Tomorrow' }, { title: 'House of the Dragon S02E03', date: 'In 2 days' }] };
@@ -594,7 +598,7 @@ async function getSonarrUpcoming() {
 
 // Radarr Calendar Fetch/Mock
 async function getRadarrUpcoming() {
-  const url = integrationConfigs.radarrUrl;
+  const url = cleanUrl(integrationConfigs.radarrUrl);
   const key = integrationConfigs.radarrKey;
   if (!url || !key) {
     return { releases: [{ title: 'Deadpool & Wolverine', date: 'Next Friday' }] };
@@ -620,7 +624,7 @@ async function getRadarrUpcoming() {
 
 // Overseerr Requests Fetch/Mock
 async function getOverseerrRequests() {
-  const url = integrationConfigs.overseerrUrl;
+  const url = cleanUrl(integrationConfigs.overseerrUrl);
   const key = integrationConfigs.overseerrKey;
   if (!url || !key) {
     return { pending: 2, approved: 14 };
@@ -641,7 +645,7 @@ async function getOverseerrRequests() {
 
 // qBittorrent Fetch/Mock
 async function getQbittorrentStatus() {
-  const url = integrationConfigs.qbittorrentUrl;
+  const url = cleanUrl(integrationConfigs.qbittorrentUrl);
   if (!url) {
     // Generate organic shifting download progress mock
     const progress = Math.min(100, Math.round(55 + (Date.now() / 100000) % 40));
@@ -1319,6 +1323,92 @@ function initSettingsModal() {
   if (importFile) {
     importFile.addEventListener('change', (e) => importWorkspaceConfig(e));
   }
+
+  // Hook Test Connection buttons
+  const testBtns = document.querySelectorAll('.test-integration-btn');
+  testBtns.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const integration = btn.getAttribute('data-integration');
+      const statusEl = document.getElementById(`test-status-${integration}`);
+      if (!statusEl) return;
+      
+      statusEl.innerHTML = `<i class="fa-solid fa-sync fa-spin" style="color:var(--text-secondary)"></i> Testing...`;
+      statusEl.style.color = 'var(--text-secondary)';
+
+      // Read values live from form inputs
+      let url = '';
+      let key = '';
+
+      if (integration === 'plex') {
+        url = cleanUrl(document.getElementById('integration-plex-url').value);
+        key = document.getElementById('integration-plex-token').value.trim();
+      } else if (integration === 'tautulli') {
+        url = cleanUrl(document.getElementById('integration-tautulli-url').value);
+        key = document.getElementById('integration-tautulli-key').value.trim();
+      } else if (integration === 'sonarr') {
+        url = cleanUrl(document.getElementById('integration-sonarr-url').value);
+        key = document.getElementById('integration-sonarr-key').value.trim();
+      } else if (integration === 'radarr') {
+        url = cleanUrl(document.getElementById('integration-radarr-url').value);
+        key = document.getElementById('integration-radarr-key').value.trim();
+      } else if (integration === 'overseerr') {
+        url = cleanUrl(document.getElementById('integration-overseerr-url').value);
+        key = document.getElementById('integration-overseerr-key').value.trim();
+      } else if (integration === 'qbittorrent') {
+        url = cleanUrl(document.getElementById('integration-qbittorrent-url').value);
+      }
+
+      if (!url) {
+        statusEl.innerHTML = `❌ URL is empty`;
+        statusEl.style.color = '#f87171';
+        return;
+      }
+
+      try {
+        let success = false;
+        let errorDetail = '';
+
+        if (integration === 'plex') {
+          const res = await fetch(`${url}/status/sessions?X-Plex-Token=${key}`, { headers: { 'Accept': 'application/json' } });
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'tautulli') {
+          const res = await fetch(`${url}/api/v2?apikey=${key}&cmd=get_activity`);
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'sonarr') {
+          const res = await fetch(`${url}/api/v3/system/status?apikey=${key}`);
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'radarr') {
+          const res = await fetch(`${url}/api/v3/system/status?apikey=${key}`);
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'overseerr') {
+          const res = await fetch(`${url}/api/v1/status`, { headers: { 'X-Api-Key': key } });
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'qbittorrent') {
+          const res = await fetch(`${url}/api/v2/torrents/info?filter=all`);
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        }
+
+        if (success) {
+          statusEl.innerHTML = `✅ Connection Successful!`;
+          statusEl.style.color = '#34d399';
+        } else {
+          statusEl.innerHTML = `❌ Failed (${errorDetail})`;
+          statusEl.style.color = '#f87171';
+        }
+      } catch (err) {
+        console.error(`Test Connection Error for ${integration}:`, err);
+        statusEl.innerHTML = `❌ Failed (CORS block or Host offline)`;
+        statusEl.style.color = '#f87171';
+      }
+    });
+  });
 }
 
 function populateSettingsForm() {
