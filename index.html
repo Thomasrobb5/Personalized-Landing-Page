@@ -521,6 +521,7 @@
             <option value="countdown">Countdown Timer</option>
             <option value="iframe">Iframe Embed Screen</option>
             <option value="calculator">Calculator</option>
+            <option value="disk">Disk Storage Space (Sonarr)</option>
           </select>
         </div>
 
@@ -573,6 +574,14 @@
             <div class="form-group">
               <label for="widget-iframe-height">Widget Height (px)</label>
               <input type="number" id="widget-iframe-height" placeholder="200" min="100" max="800" value="200">
+            </div>
+          </div>
+
+          <!-- Disk Storage Config -->
+          <div class="widget-type-fields field-disk" style="display: none;">
+            <div class="form-group">
+              <label for="widget-disk-path">Disk Path Filter (Optional)</label>
+              <input type="text" id="widget-disk-path" placeholder="e.g. /Plex_Media (leave empty for all)">
             </div>
           </div>
         </div>

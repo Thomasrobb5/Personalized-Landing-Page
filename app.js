@@ -589,7 +589,7 @@ async function getSonarrUpcoming() {
   try {
     const start = new Date().toISOString().split('T')[0];
     const end = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
-    const res = await fetch(`${url}/api/v3/calendar?apikey=${key}&start=${start}&end=${end}`);
+    const res = await fetch(`${url}/api/v3/calendar?apikey=${key}&start=${start}&end=${end}&includeSeries=true`);
     if (!res.ok) throw new Error();
     const json = await res.json();
     const releases = json.map(item => {
@@ -2142,8 +2142,8 @@ function renderSidebarWidgets(widgets) {
     else if (widget.type === 'bookmarks') iconClass = 'fa-bookmark';
     else if (widget.type === 'todo') iconClass = 'fa-list-check';
     else if (widget.type === 'countdown') iconClass = 'fa-stopwatch';
-    else if (widget.type === 'iframe') iconClass = 'fa-window-maximize';
     else if (widget.type === 'calculator') iconClass = 'fa-calculator';
+    else if (widget.type === 'disk') iconClass = 'fa-hard-drive';
     
     titleEl.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${widget.title}`;
     header.appendChild(titleEl);
@@ -2212,6 +2212,7 @@ function buildWidgetBody(widget, container, statusEl) {
   else if (widget.type === 'countdown') buildCountdownWidget(widget, container);
   else if (widget.type === 'iframe') buildIframeWidget(widget, container);
   else if (widget.type === 'calculator') buildCalculatorWidget(widget, container);
+  else if (widget.type === 'disk') buildDiskWidget(widget, container, statusEl);
 }
 
 /**
@@ -2670,6 +2671,94 @@ function buildCalculatorWidget(widget, container) {
   });
 }
 
+function buildDiskWidget(widget, container, statusEl) {
+  container.innerHTML = `<div class="disk-widget-content" id="disk-content-${widget.id}"><div style="opacity:0.6; font-size:0.8rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading storage details...</div></div>`;
+  updateDiskWidgetContent(widget, container, statusEl);
+}
+
+async function updateDiskWidgetContent(widget, container, statusEl) {
+  const diskContentContainer = container.querySelector(`#disk-content-${widget.id}`);
+  if (!diskContentContainer) return;
+
+  const url = cleanUrl(integrationConfigs.sonarrUrl);
+  const key = integrationConfigs.sonarrKey;
+  const filterPath = widget.settings.path ? widget.settings.path.toLowerCase().trim() : '';
+
+  if (!url || !key) {
+    // Render mock data
+    const mockDisks = [
+      { path: '/data/media', free: '5.9 TB', total: '8.0 TB', pct: 73.7 },
+      { path: '/system/root', free: '124.0 GB', total: '250.0 GB', pct: 49.6 }
+    ];
+
+    let html = '';
+    mockDisks.forEach(d => {
+      if (filterPath && !d.path.toLowerCase().includes(filterPath)) return;
+      html += `
+        <div class="disk-usage-item" style="margin-bottom: 8px; padding: 10px 12px; border-radius: 12px;">
+          <div class="disk-usage-header" style="font-size: 0.75rem; margin-bottom: 4px;">
+            <span class="disk-usage-path" style="font-size: 0.75rem;">${d.path}</span>
+            <span>${d.free} free / ${d.total} total</span>
+          </div>
+          <div class="disk-progress-bar" style="height: 5px; border-radius: 2.5px;">
+            <div class="disk-progress-fill" style="width: ${d.pct}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    if (!html) {
+      html = `<div style="opacity:0.6; font-size:0.8rem;">No matching mock paths found.</div>`;
+    }
+    diskContentContainer.innerHTML = html;
+    if (statusEl) statusEl.textContent = 'Demo Mode';
+    return;
+  }
+
+  try {
+    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    const res = await fetch(`${url}/api/v3/diskspace?apikey=${key}`);
+    if (!res.ok) throw new Error();
+    const diskData = await res.json();
+    
+    if (diskData.length === 0) {
+      diskContentContainer.innerHTML = `<div style="opacity:0.6; font-size:0.8rem;">No storage paths found.</div>`;
+      if (statusEl) statusEl.textContent = '';
+      return;
+    }
+
+    let html = '';
+    let foundAny = false;
+    diskData.forEach(d => {
+      if (filterPath && !d.path.toLowerCase().includes(filterPath)) return;
+      foundAny = true;
+      const free = formatBytes(d.freeSpace);
+      const total = formatBytes(d.totalSpace);
+      const usedPercent = ((d.totalSpace - d.freeSpace) / d.totalSpace) * 100;
+      
+      html += `
+        <div class="disk-usage-item" style="margin-bottom: 8px; padding: 10px 12px; border-radius: 12px;">
+          <div class="disk-usage-header" style="font-size: 0.75rem; margin-bottom: 4px;">
+            <span class="disk-usage-path" style="font-size: 0.75rem;">${d.path}</span>
+            <span>${free} free / ${total} total</span>
+          </div>
+          <div class="disk-progress-bar" style="height: 5px; border-radius: 2.5px;">
+            <div class="disk-progress-fill" style="width: ${usedPercent.toFixed(1)}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+
+    if (!foundAny) {
+      html = `<div style="opacity:0.6; font-size:0.8rem;">No path matching "${widget.settings.path}"</div>`;
+    }
+    diskContentContainer.innerHTML = html;
+    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
+  } catch (err) {
+    diskContentContainer.innerHTML = `<div style="color:#f87171; font-size:0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading disk space.</div>`;
+    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i>';
+  }
+}
+
 /**
  * Global Clock, Resource Monitor & Countdown Timers
  */
@@ -2818,6 +2907,19 @@ function tickCountdowns() {
   });
 }
 
+function updateAllDiskWidgets() {
+  userWidgets.forEach(widget => {
+    if (widget.type !== 'disk') return;
+    const cardEl = document.getElementById(widget.id);
+    if (!cardEl) return;
+    const bodyContainer = cardEl.querySelector('.widget-body-content');
+    const statusEl = document.getElementById(`status-${widget.id}`);
+    if (bodyContainer) {
+      updateDiskWidgetContent(widget, bodyContainer, statusEl);
+    }
+  });
+}
+
 function initGlobalTimers() {
   updateAllClocks();
   setInterval(updateAllClocks, 1000);
@@ -2827,12 +2929,16 @@ function initGlobalTimers() {
   
   tickCountdowns();
   setInterval(tickCountdowns, 1000);
+  
+  updateAllDiskWidgets();
+  setInterval(updateAllDiskWidgets, 60000);
 }
 
 function runWidgetInitializers() {
   updateAllClocks();
   updateDynamicResources();
   tickCountdowns();
+  updateAllDiskWidgets();
 }
 
 /**
@@ -2879,6 +2985,8 @@ function openWidgetModalForEdit(index) {
   } else if (widget.type === 'iframe') {
     document.getElementById('widget-iframe-url').value = widget.settings.url || '';
     document.getElementById('widget-iframe-height').value = widget.settings.height || 200;
+  } else if (widget.type === 'disk') {
+    document.getElementById('widget-disk-path').value = widget.settings.path || '';
   }
   
   document.getElementById('widget-modal').style.display = 'flex';
@@ -2937,6 +3045,8 @@ function initWidgetModalEvents() {
           { name: 'GitHub', url: 'https://github.com' },
           { name: 'Google', url: 'https://google.com' }
         ];
+      } else if (type === 'disk') {
+        settings.path = document.getElementById('widget-disk-path').value.trim();
       }
       
       if (editingWidgetIndex === null) {
