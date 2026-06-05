@@ -553,6 +553,7 @@ async function getPlexStreams() {
     }
     return { online: true, count: size, streams };
   } catch (e) {
+    if (url && token) throw e;
     return { online: true, count: 1, streams: [{ title: 'Interstellar (1080p)', user: 'Thomas (AppleTV)' }] }; // Fallback mock
   }
 }
@@ -573,6 +574,7 @@ async function getTautulliActivity() {
       transcodeCount: parseInt(json.response.data.stream_count_transcode || 0)
     };
   } catch (e) {
+    if (url && key) throw e;
     return { streamCount: 1, transcodeCount: 0 };
   }
 }
@@ -599,6 +601,7 @@ async function getSonarrUpcoming() {
     });
     return { releases };
   } catch (e) {
+    if (url && key) throw e;
     return { releases: [{ title: 'The Boys S04E05', date: 'Tomorrow' }, { title: 'House of the Dragon S02E03', date: 'In 2 days' }] };
   }
 }
@@ -625,6 +628,7 @@ async function getRadarrUpcoming() {
     });
     return { releases };
   } catch (e) {
+    if (url && key) throw e;
     return { releases: [{ title: 'Deadpool & Wolverine', date: 'Next Friday' }] };
   }
 }
@@ -646,6 +650,7 @@ async function getOverseerrRequests() {
     const approved = json.results.filter(r => r.status === 2).length; // status 2 is approved
     return { pending, approved };
   } catch (e) {
+    if (url && key) throw e;
     return { pending: 2, approved: 14 };
   }
 }
@@ -677,6 +682,7 @@ async function getQbittorrentStatus() {
       
     return { progress: avgProgress, speed: speedFormatted };
   } catch (e) {
+    if (url) throw e;
     const progress = Math.min(100, Math.round(55 + (Date.now() / 100000) % 40));
     return { progress, speed: '4.2 MB/s' };
   }
