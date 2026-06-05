@@ -3010,15 +3010,43 @@ async function renderRadarrSonarrOverlay(integration, container) {
   const label = integration === 'radarr' ? 'movies' : 'TV shows';
   
   container.innerHTML = `
-    <div class="detail-search-bar-wrapper">
-      <i class="fa-solid fa-magnifying-glass detail-search-icon"></i>
-      <input type="text" class="detail-search-input-field" placeholder="Search for ${label} to add to ${integration.toUpperCase()}..." id="detail-media-search">
+    <!-- Overlay Tab Navigation -->
+    <div class="detail-tab-bar">
+      <button type="button" class="detail-tab-btn active" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i> Search & Add</button>
+      <button type="button" class="detail-tab-btn" data-tab="queue"><i class="fa-solid fa-circle-arrow-down"></i> Active Queue</button>
+      <button type="button" class="detail-tab-btn" data-tab="library"><i class="fa-solid fa-folder-open"></i> Library Explorer</button>
+    </div>
+
+    <!-- Tab Content Panes -->
+    <div class="detail-tab-panes" style="margin-bottom: 24px;">
+      <!-- Search Pane -->
+      <div class="detail-tab-pane" id="pane-search" style="display:block;">
+        <div class="detail-search-bar-wrapper">
+          <i class="fa-solid fa-magnifying-glass detail-search-icon" style="cursor: pointer;"></i>
+          <input type="text" class="detail-search-input-field" placeholder="Search for new ${label} to add to ${integration.toUpperCase()}..." id="detail-media-search">
+        </div>
+        <div class="media-results-container">
+          <div class="search-results-grid" id="detail-search-results" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- Queue Pane -->
+      <div class="detail-tab-pane" id="pane-queue" style="display:none;">
+        <div class="queue-list" id="detail-queue-list">
+          <div style="opacity:0.6; font-size:0.85rem; padding:20px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking downloads queue...</div>
+        </div>
+      </div>
+
+      <!-- Library Pane -->
+      <div class="detail-tab-pane" id="pane-library" style="display:none;">
+        <div class="library-filter-wrapper" style="margin-bottom: 20px;">
+          <input type="text" class="detail-search-input-field" placeholder="Filter library by title..." id="detail-library-filter" style="padding: 12px 18px; border-radius:12px;">
+        </div>
+        <div class="search-results-grid" id="detail-library-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px;"></div>
+      </div>
     </div>
     
-    <div class="media-results-container" style="margin-bottom: 32px;">
-      <div class="search-results-grid" id="detail-search-results" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px;"></div>
-    </div>
-    
+    <!-- Permanent Stats Row -->
     <div class="media-details-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; border-top: 1px solid rgba(255,255,255,0.08); padding-top:24px;">
       <div class="disk-usage-section">
         <h4 style="margin-bottom: 16px; font-size: 1rem; font-family: var(--font-display); font-weight:700;"><i class="fa-solid fa-hard-drive" style="color:rgb(var(--accent-color-rgb));"></i> Disk Storage</h4>
@@ -3039,26 +3067,96 @@ async function renderRadarrSonarrOverlay(integration, container) {
   const resultsGrid = container.querySelector('#detail-search-results');
   const diskSpaceContainer = container.querySelector('#detail-disk-space');
   const upcomingContainer = container.querySelector('#detail-upcoming-releases');
+  const queueList = container.querySelector('#detail-queue-list');
+  const libraryGrid = container.querySelector('#detail-library-grid');
+  const libraryFilter = container.querySelector('#detail-library-filter');
 
+  // Load basic stats
   loadRadarrSonarrDiskSpace(integration, diskSpaceContainer);
   loadRadarrSonarrCalendar(integration, upcomingContainer);
 
+  // Tab switching logic
+  const tabs = container.querySelectorAll('.detail-tab-btn');
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      tabs.forEach(btn => btn.classList.remove('active'));
+      t.classList.add('active');
+      
+      const targetTab = t.getAttribute('data-tab');
+      container.querySelectorAll('.detail-tab-pane').forEach(p => p.style.display = 'none');
+      container.querySelector(`#pane-${targetTab}`).style.display = 'block';
+      
+      // Stop ongoing loops when switching tabs
+      if (detailOverlayInterval) {
+        clearInterval(detailOverlayInterval);
+        detailOverlayInterval = null;
+      }
+      
+      if (targetTab === 'queue') {
+        loadRadarrSonarrQueue(integration, queueList);
+        detailOverlayInterval = setInterval(() => {
+          loadRadarrSonarrQueue(integration, queueList);
+        }, 3000);
+      } else if (targetTab === 'library') {
+        loadRadarrSonarrLibrary(integration, libraryGrid);
+      }
+    });
+  });
+
+  // Debounced search logic
   if (searchInput && resultsGrid) {
     searchInput.focus();
-    searchInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter') {
-        const query = searchInput.value.trim();
-        if (query.length === 0) return;
-        
-        resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Searching ${integration.toUpperCase()} library...</div>`;
-        
+    let searchTimeout = null;
+    
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      const query = searchInput.value.trim();
+      
+      if (query.length === 0) {
+        resultsGrid.innerHTML = '';
+        return;
+      }
+      
+      resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-keyboard fa-fade"></i> &nbsp; Typing...</div>`;
+      
+      searchTimeout = setTimeout(async () => {
+        resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Searching ${integration.toUpperCase()}...</div>`;
         try {
           await renderMediaSearchResults(integration, query, resultsGrid);
         } catch (err) {
           console.error(err);
           resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading search results.</div>`;
         }
-      }
+      }, 450);
+    });
+
+    // Make magnifying glass icon trigger immediate search on click
+    const searchIcon = container.querySelector('.detail-search-icon');
+    if (searchIcon) {
+      searchIcon.addEventListener('click', async () => {
+        clearTimeout(searchTimeout);
+        const query = searchInput.value.trim();
+        if (query.length === 0) return;
+        
+        resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Searching ${integration.toUpperCase()}...</div>`;
+        try {
+          await renderMediaSearchResults(integration, query, resultsGrid);
+        } catch (err) {
+          resultsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading search results.</div>`;
+        }
+      });
+    }
+  }
+
+  // Library browser filter
+  if (libraryFilter && libraryGrid) {
+    libraryFilter.addEventListener('input', () => {
+      const q = libraryFilter.value.toLowerCase().trim();
+      const cards = libraryGrid.querySelectorAll('.search-result-card');
+      cards.forEach(c => {
+        const title = c.querySelector('.search-result-title').textContent.toLowerCase();
+        c.style.display = title.includes(q) ? 'flex' : 'none';
+      });
     });
   }
 }
@@ -3190,6 +3288,217 @@ async function loadRadarrSonarrCalendar(integration, container) {
   } catch (err) {
     container.innerHTML = `<div style="color:#f87171; font-size:0.8rem;"><i class="fa-solid fa-triangle-exclamation"></i> Could not query calendar.</div>`;
   }
+}
+
+async function loadRadarrSonarrQueue(integration, container) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+
+  if (!url || !key) {
+    // Render mock downloading queue
+    let html = '<div class="queue-list">';
+    let mockQueue = [];
+    if (integration === 'radarr') {
+      mockQueue = [
+        { title: 'Gladiator II (2024)', size: 13314390000, sizeleft: 6920000000, status: 'downloading', timeleft: '00:08:12' },
+        { title: 'Dune: Part Two (2024)', size: 19430000000, sizeleft: 19430000000, status: 'paused', timeleft: 'Paused' }
+      ];
+    } else {
+      mockQueue = [
+        { title: 'Severance - S02E01 - Episode 1', size: 2250000000, sizeleft: 450000000, status: 'downloading', timeleft: '00:01:15' },
+        { title: 'The Boys - S04E06 - Episode 6', size: 2460000000, sizeleft: 2150000000, status: 'downloading', timeleft: '00:15:30' }
+      ];
+    }
+
+    mockQueue.forEach(t => {
+      const progress = ((t.size - t.sizeleft) / t.size) * 100;
+      const progressPercent = progress.toFixed(1);
+      const sizeStr = formatBytes(t.size);
+      const leftStr = formatBytes(t.sizeleft);
+      
+      html += `
+        <div class="queue-item-row">
+          <div class="queue-row-top">
+            <span class="queue-name" title="${t.title}">${t.title}</span>
+            <span class="queue-percent">${progressPercent}%</span>
+          </div>
+          <div class="queue-progress-bar-container">
+            <div class="queue-progress-bar-fill" style="width: ${progressPercent}%;"></div>
+          </div>
+          <div class="queue-row-bottom">
+            <div class="queue-stats-left">
+              <span><i class="fa-solid fa-hard-drive"></i> ${leftStr} left of ${sizeStr}</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> ${t.timeleft}</span>
+              <span class="queue-status-badge">${t.status}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${url}/api/v3/queue?apikey=${key}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    
+    const queueItems = Array.isArray(data) ? data : (data.records || []);
+    
+    if (queueItems.length === 0) {
+      container.innerHTML = `
+        <div style="opacity:0.6; font-size:0.85rem; padding:12px; display:flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-circle-check" style="color:#34d399; font-size:1.1rem;"></i> No active downloading queue items.
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div class="queue-list">';
+    queueItems.forEach(t => {
+      const title = t.title || 'Unknown Media';
+      const size = t.size || 0;
+      const sizeleft = t.sizeleft || 0;
+      const progress = size > 0 ? (((size - sizeleft) / size) * 100) : 0;
+      const progressPercent = progress.toFixed(1);
+      const sizeStr = formatBytes(size);
+      const leftStr = formatBytes(sizeleft);
+      const status = t.status || 'downloading';
+      const timeleft = t.timeleft || 'Unknown';
+      
+      html += `
+        <div class="queue-item-row">
+          <div class="queue-row-top">
+            <span class="queue-name" title="${title}">${title}</span>
+            <span class="queue-percent">${progressPercent}%</span>
+          </div>
+          <div class="queue-progress-bar-container">
+            <div class="queue-progress-bar-fill" style="width: ${progressPercent}%;"></div>
+          </div>
+          <div class="queue-row-bottom">
+            <div class="queue-stats-left">
+              <span><i class="fa-solid fa-hard-drive"></i> ${leftStr} left of ${sizeStr}</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> ${timeleft}</span>
+              <span class="queue-status-badge">${status}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#f87171; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading queue list.</div>`;
+  }
+}
+
+async function loadRadarrSonarrLibrary(integration, container) {
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+
+  container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Loading library entries...</div>`;
+
+  if (!url || !key) {
+    let mockLibrary = [];
+    if (integration === 'radarr') {
+      mockLibrary = [
+        { id: 1, title: 'Inception', year: 2010, poster: 'https://image.tmdb.org/t/p/w185/iiZZZe44P6r7532vcyfK24gPVev.jpg', hasFile: true },
+        { id: 2, title: 'The Dark Knight', year: 2008, poster: 'https://image.tmdb.org/t/p/w185/qJ2t4EDtegiovRMMjaL0asQEEZz.jpg', hasFile: true },
+        { id: 3, title: 'Interstellar', year: 2014, poster: 'https://image.tmdb.org/t/p/w185/gEU2QniE6E6vNI6m8hmdj6HwMwR.jpg', hasFile: true },
+        { id: 4, title: 'Spider-Man: Across the Spider-Verse', year: 2023, poster: 'https://image.tmdb.org/t/p/w185/8Vtbi7ehX7S6C61rjv5hWgMzarj.jpg', hasFile: false }
+      ];
+    } else {
+      mockLibrary = [
+        { id: 1, title: 'Breaking Bad', year: 2008, poster: 'https://image.tmdb.org/t/p/w185/ztkK6o1wS6EZDw7Z65XzsIfVZPE.jpg', statistics: { episodeFileCount: 62, episodeCount: 62 } },
+        { id: 2, title: 'Stranger Things', year: 2016, poster: 'https://image.tmdb.org/t/p/w185/49WJfeN0mhmmQ9R6j4qqC34FIaY.jpg', statistics: { episodeFileCount: 34, episodeCount: 34 } },
+        { id: 3, title: 'The Boys', year: 2019, poster: 'https://image.tmdb.org/t/p/w185/7NsNS8VQD1T28t3qn9d191iHOfH.jpg', statistics: { episodeFileCount: 24, episodeCount: 32 } }
+      ];
+    }
+
+    displayLibraryResults(integration, mockLibrary, container, true);
+    return;
+  }
+
+  try {
+    const endpoint = integration === 'radarr'
+      ? `${url}/api/v3/movie?apikey=${key}`
+      : `${url}/api/v3/series?apikey=${key}`;
+
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+    if (data.length === 0) {
+      container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; opacity:0.6;"><i class="fa-solid fa-face-frown"></i> Library is currently empty.</div>`;
+      return;
+    }
+
+    const sorted = data.sort((a, b) => b.id - a.id).slice(0, 36);
+    displayLibraryResults(integration, sorted, container, false);
+  } catch (err) {
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; font-size:0.95rem; color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i> Error loading library.</div>`;
+  }
+}
+
+function displayLibraryResults(integration, results, gridContainer, isMock) {
+  gridContainer.innerHTML = '';
+  const url = cleanUrl(integrationConfigs[`${integration}Url`]);
+  const key = integrationConfigs[`${integration}Key`];
+
+  results.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+    card.style.position = 'relative';
+
+    let posterUrl = '';
+    if (isMock) {
+      posterUrl = item.poster;
+    } else {
+      posterUrl = `${url}/api/v3/mediacover/${item.id}/poster.jpg?apikey=${key}`;
+    }
+
+    let posterHtml = `<div class="search-result-poster-wrapper"><i class="fa-solid fa-clapperboard search-result-poster-fallback"></i></div>`;
+    if (posterUrl) {
+      posterHtml = `
+        <div class="search-result-poster-wrapper">
+          <img src="${posterUrl}" alt="${item.title}" class="search-result-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="search-result-poster-fallback" style="display:none;"><i class="fa-solid fa-clapperboard"></i></div>
+        </div>
+      `;
+    }
+
+    let badgeHtml = '';
+    if (integration === 'radarr') {
+      const isAvailable = item.hasFile || (item.movieFile && item.movieFile.id > 0);
+      const label = isAvailable ? 'Available' : 'Missing';
+      const classType = isAvailable ? 'available' : 'missing';
+      badgeHtml = `<span class="library-status-badge library-status-${classType}">${label}</span>`;
+    } else {
+      const stats = item.statistics;
+      if (stats) {
+        const isCompleted = stats.episodeFileCount === stats.episodeCount;
+        const classType = isCompleted ? 'available' : 'missing';
+        badgeHtml = `<span class="library-status-badge library-status-${classType}">${stats.episodeFileCount}/${stats.episodeCount} Ep</span>`;
+      } else {
+        badgeHtml = `<span class="library-status-badge library-status-missing">0/0 Ep</span>`;
+      }
+    }
+
+    card.innerHTML = `
+      ${badgeHtml}
+      ${posterHtml}
+      <div class="search-result-info">
+        <h4 class="search-result-title" title="${item.title}">${item.title}</h4>
+        <div class="search-result-meta">
+          <span>${item.year || ''}</span>
+        </div>
+      </div>
+    `;
+
+    gridContainer.appendChild(card);
+  });
 }
 
 async function renderMediaSearchResults(integration, query, resultsGrid) {

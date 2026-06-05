@@ -3310,3 +3310,145 @@ a {
   color: #60a5fa;
 }
 
+/* --------------------------------------------------------------------------
+   Radarr / Sonarr Overlay Tab Navigation & Sub-widgets Styling
+   -------------------------------------------------------------------------- */
+.detail-tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.detail-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.detail-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.detail-tab-btn.active {
+  background: rgba(var(--accent-color-rgb), 0.15);
+  color: rgb(var(--accent-color-rgb));
+  border: 1px solid rgba(var(--accent-color-rgb), 0.3);
+}
+
+/* Queue List Layout */
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.queue-item-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--transition-fast);
+}
+
+.queue-item-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.queue-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.queue-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-percent {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.queue-progress-bar-container {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.queue-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.queue-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+}
+
+.queue-stats-left {
+  display: flex;
+  gap: 12px;
+}
+
+.queue-status-badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+/* Library Poster Badges */
+.library-status-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.library-status-available {
+  background: rgba(16, 185, 129, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: white;
+}
+
+.library-status-missing {
+  background: rgba(239, 68, 68, 0.85);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: white;
+}
+
