@@ -1,0 +1,275 @@
+{
+  "version": "2.0.0",
+  "groups": [
+    {
+      "id": "group-default",
+      "title": "My Applications",
+      "icon": "fa-folder",
+      "collapsed": false,
+      "apps": [
+        {
+          "title": "FilmIQ",
+          "desc": "Cinematic tracker and analytics dashboard",
+          "url": "https://filmiq.app",
+          "color": "#a855f7",
+          "icon": "fa-film",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "url": "https://prismpf.com",
+          "title": "Prism Personal Finance",
+          "desc": "Personal wealth tracker and budgeting system",
+          "color": "#10b981",
+          "icon": "fa-chart-line",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "url": "https://blog.tomjrobb.com/",
+          "title": "Personal Blog",
+          "desc": "Thoughts on engineering, design, and technology",
+          "color": "#3b82f6",
+          "icon": "fa-pen-nib",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "title": "FilmIQ - Admin Portal",
+          "desc": "Track Game Stats",
+          "url": "https://filmiq.app/admin",
+          "color": "#8df755",
+          "icon": "fa-film",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "url": "https://orbit-project-tracker.thomasrobb5.workers.dev/",
+          "title": "Orbit Project Management",
+          "desc": "Collaborative project tracker and workflow manager",
+          "color": "#06b6d4",
+          "icon": "fa-atom",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "url": "https://lightzstocksystem.pages.dev/",
+          "title": "Lightz",
+          "desc": "Stock inventory and system management utility",
+          "color": "#f59e0b",
+          "icon": "fa-bolt-lightning",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        },
+        {
+          "url": "https://diablo4-hof.thomasrobb5.workers.dev/",
+          "title": "Diablo 4 Challenge",
+          "desc": "Discord community leaderboard and hall of fame",
+          "color": "#ef4444",
+          "icon": "fa-skull",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "none"
+        }
+      ]
+    },
+    {
+      "id": "group-self-hosted",
+      "title": "Self-Hosted Services",
+      "icon": "fa-server",
+      "collapsed": false,
+      "apps": [
+        {
+          "url": "http://192.168.1.161:32400",
+          "title": "Plex",
+          "desc": "Media streaming library server",
+          "color": "#e5a00d",
+          "icon": "fa-play",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "plex"
+        },
+        {
+          "url": "http://192.168.1.161:30047",
+          "title": "Tautulli",
+          "desc": "Plex stream stats and active watcher dashboard",
+          "color": "#d97706",
+          "icon": "fa-chart-pie",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "tautulli"
+        },
+        {
+          "title": "Sonarr",
+          "desc": "TV shows tracker and downloads manager",
+          "url": "http://192.168.1.161:30027",
+          "color": "#00b4e5",
+          "icon": "fa-download",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "sonarr"
+        },
+        {
+          "url": "http://192.168.1.161:30025",
+          "title": "Radarr",
+          "desc": "Movies tracker and downloads manager",
+          "color": "#ffc107",
+          "icon": "fa-film",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "radarr"
+        },
+        {
+          "url": "http://192.168.1.161:30042",
+          "title": "Overseerr",
+          "desc": "Request media files on Plex library",
+          "color": "#e27522",
+          "icon": "fa-user-plus",
+          "colspan": 1,
+          "rowspan": 1,
+          "sizeOverride": "default",
+          "pingEnabled": true,
+          "integration": "overseerr"
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "id": "widget-clock",
+      "type": "clock",
+      "title": "Clock",
+      "colSpan": 1,
+      "settings": {}
+    },
+    {
+      "id": "widget-notepad",
+      "type": "notepad",
+      "title": "Notepad",
+      "colSpan": 1,
+      "settings": {}
+    },
+    {
+      "id": "widget-theme",
+      "type": "theme",
+      "title": "Workspace Style",
+      "colSpan": 1,
+      "settings": {}
+    },
+    {
+      "id": "widget-weather",
+      "type": "weather",
+      "title": "Weather",
+      "colSpan": 1,
+      "settings": {
+        "city": "London",
+        "state": "sunny"
+      }
+    },
+    {
+      "id": "widget-resources",
+      "type": "resources",
+      "title": "System Resources",
+      "colSpan": 1,
+      "settings": {}
+    },
+    {
+      "id": "widget-bookmarks",
+      "type": "bookmarks",
+      "title": "Quick Bookmarks",
+      "colSpan": 1,
+      "settings": {
+        "bookmarks": [
+          {
+            "name": "Youtube",
+            "url": "https://www.youtube.com/"
+          },
+          {
+            "name": "Twitch",
+            "url": "https://www.twitch.tv/directory/following"
+          },
+          {
+            "name": "Cloudflare",
+            "url": "https://www.cloudflare.com/"
+          },
+          {
+            "name": "Github",
+            "url": "https://github.com/"
+          },
+          {
+            "name": "Gmail",
+            "url": "https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox"
+          },
+          {
+            "name": "TikTok",
+            "url": "https://www.tiktok.com/tiktokstudio.com"
+          },
+          {
+            "name": "Instagram",
+            "url": "https://www.instagram.com/"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "gridCols": "auto",
+    "cardSize": "compact",
+    "cardGap": "comfortable",
+    "sidebarPos": "right",
+    "sidebarCols": "1",
+    "showClock": true,
+    "showNotepad": true,
+    "showWeather": false,
+    "showResources": false,
+    "showBookmarks": true,
+    "weatherCity": "London",
+    "weatherState": "cloudy",
+    "bgPattern": "dots",
+    "showBlobs": true,
+    "theme": "theme-midnight-nebula"
+  },
+  "integrations": {
+    "plexUrl": "http://192.168.1.161:32400",
+    "plexToken": "gnJaoDbrpH3Z4jmHyp7s",
+    "tautulliUrl": "http://192.168.1.161:30047",
+    "tautulliKey": "http://192.168.1.161:32400/",
+    "sonarrUrl": "http://192.168.1.161:30027",
+    "sonarrKey": "http://192.168.1.161:30047/",
+    "radarrUrl": "http://192.168.1.161:30025",
+    "radarrKey": "https://films.tomslab.uk/",
+    "overseerrUrl": "http://192.168.1.161:30042",
+    "overseerrKey": "https://films.tomslab.uk/",
+    "qbittorrentUrl": "",
+    "qbittorrentUser": "",
+    "qbittorrentPass": ""
+  }
+}

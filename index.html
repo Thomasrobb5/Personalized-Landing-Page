@@ -211,9 +211,12 @@
           </div>
         </div>
         <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
-          <div class="form-group" style="display: flex; align-items: center; height: 100%;">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 15px;">
+          <div class="form-group" style="display: flex; align-items: center; height: 100%; gap: 14px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; margin-top: 15px;">
               <input type="checkbox" id="modal-app-ping" checked> Health check (Ping)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; margin-top: 15px;">
+              <input type="checkbox" id="modal-app-favorite"> Pin to Favorites
             </label>
           </div>
           <div class="form-group">
@@ -257,6 +260,16 @@
         
         <!-- Tab 1: General -->
         <div id="settings-tab-general" class="settings-tab-content active">
+          <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label for="settings-username">Your Name</label>
+              <input type="text" id="settings-username" placeholder="Thomas" required style="width:100%;">
+            </div>
+            <div class="form-group">
+              <label for="settings-workspace-name">Workspace Title</label>
+              <input type="text" id="settings-workspace-name" placeholder="Thomas's Workspace" required style="width:100%;">
+            </div>
+          </div>
           <div class="form-group">
             <label for="settings-grid-cols">Grid Columns</label>
             <select id="settings-grid-cols">
@@ -660,6 +673,48 @@
       <div class="detail-body" id="app-detail-body">
         <!-- Dynamically injected content based on app context -->
       </div>
+    </div>
+  </div>
+
+  <!-- First-Time Setup Wizard Modal (Overlay) -->
+  <div id="first-time-setup-modal" class="modal-overlay" style="display: none; z-index: 10000; background: rgba(8, 12, 20, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
+    <div class="modal-container" style="max-width: 550px; padding: 40px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); animation: scaleIn 0.5s ease;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; margin-bottom: 15px; color: #a855f7; display: inline-flex; animation: float-blob 6s infinite alternate ease-in-out;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h2 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">Personalize Your Launchpad</h2>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.4;">Welcome! Let's customize your workspace in a few quick steps. Everything is saved locally in your browser.</p>
+      </div>
+      <form id="first-time-setup-form" onsubmit="event.preventDefault();">
+        <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+          <label for="setup-username" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Your Name</label>
+          <input type="text" id="setup-username" placeholder="e.g. Thomas" required style="width: 100%; padding: 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
+        </div>
+        <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+          <label for="setup-workspacename" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Workspace Title</label>
+          <input type="text" id="setup-workspacename" placeholder="e.g. Thomas's Workspace" required style="width: 100%; padding: 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
+        </div>
+        <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; text-align: left;">
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label for="setup-weather-city" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Weather City</label>
+            <input type="text" id="setup-weather-city" placeholder="e.g. London" required style="width: 100%; padding: 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); color: white;">
+          </div>
+          <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+            <label for="setup-theme" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Select Theme</label>
+            <select id="setup-theme" style="width: 100%; padding: 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); color: white; cursor: pointer; height: 49px;">
+              <option value="theme-midnight-nebula">Midnight Nebula</option>
+              <option value="theme-aurora-borealis">Aurora Borealis</option>
+              <option value="theme-solar-eclipse">Solar Eclipse</option>
+              <option value="theme-cyberpunk">Cyberpunk Cyber</option>
+              <option value="theme-slate-glass">Slate Glass</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-macos btn-macos-primary" style="width: 100%; padding: 16px; font-size: 1.05rem; font-weight: 600; border-radius: 14px; margin-top: 10px;">
+          Complete Setup & Enter <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+        </button>
+      </form>
     </div>
   </div>
 

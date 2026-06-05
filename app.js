@@ -4,10 +4,14 @@
 
 // Global State
 let userGroups = [];
+let personalGroups = [];
+let workGroups = [];
 let editingAppIndex = null;      // format: { groupIndex, appIndex }
 let editingGroupIndex = null;    // format: groupIndex
 let editModeActive = false;
 let userWidgets = [];
+let personalWidgets = [];
+let workWidgets = [];
 let workModeActive = false;
 let workModeTimer = null;
 let workTasks = [];
@@ -468,16 +472,27 @@ const DEFAULT_WIDGETS = [
 
 document.addEventListener('DOMContentLoaded', () => {
   // Load State from LocalStorage
-  userGroups = loadGroupsFromStorage();
-  userWidgets = loadWidgetsFromStorage();
+  personalGroups = loadGroupsFromStorage();
+  workGroups = loadWorkGroupsFromStorage();
+  personalWidgets = loadWidgetsFromStorage();
+  workWidgets = loadWorkWidgetsFromStorage();
   loadWorkspaceConfig();
   loadIntegrationConfigs();
   workModeActive = localStorage.getItem('launchpad_work_mode_active') === 'true';
 
+  userGroups = workModeActive ? workGroups : personalGroups;
+  userWidgets = workModeActive ? workWidgets : personalWidgets;
+
+  // Set Workspace Label
+  const storedWorkspaceName = localStorage.getItem('launchpad_workspace_name');
+  if (storedWorkspaceName) {
+    const label = document.querySelector('.workspace-label');
+    if (label && !workModeActive) label.textContent = storedWorkspaceName;
+  }
+
   // Render Dashboard Components
-  const initialGroups = workModeActive ? MICROSOFT_PORTALS : userGroups;
-  renderDashboardGroups(initialGroups);
-  renderAppDock(initialGroups);
+  renderDashboardGroups(userGroups);
+  renderAppDock(userGroups);
   renderSidebarWidgets(userWidgets);
 
   // Initialize Widgets and Interactive Elements
@@ -502,6 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Start Loops
   startIntegrationLoops();
   startPingChecksLoop();
+
+  // First-Time Setup Wizard Check
+  checkFirstTimeSetup();
 });
 
 /**
@@ -552,8 +570,30 @@ function loadGroupsFromStorage() {
   return JSON.parse(JSON.stringify(DEFAULT_GROUPS));
 }
 
+function loadWorkGroupsFromStorage() {
+  const groupsData = localStorage.getItem('launchpad_work_groups');
+  if (groupsData) {
+    try {
+      return JSON.parse(groupsData);
+    } catch (e) {
+      console.error('Error parsing work groups, falling back.', e);
+    }
+  }
+
+  // Return default setup for work mode
+  localStorage.setItem('launchpad_work_groups', JSON.stringify(MICROSOFT_PORTALS));
+  return JSON.parse(JSON.stringify(MICROSOFT_PORTALS));
+}
+
 function saveGroupsToStorage(groups) {
-  localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(groups));
+  if (workModeActive) {
+    localStorage.setItem('launchpad_work_groups', JSON.stringify(groups));
+    workGroups = groups;
+  } else {
+    localStorage.setItem(STORAGE_KEY_GROUPS, JSON.stringify(groups));
+    personalGroups = groups;
+  }
+  userGroups = groups;
 }
 
 function loadWorkspaceConfig() {
@@ -989,6 +1029,42 @@ function renderDashboardGroups(groups) {
   if (!container) return;
   container.innerHTML = '';
 
+  // Render Favorites if any exist
+  const favApps = [];
+  groups.forEach((group, groupIdx) => {
+    group.apps.forEach((app, appIdx) => {
+      if (app.favorite === true) {
+        favApps.push({ app, groupIdx, appIdx });
+      }
+    });
+  });
+
+  if (favApps.length > 0) {
+    const favBlock = document.createElement('section');
+    favBlock.className = 'dashboard-category-group favorites-group';
+    
+    const header = document.createElement('header');
+    header.className = 'category-group-header';
+    header.innerHTML = `
+      <div class="category-group-title-wrapper">
+        <i class="fa-solid fa-star category-group-icon" style="color: #fbbf24; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4));"></i>
+        <h2 class="category-group-title">Favorites</h2>
+      </div>
+    `;
+    
+    const grid = document.createElement('div');
+    grid.className = 'category-group-grid favorites-grid';
+    applyGroupGridConfig(grid);
+    
+    favApps.forEach(fav => {
+      buildFavoriteCard(fav.app, fav.groupIdx, fav.appIdx, grid);
+    });
+    
+    favBlock.appendChild(header);
+    favBlock.appendChild(grid);
+    container.appendChild(favBlock);
+  }
+
   groups.forEach((group, groupIndex) => {
     // Group block container
     const groupBlock = document.createElement('section');
@@ -1239,8 +1315,22 @@ function buildAppCardsForGroup(group, groupIndex, grid) {
         openModalForEdit(groupIndex, appIndex);
       });
 
+      const starBadge = document.createElement('div');
+      starBadge.className = `star-badge ${app.favorite ? 'starred' : ''}`;
+      starBadge.innerHTML = `<i class="${app.favorite ? 'fa-solid fa-star' : 'fa-regular fa-star'}" style="color: ${app.favorite ? '#fff' : '#cbd5e1'}"></i>`;
+      starBadge.title = app.favorite ? 'Remove from Favorites' : 'Add to Favorites';
+      starBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        app.favorite = !app.favorite;
+        saveGroupsToStorage(userGroups);
+        renderDashboardGroups(userGroups);
+        renderAppDock(userGroups);
+      });
+
       card.appendChild(deleteBadge);
       card.appendChild(editBadge);
+      card.appendChild(starBadge);
     }
 
     grid.appendChild(card);
@@ -1273,6 +1363,83 @@ function buildAppCardsForGroup(group, groupIndex, grid) {
     });
     grid.appendChild(addCard);
   }
+}
+
+function buildFavoriteCard(app, groupIndex, appIndex, grid) {
+  const card = document.createElement('a');
+  card.className = 'app-card';
+  card.style.setProperty('--accent-color-rgb', hexToRgb(app.color));
+
+  const sizeStyle = (app.sizeOverride && app.sizeOverride !== 'default') ? app.sizeOverride : workspaceConfig.cardSize;
+  if (sizeStyle === 'compact') card.classList.add('card-compact');
+  else if (sizeStyle === 'expanded') card.classList.add('card-expanded');
+
+  if (editModeActive) {
+    card.href = '#';
+    card.addEventListener('click', (e) => e.preventDefault());
+  } else {
+    if (app.integration && app.integration !== 'none') {
+      card.href = '#';
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        openAppDetailOverlay(app, groupIndex, appIndex);
+      });
+    } else {
+      card.href = app.url;
+      card.target = '_blank';
+    }
+  }
+
+  let pingHtml = '';
+  if (app.pingEnabled) {
+    pingHtml = `
+      <div class="ping-indicator">
+        <span class="ping-latency">checking</span>
+        <span class="ping-dot"></span>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    ${pingHtml}
+    <div class="card-glow"></div>
+    <div class="card-header">
+      <div class="app-icon-squircle" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.2), rgba(${hexToRgb(app.color)}, 0.08)); color:${app.color};">
+        <i class="fa-solid ${app.icon}"></i>
+      </div>
+      <div class="card-action-icon">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </div>
+    </div>
+    <div class="card-content">
+      <h3 class="app-title">${app.title}</h3>
+      <p class="app-description">${app.desc}</p>
+    </div>
+    <div class="card-footer">
+      <span class="app-accent-badge" style="background: rgba(${hexToRgb(app.color)}, 0.15); color: ${app.color}; border: 1px solid rgba(${hexToRgb(app.color)}, 0.3);">
+        <span class="badge-dot" style="background: ${app.color};"></span>
+        <span class="badge-text">${getCleanUrl(app.url)}</span>
+      </span>
+    </div>
+  `;
+
+  if (editModeActive) {
+    const starBadge = document.createElement('div');
+    starBadge.className = 'star-badge starred';
+    starBadge.innerHTML = `<i class="fa-solid fa-star" style="color: #fff;"></i>`;
+    starBadge.title = 'Remove from Favorites';
+    starBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      app.favorite = false;
+      saveGroupsToStorage(userGroups);
+      renderDashboardGroups(userGroups);
+      renderAppDock(userGroups);
+    });
+    card.appendChild(starBadge);
+  }
+
+  grid.appendChild(card);
 }
 
 // Flat App Dock Renderer
@@ -1347,13 +1514,14 @@ function initModalEvents() {
       const rowspan = parseInt(document.getElementById('modal-app-rowspan').value, 10) || 1;
       const sizeOverride = document.getElementById('modal-app-size').value;
       const pingEnabled = document.getElementById('modal-app-ping').checked;
+      const favorite = document.getElementById('modal-app-favorite').checked;
       const integration = document.getElementById('modal-app-integration').value;
       const groupSelect = document.getElementById('modal-app-group');
       const targetGroupIndex = parseInt(groupSelect.value, 10);
 
       if (!title || !desc || !url) return;
 
-      const appData = { title, desc, url, color, icon, colspan, rowspan, sizeOverride, pingEnabled, integration };
+      const appData = { title, desc, url, color, icon, colspan, rowspan, sizeOverride, pingEnabled, favorite, integration };
 
       if (editingAppIndex === null) {
         // Create new card
@@ -1394,6 +1562,7 @@ function openModalForCreate(groupIndex = 0) {
   document.getElementById('modal-app-rowspan').value = '1';
   document.getElementById('modal-app-size').value = 'default';
   document.getElementById('modal-app-ping').checked = true;
+  document.getElementById('modal-app-favorite').checked = false;
   document.getElementById('modal-app-integration').value = 'none';
 
   document.getElementById('editor-modal').style.display = 'flex';
@@ -1417,6 +1586,7 @@ function openModalForEdit(groupIndex, appIndex) {
     document.getElementById('modal-app-rowspan').value = app.rowspan || 1;
     document.getElementById('modal-app-size').value = app.sizeOverride || 'default';
     document.getElementById('modal-app-ping').checked = app.pingEnabled !== false;
+    document.getElementById('modal-app-favorite').checked = app.favorite === true;
     document.getElementById('modal-app-integration').value = app.integration || 'none';
   }
 
@@ -1601,6 +1771,16 @@ function initSettingsModal() {
     settingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
       
+      const username = document.getElementById('settings-username').value.trim();
+      const workspaceName = document.getElementById('settings-workspace-name').value.trim();
+      if (username) localStorage.setItem('launchpad_username', username);
+      if (workspaceName) {
+        localStorage.setItem('launchpad_workspace_name', workspaceName);
+        const label = document.querySelector('.workspace-label');
+        if (label && !workModeActive) label.textContent = workspaceName;
+      }
+      initGreeting();
+      
       workspaceConfig.gridCols = document.getElementById('settings-grid-cols').value;
       workspaceConfig.cardSize = document.getElementById('settings-card-size').value;
       workspaceConfig.cardGap = document.getElementById('settings-card-gap').value;
@@ -1771,6 +1951,8 @@ function initIntegrationsSetupBanner() {
 }
 
 function populateSettingsForm() {
+  document.getElementById('settings-username').value = localStorage.getItem('launchpad_username') || 'Thomas';
+  document.getElementById('settings-workspace-name').value = localStorage.getItem('launchpad_workspace_name') || "Thomas's Workspace";
   document.getElementById('settings-grid-cols').value = workspaceConfig.gridCols;
   document.getElementById('settings-card-size').value = workspaceConfig.cardSize;
   document.getElementById('settings-card-gap').value = workspaceConfig.cardGap;
@@ -2191,7 +2373,62 @@ function initGreeting() {
     greetingText = 'Good night';
   }
 
-  greetingEl.textContent = workModeActive ? `Work Console, Thomas` : `${greetingText}, Thomas`;
+  const username = localStorage.getItem('launchpad_username') || "Thomas";
+  greetingEl.textContent = workModeActive ? `Work Console, ${username}` : `${greetingText}, ${username}`;
+}
+
+function checkFirstTimeSetup() {
+  const username = localStorage.getItem('launchpad_username');
+  if (!username) {
+    const setupModal = document.getElementById('first-time-setup-modal');
+    if (setupModal) {
+      setupModal.style.display = 'flex';
+      
+      const setupForm = document.getElementById('first-time-setup-form');
+      if (setupForm) {
+        setupForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const newUsername = document.getElementById('setup-username').value.trim();
+          const newWorkspaceName = document.getElementById('setup-workspacename').value.trim();
+          const newWeatherCity = document.getElementById('setup-weather-city').value.trim();
+          const newTheme = document.getElementById('setup-theme').value;
+          
+          if (newUsername) localStorage.setItem('launchpad_username', newUsername);
+          if (newWorkspaceName) localStorage.setItem('launchpad_workspace_name', newWorkspaceName);
+          
+          // Apply weather city config
+          workspaceConfig.weatherCity = newWeatherCity;
+          // Apply theme config
+          workspaceConfig.theme = newTheme;
+          
+          // Find weather widget in personalWidgets and update it
+          const weatherWidget = personalWidgets.find(w => w.type === 'weather');
+          if (weatherWidget) {
+            weatherWidget.settings.city = newWeatherCity;
+            saveWidgetsToStorage(personalWidgets);
+          }
+          
+          // Save workspace config
+          localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
+          applyWorkspaceConfig(workspaceConfig);
+          
+          // Hide modal
+          setupModal.style.display = 'none';
+          
+          // Update header details
+          const label = document.querySelector('.workspace-label');
+          if (label && !workModeActive) label.textContent = newWorkspaceName;
+          
+          initGreeting();
+          
+          // Re-render
+          renderDashboardGroups(userGroups);
+          renderAppDock(userGroups);
+          renderSidebarWidgets(userWidgets);
+        });
+      }
+    }
+  }
 }
 
 function initWorkMode() {
@@ -2199,7 +2436,6 @@ function initWorkMode() {
   if (!workBtn) return;
 
   const workspaceLabel = document.querySelector('.workspace-label');
-  const originalLabel = workspaceLabel ? workspaceLabel.textContent : "Thomas's Workspace";
   const greetingEl = document.getElementById('greeting');
   const subtitleEl = document.querySelector('.greeting-container .subtitle');
   const editBtn = document.getElementById('edit-mode-btn');
@@ -2208,11 +2444,16 @@ function initWorkMode() {
     localStorage.setItem('launchpad_work_mode_active', active ? 'true' : 'false');
     workModeActive = active;
 
+    // Set state pointers
+    userGroups = active ? workGroups : personalGroups;
+    userWidgets = active ? workWidgets : personalWidgets;
+
     workBtn.classList.toggle('work-mode-on', active);
     document.body.classList.toggle('work-mode-active', active);
 
+    const customLabel = localStorage.getItem('launchpad_workspace_name') || "Thomas's Workspace";
     if (workspaceLabel) {
-      workspaceLabel.textContent = active ? "Microsoft Admin Portal" : originalLabel;
+      workspaceLabel.textContent = active ? "Microsoft Admin Portal" : customLabel;
     }
 
     if (subtitleEl) {
@@ -2221,12 +2462,9 @@ function initWorkMode() {
         : "Your personal workspace and applications launchpad.";
     }
 
-    if (active && editModeActive && editBtn) {
+    // Turn off edit mode during mode transition to prevent ghost drag-states
+    if (editModeActive && editBtn) {
       editBtn.click();
-    }
-    
-    if (editBtn) {
-      editBtn.style.display = active ? 'none' : 'flex';
     }
 
     const mainGrid = document.querySelector('.dashboard-layout');
@@ -2236,16 +2474,16 @@ function initWorkMode() {
       mainGrid.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
       
       setTimeout(() => {
-        renderDashboardGroups(active ? MICROSOFT_PORTALS : userGroups);
-        renderAppDock(active ? MICROSOFT_PORTALS : userGroups);
+        renderDashboardGroups(userGroups);
+        renderAppDock(userGroups);
         renderSidebarWidgets(userWidgets);
         
         mainGrid.style.opacity = '1';
         mainGrid.style.transform = 'scale(1)';
       }, 200);
     } else {
-      renderDashboardGroups(active ? MICROSOFT_PORTALS : userGroups);
-      renderAppDock(active ? MICROSOFT_PORTALS : userGroups);
+      renderDashboardGroups(userGroups);
+      renderAppDock(userGroups);
       renderSidebarWidgets(userWidgets);
     }
     
@@ -2420,9 +2658,34 @@ function loadWidgetsFromStorage() {
   }
 }
 
+function loadWorkWidgetsFromStorage() {
+  const data = localStorage.getItem('launchpad_work_widgets');
+  const WORK_WIDGETS_DEFAULT = [
+    { id: 'widget-m365-status', type: 'm365-status', title: 'M365 Status (Live)', colSpan: 1 },
+    { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 },
+    { id: 'widget-azure-news', type: 'azure-news', title: 'Azure Cloud News', colSpan: 1 }
+  ];
+  if (!data) {
+    localStorage.setItem('launchpad_work_widgets', JSON.stringify(WORK_WIDGETS_DEFAULT));
+    return JSON.parse(JSON.stringify(WORK_WIDGETS_DEFAULT));
+  }
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Error loading work widgets from storage', e);
+    return JSON.parse(JSON.stringify(WORK_WIDGETS_DEFAULT));
+  }
+}
 
 function saveWidgetsToStorage(widgets) {
-  localStorage.setItem(STORAGE_KEY_WIDGETS, JSON.stringify(widgets));
+  if (workModeActive) {
+    localStorage.setItem('launchpad_work_widgets', JSON.stringify(widgets));
+    workWidgets = widgets;
+  } else {
+    localStorage.setItem(STORAGE_KEY_WIDGETS, JSON.stringify(widgets));
+    personalWidgets = widgets;
+  }
+  userWidgets = widgets;
 }
 
 /**
@@ -2434,13 +2697,7 @@ function renderSidebarWidgets(widgets) {
   
   container.innerHTML = '';
   
-  const WORK_WIDGETS = [
-    { id: 'widget-m365-status', type: 'm365-status', title: 'M365 Status (Live)', colSpan: 1 },
-    { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 },
-    { id: 'widget-azure-news', type: 'azure-news', title: 'Azure Cloud News', colSpan: 1 }
-  ];
-  
-  const activeWidgets = workModeActive ? WORK_WIDGETS : widgets;
+  const activeWidgets = widgets;
   
   activeWidgets.forEach((widget, index) => {
     const card = document.createElement('article');
