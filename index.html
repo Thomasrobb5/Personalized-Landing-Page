@@ -56,6 +56,27 @@
       </div>
     </header>
 
+    <!-- Integrations Alert Banner (dynamic) -->
+    <div id="integrations-setup-banner" style="display: none; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); align-items: center; justify-content: space-between; gap: 16px; animation: scaleIn 0.4s ease;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="background: rgba(168, 85, 247, 0.15); border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15);">
+          <i class="fa-solid fa-gears" style="color: #c084fc; font-size: 1.3rem;"></i>
+        </div>
+        <div>
+          <h4 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Configure Home Enterprise Ecosystem</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">Configure your self-hosted integrations (Plex, Sonarr, Radarr, Overseerr, qBittorrent) to activate real-time widgets, downloads explorer, active watcher counters, and media search features.</p>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <a href="setup.html" class="btn-macos btn-macos-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 18px;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Quick Setup Wizard
+        </a>
+        <button id="dismiss-setup-banner-btn" class="btn-macos btn-macos-secondary" style="padding: 10px; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Main Grid Layout -->
     <main class="dashboard-layout">
       
@@ -352,6 +373,22 @@
 
         <!-- Tab 3: Integrations -->
         <div id="settings-tab-integrations" class="settings-tab-content">
+          <!-- Quick Setup Wizard Banner -->
+          <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 12px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.05);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.875rem; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: #c084fc;"></i>
+                Quick Setup Wizard
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">
+                Use the dedicated ecosystem setup page to easily configure, test connection states, and locate API keys.
+              </div>
+            </div>
+            <a href="setup.html" class="btn-macos btn-macos-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.775rem; font-weight: 600; flex-shrink: 0; white-space: nowrap;">
+              Open Wizard <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem; margin-left: 4px;"></i>
+            </a>
+          </div>
+
           <p class="settings-tab-desc" style="font-size: 0.825rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
             Configure API keys and local endpoints below to enable widgets and status monitoring. Keys are saved <strong>only locally</strong> in your browser storage.
           </p>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Quick setup for self-hosted integrations including Plex, Sonarr, Radarr, Overseerr, qBittorrent.">
+  <title>Ecosystem Integrations Setup - Personal Launchpad</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Free Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Premium Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Dedicated styles for Integrations Wizard */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      margin-top: 20px;
+      margin-bottom: 60px;
+    }
+    
+    @media (max-width: 1024px) {
+      .setup-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .setup-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .setup-card:hover {
+      border-color: var(--card-border-hover);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .setup-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--card-border-hover), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .setup-card:hover::before {
+      opacity: 1;
+    }
+
+    .setup-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+    }
+
+    .setup-card-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-primary);
+    }
+
+    .setup-card-title i {
+      font-size: 1.35rem;
+      background: rgba(255, 255, 255, 0.05);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .setup-card-status {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .setup-card-status.connected {
+      background: rgba(52, 211, 153, 0.1);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.2);
+    }
+
+    .setup-card-status.failed {
+      background: rgba(248, 113, 113, 0.1);
+      color: #f87171;
+      border-color: rgba(248, 113, 113, 0.2);
+    }
+
+    .setup-card-status.testing {
+      background: rgba(251, 191, 36, 0.1);
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    .setup-input-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .setup-input-group.cols-2 {
+      grid-template-columns: 1.6fr 1.4fr;
+    }
+
+    .setup-input-group.cols-3 {
+      grid-template-columns: 1.6fr 1fr 1fr;
+    }
+
+    @media (max-width: 640px) {
+      .setup-input-group.cols-2,
+      .setup-input-group.cols-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .setup-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setup-field label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .setup-field input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: var(--transition-fast);
+    }
+
+    .setup-field input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+    }
+
+    .setup-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    /* API Help details accordion styling */
+    .setup-help-details {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      margin-top: 16px;
+      overflow: hidden;
+      transition: var(--transition-fast);
+    }
+
+    .setup-help-details[open] {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .setup-help-summary {
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .setup-help-summary:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .setup-help-summary::marker,
+    .setup-help-summary::-webkit-details-marker {
+      display: none;
+      content: "";
+    }
+
+    .setup-help-summary i {
+      transition: transform 0.2s ease;
+    }
+
+    .setup-help-details[open] .setup-help-summary i {
+      transform: rotate(90deg);
+      color: var(--text-primary);
+    }
+
+    .setup-help-content {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.825rem;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .setup-help-content ol,
+    .setup-help-content ul {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .setup-help-content li {
+      margin-bottom: 6px;
+    }
+
+    .setup-help-content code {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: monospace;
+      font-size: 0.775rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Side Panel elements styling */
+    .side-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      position: sticky;
+      top: 74px;
+    }
+
+    .side-panel-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .side-action-btn {
+      width: 100%;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      font-size: 0.925rem;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+
+    .side-checklist-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    .side-checklist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+
+    .side-checklist-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .side-checklist-status {
+      font-weight: 600;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cors-info-box {
+      background: rgba(239, 68, 68, 0.04);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 24px;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: var(--text-secondary);
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+    
+    @keyframes fadeOutDown {
+      from {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      to {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+      }
+    }
+  </style>
+</head>
+<body class="theme-midnight-nebula">
+
+  <!-- macOS Top Menu Bar -->
+  <div class="mac-menu-bar">
+    <div class="mac-menu-left">
+      <i class="fa-brands fa-apple mac-menu-item apple-logo"></i>
+      <span class="workspace-label mac-menu-item active-app">Thomas's Workspace</span>
+      <a href="index.html" class="mac-menu-item" style="text-decoration: none; display: flex; align-items: center; gap: 6px; color: inherit;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+    <div class="mac-menu-right">
+      <span id="menu-time" class="mac-menu-item">--:--</span>
+      <span id="menu-date" class="mac-menu-item">---, --- --</span>
+    </div>
+  </div>
+
+  <!-- Animated Glassmorphic Background Glow Blobs -->
+  <div class="bg-blobs" id="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Dynamic Background Pattern Overlay -->
+  <div id="bg-pattern-overlay" class="bg-pattern-overlay"></div>
+
+  <div class="dashboard-container">
+    <!-- Header Welcome Bar -->
+    <header class="dashboard-header" style="margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; width: 100%;">
+        <div class="greeting-container">
+          <h1 id="greeting" style="display: flex; align-items: center; gap: 14px;">
+            <i class="fa-solid fa-gears" style="color: #a855f7;"></i>
+            Ecosystem Integrations
+          </h1>
+          <p class="subtitle">Set up API connections for Plex, Sonarr, Radarr, Overseerr, qBittorrent, and Tautulli in one secure space.</p>
+        </div>
+        <div>
+          <a href="index.html" class="btn-macos btn-macos-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;">
+            <i class="fa-solid fa-house"></i> Return to Dashboard
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <div class="setup-grid">
+      <!-- Left Column: Forms -->
+      <div class="setup-main-col">
+
+        <!-- Card: Plex Media Server -->
+        <div class="setup-card" id="card-plex">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-play" style="color: #e5a00d;"></i>
+              Plex Media Server
+            </div>
+            <div class="setup-card-status" id="status-plex">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-2">
+            <div class="setup-field">
+              <label for="plex-url">Connection URL</label>
+              <input type="url" id="plex-url" placeholder="http://localhost:32400" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="plex-token">X-Plex-Token</label>
+              <input type="password" id="plex-token" placeholder="Plex Token Credentials" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="plex">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to find your Plex Token
+            </summary>
+            <div class="setup-help-content">
+              <ol>
+                <li>Open your browser and log into <code>app.plex.tv</code> or your local server interface.</li>
+                <li>Navigate into any media library, click on any movie or TV episode, and open the options dropdown menu (<code>...</code>).</li>
+                <li>Click <strong>Get Info</strong> at the bottom of the menu.</li>
+                <li>In the popup info drawer, click the <strong>View XML</strong> link at the bottom right.</li>
+                <li>A new web page will open showing XML code. Look at the address bar URL — copy the long alphanumeric string at the very end of the URL starting after <code>X-Plex-Token=</code>.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <!-- Card: Tautulli Monitor -->
+        <div class="setup-card" id="card-tautulli">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-chart-pie" style="color: #d97706;"></i>
+              Tautulli Monitor
+            </div>
+            <div class="setup-card-status" id="status-tautulli">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-2">
+            <div class="setup-field">
+              <label for="tautulli-url">Connection URL</label>
+              <input type="url" id="tautulli-url" placeholder="http://localhost:8181" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="tautulli-key">API Key</label>
+              <input type="password" id="tautulli-key" placeholder="API Key" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="tautulli">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to find Tautulli API credentials
+            </summary>
+            <div class="setup-help-content">
+              <ol>
+                <li>Open Tautulli's interface and click on <strong>Settings</strong> (gear icon).</li>
+                <li>Click on <strong>Web Interface</strong> in the left sidebar menu.</li>
+                <li>Scroll down to the <strong>API</strong> section.</li>
+                <li>Verify <strong>Enable API</strong> is checked, and copy the long string under <strong>API Key</strong>.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <!-- Card: Sonarr TV Tracker -->
+        <div class="setup-card" id="card-sonarr">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-download" style="color: #00b4e5;"></i>
+              Sonarr TV Tracker
+            </div>
+            <div class="setup-card-status" id="status-sonarr">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-2">
+            <div class="setup-field">
+              <label for="sonarr-url">Connection URL</label>
+              <input type="url" id="sonarr-url" placeholder="http://localhost:8989" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="sonarr-key">API Key</label>
+              <input type="password" id="sonarr-key" placeholder="API Key" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="sonarr">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to find Sonarr API key
+            </summary>
+            <div class="setup-help-content">
+              <ol>
+                <li>Open your Sonarr web page.</li>
+                <li>Go to <strong>Settings</strong> in the main navigation.</li>
+                <li>Select the <strong>General</strong> configuration tab.</li>
+                <li>Scroll down to the <strong>Security</strong> category.</li>
+                <li>Copy the alphanumeric string next to <strong>API Key</strong>.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <!-- Card: Radarr Movie Tracker -->
+        <div class="setup-card" id="card-radarr">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-film" style="color: #ffc107;"></i>
+              Radarr Movie Tracker
+            </div>
+            <div class="setup-card-status" id="status-radarr">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-2">
+            <div class="setup-field">
+              <label for="radarr-url">Connection URL</label>
+              <input type="url" id="radarr-url" placeholder="http://localhost:7878" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="radarr-key">API Key</label>
+              <input type="password" id="radarr-key" placeholder="API Key" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="radarr">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to find Radarr API key
+            </summary>
+            <div class="setup-help-content">
+              <ol>
+                <li>Open your Radarr web page.</li>
+                <li>Go to <strong>Settings</strong> in the main navigation.</li>
+                <li>Select the <strong>General</strong> configuration tab.</li>
+                <li>Scroll down to the <strong>Security</strong> category.</li>
+                <li>Copy the alphanumeric string next to <strong>API Key</strong>.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <!-- Card: Overseerr Requests -->
+        <div class="setup-card" id="card-overseerr">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-user-plus" style="color: #e27522;"></i>
+              Overseerr Requests
+            </div>
+            <div class="setup-card-status" id="status-overseerr">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-2">
+            <div class="setup-field">
+              <label for="overseerr-url">Connection URL</label>
+              <input type="url" id="overseerr-url" placeholder="http://localhost:5055" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="overseerr-key">API Key</label>
+              <input type="password" id="overseerr-key" placeholder="API Key" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="overseerr">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to find Overseerr API key
+            </summary>
+            <div class="setup-help-content">
+              <ol>
+                <li>Open Overseerr and log in.</li>
+                <li>Navigate to <strong>Settings</strong> in the sidebar.</li>
+                <li>Under the <strong>General</strong> tab, look for the API Key section.</li>
+                <li>Copy the <strong>API Key</strong>.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <!-- Card: qBittorrent Client -->
+        <div class="setup-card" id="card-qbittorrent">
+          <div class="setup-card-header">
+            <div class="setup-card-title">
+              <i class="fa-solid fa-arrow-down-up-lock" style="color: #3b82f6;"></i>
+              qBittorrent Client
+            </div>
+            <div class="setup-card-status" id="status-qbittorrent">
+              <i class="fa-solid fa-circle-question"></i> Idle
+            </div>
+          </div>
+          <div class="setup-input-group cols-3">
+            <div class="setup-field">
+              <label for="qbittorrent-url">Connection URL</label>
+              <input type="url" id="qbittorrent-url" placeholder="http://localhost:8080" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="qbittorrent-user">Username</label>
+              <input type="text" id="qbittorrent-user" placeholder="admin" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="qbittorrent-pass">Password</label>
+              <input type="password" id="qbittorrent-pass" placeholder="adminadmin" autocomplete="off">
+            </div>
+          </div>
+          <div class="setup-card-actions">
+            <button type="button" class="btn-macos btn-macos-secondary test-btn" data-integration="qbittorrent">
+              <i class="fa-solid fa-circle-play"></i> Test Connection
+            </button>
+          </div>
+          <details class="setup-help-details">
+            <summary class="setup-help-summary">
+              <i class="fa-solid fa-chevron-right"></i> How to set up qBittorrent connection
+            </summary>
+            <div class="setup-help-content">
+              <ul>
+                <li>Provide the full URL to your qBittorrent Web UI (e.g. <code>http://192.168.1.50:8080</code>).</li>
+                <li>Input your Web UI access credentials (the default username is usually <code>admin</code> and password is <code>adminadmin</code>).</li>
+                <li>Ensure Web UI is enabled in qBittorrent Settings -> Web UI.</li>
+                <li><strong>IMPORTANT:</strong> In qBittorrent settings -> Web UI, disable "Bypass Web User Interface authentication for clients on localhost" and make sure "Enable Cross-Site Request Forgery (CSRF) protection" does not block your requests.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Sidebar controls -->
+      <div class="setup-side-col">
+        <div class="side-card">
+          <div class="side-panel-title">
+            <i class="fa-solid fa-toolbox" style="color: var(--blob-2);"></i>
+            Configuration Panel
+          </div>
+          
+          <button type="button" id="save-btn" class="btn-macos btn-macos-primary side-action-btn">
+            <i class="fa-solid fa-floppy-disk"></i> Save & Return
+          </button>
+          
+          <button type="button" id="demo-btn" class="btn-macos btn-macos-secondary side-action-btn">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: #fbbf24;"></i> Load Demo Mock Data
+          </button>
+
+          <button type="button" id="test-all-btn" class="btn-macos btn-macos-secondary side-action-btn">
+            <i class="fa-solid fa-vials"></i> Test All Connections
+          </button>
+
+          <button type="button" id="clear-btn" class="btn-macos btn-macos-secondary side-action-btn" style="color: #f87171; border-color: rgba(239, 68, 68, 0.2);">
+            <i class="fa-solid fa-trash-can"></i> Clear All Configs
+          </button>
+
+          <div class="side-checklist-title">Connection Status Check</div>
+          <div id="side-checklist">
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-play" style="color:#e5a00d; width:16px;"></i> Plex
+              </span>
+              <span class="side-checklist-status" id="checklist-plex" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-chart-pie" style="color:#d97706; width:16px;"></i> Tautulli
+              </span>
+              <span class="side-checklist-status" id="checklist-tautulli" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-download" style="color:#00b4e5; width:16px;"></i> Sonarr
+              </span>
+              <span class="side-checklist-status" id="checklist-sonarr" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-film" style="color:#ffc107; width:16px;"></i> Radarr
+              </span>
+              <span class="side-checklist-status" id="checklist-radarr" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-user-plus" style="color:#e27522; width:16px;"></i> Overseerr
+              </span>
+              <span class="side-checklist-status" id="checklist-overseerr" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+            <div class="side-checklist-item">
+              <span class="side-checklist-name">
+                <i class="fa-solid fa-arrow-down-up-lock" style="color:#3b82f6; width:16px;"></i> qBittorrent
+              </span>
+              <span class="side-checklist-status" id="checklist-qbittorrent" style="color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-question"></i> Idle
+              </span>
+            </div>
+          </div>
+
+          <div class="cors-info-box">
+            <h4 style="margin-bottom: 6px; color: var(--text-primary); font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-shield-halved" style="color: #fbbf24;"></i>
+              CORS Block Note
+            </h4>
+            Since this website runs directly inside your web browser client, checks to local IP addresses/custom domains may be blocked by CORS policies.
+            <br><br>
+            If tests fail but the URLs are correct and accessible:
+            <ul style="padding-left: 14px; margin-top: 6px;">
+              <li>Install a "CORS Unblock" extension for setup.</li>
+              <li>Or configure custom reverse proxies with appropriate headers.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Javascript Logic -->
+  <script src="setup.js"></script>
+</body>
+</html>

@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Custom Workspace Elements
   applyWorkspaceConfig(workspaceConfig);
   initSettingsModal();
+  initIntegrationsSetupBanner();
 
   // Start Loops
   startIntegrationLoops();
@@ -1434,6 +1435,35 @@ function initSettingsModal() {
       }
     });
   });
+}
+
+function initIntegrationsSetupBanner() {
+  const banner = document.getElementById('integrations-setup-banner');
+  const dismissBtn = document.getElementById('dismiss-setup-banner-btn');
+  if (!banner) return;
+
+  const isDismissed = localStorage.getItem('launchpad_setup_banner_dismissed') === 'true';
+  const hasConfigs = integrationConfigs.plexUrl || 
+                     integrationConfigs.tautulliUrl || 
+                     integrationConfigs.sonarrUrl || 
+                     integrationConfigs.radarrUrl || 
+                     integrationConfigs.overseerrUrl || 
+                     integrationConfigs.qbittorrentUrl;
+
+  if (!hasConfigs && !isDismissed) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      banner.style.display = 'none';
+      localStorage.setItem('launchpad_setup_banner_dismissed', 'true');
+    });
+  }
 }
 
 function populateSettingsForm() {
