@@ -2676,13 +2676,53 @@ function buildDiskWidget(widget, container, statusEl) {
   updateDiskWidgetContent(widget, container, statusEl);
 }
 
+function shouldShowPath(path, filterString) {
+  if (!filterString) return true;
+  const pathLower = path.toLowerCase();
+  const terms = filterString.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  if (terms.length === 0) return true;
+
+  const exclusions = terms.filter(t => t.startsWith('!'));
+  const inclusions = terms.filter(t => !t.startsWith('!'));
+
+  // Evaluate exclusions first
+  for (const exc of exclusions) {
+    const term = exc.substring(1);
+    if (!term) continue;
+    if (term === '/' && pathLower === '/') {
+      return false; // Exact match for root '/' exclusion
+    }
+    if (term !== '/' && pathLower.includes(term)) {
+      return false;
+    }
+  }
+
+  // If there are inclusions, at least one must match
+  if (inclusions.length > 0) {
+    let matchedAny = false;
+    for (const inc of inclusions) {
+      if (inc === '/' && pathLower === '/') {
+        matchedAny = true;
+        break;
+      }
+      if (inc !== '/' && pathLower.includes(inc)) {
+        matchedAny = true;
+        break;
+      }
+    }
+    if (!matchedAny) return false;
+  }
+
+  return true;
+}
+
 async function updateDiskWidgetContent(widget, container, statusEl) {
   const diskContentContainer = container.querySelector(`#disk-content-${widget.id}`);
   if (!diskContentContainer) return;
 
   const url = cleanUrl(integrationConfigs.sonarrUrl);
   const key = integrationConfigs.sonarrKey;
-  const filterPath = widget.settings.path ? widget.settings.path.toLowerCase().trim() : '';
+  const filterString = widget.settings.path || '';
 
   if (!url || !key) {
     // Render mock data
@@ -2693,7 +2733,7 @@ async function updateDiskWidgetContent(widget, container, statusEl) {
 
     let html = '';
     mockDisks.forEach(d => {
-      if (filterPath && !d.path.toLowerCase().includes(filterPath)) return;
+      if (!shouldShowPath(d.path, filterString)) return;
       html += `
         <div class="disk-usage-item" style="margin-bottom: 8px; padding: 10px 12px; border-radius: 12px;">
           <div class="disk-usage-header" style="font-size: 0.75rem; margin-bottom: 4px;">
@@ -2729,7 +2769,7 @@ async function updateDiskWidgetContent(widget, container, statusEl) {
     let html = '';
     let foundAny = false;
     diskData.forEach(d => {
-      if (filterPath && !d.path.toLowerCase().includes(filterPath)) return;
+      if (!shouldShowPath(d.path, filterString)) return;
       foundAny = true;
       const free = formatBytes(d.freeSpace);
       const total = formatBytes(d.totalSpace);
