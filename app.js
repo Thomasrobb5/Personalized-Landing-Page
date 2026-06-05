@@ -1866,6 +1866,23 @@ function initThemePicker() {
   // Overridden: Theme selection is now inside the settings tab pane.
 }
 
+function updateCircularGauge(circleEl, percentage) {
+  if (!circleEl) return;
+  let circumference = parseFloat(circleEl.getAttribute('stroke-dasharray'));
+  if (isNaN(circumference) || circumference <= 0) {
+    try {
+      circumference = circleEl.getTotalLength();
+    } catch (e) {
+      const r = parseFloat(circleEl.getAttribute('r')) || 40;
+      circumference = 2 * Math.PI * r;
+    }
+  }
+  
+  circleEl.style.strokeDasharray = circumference;
+  const offset = circumference - (percentage / 100) * circumference;
+  circleEl.style.strokeDashoffset = offset;
+}
+
 function loadWidgetsFromStorage() {
   const data = localStorage.getItem(STORAGE_KEY_WIDGETS);
   if (!data) {
