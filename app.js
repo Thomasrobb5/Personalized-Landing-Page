@@ -386,7 +386,10 @@ let workspaceConfig = {
   themeFont: 'default',
   glassBlur: '20px',
   blobOpacity: '0.45',
-  blobSpeed: '25s'
+  blobSpeed: '25s',
+  cardRadius: '24px',
+  accentColor: '',
+  layoutMode: 'grid'
 };
 
 let integrationConfigs = {
@@ -1540,9 +1543,10 @@ function renderAppDock(groups) {
         link.target = '_blank';
       }
       link.setAttribute('aria-label', app.title);
+      const logoHtml = workModeActive ? (getMicrosoftLogo(app.title) || `<i class="fa-solid ${app.icon}"></i>`) : `<i class="fa-solid ${app.icon}"></i>`;
       link.innerHTML = `
         <div class="dock-fallback-icon" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.3), rgba(${hexToRgb(app.color)}, 0.15)); color: ${app.color}; display: flex; border-radius: inherit; width: 100%; height: 100%; align-items: center; justify-content: center;">
-          <i class="fa-solid ${app.icon}"></i>
+          ${logoHtml}
         </div>
       `;
       item.appendChild(link);
@@ -1826,6 +1830,12 @@ function initSettingsModal() {
         content.classList.remove('active');
         if (content.id === targetTabId) content.classList.add('active');
       });
+
+      // Update right-pane title header
+      const panelTitle = document.getElementById('settings-panel-title');
+      if (panelTitle) {
+        panelTitle.textContent = btn.textContent.trim();
+      }
     });
   });
 
@@ -1890,6 +1900,51 @@ function initSettingsModal() {
     });
   }
 
+  // Live preview for card corner roundness slider
+  const radiusSlider = document.getElementById('settings-card-radius');
+  if (radiusSlider) {
+    radiusSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const lbl = document.getElementById('label-card-radius');
+      if (lbl) lbl.textContent = val + 'px';
+      document.documentElement.style.setProperty('--card-radius', val + 'px');
+    });
+  }
+
+  // Live preview for custom accent color picker
+  const accentPicker = document.getElementById('settings-accent-color');
+  if (accentPicker) {
+    accentPicker.addEventListener('input', (e) => {
+      const val = e.target.value;
+      document.documentElement.style.setProperty('--accent-color', val);
+      document.documentElement.style.setProperty('--accent-color-rgb', hexToRgb(val));
+    });
+  }
+
+  // Reset accent color override
+  const resetAccentBtn = document.getElementById('btn-reset-accent');
+  if (resetAccentBtn) {
+    resetAccentBtn.addEventListener('click', () => {
+      if (accentPicker) accentPicker.value = '#0078d4';
+      workspaceConfig.accentColor = '';
+      document.documentElement.style.removeProperty('--accent-color');
+      document.documentElement.style.removeProperty('--accent-color-rgb');
+    });
+  }
+
+  // Live preview for workspace layout mode select
+  const layoutSelect = document.getElementById('settings-layout-mode');
+  if (layoutSelect) {
+    layoutSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      const dashboardGroups = document.getElementById('dashboard-groups');
+      if (dashboardGroups) {
+        dashboardGroups.classList.remove('groups-layout-grid', 'groups-layout-rows', 'groups-layout-list');
+        dashboardGroups.classList.add(`groups-layout-${val}`);
+      }
+    });
+  }
+
   // Hook Settings Form Submission
   if (settingsForm) {
     settingsForm.addEventListener('submit', (e) => {
@@ -1920,6 +1975,9 @@ function initSettingsModal() {
       workspaceConfig.glassBlur = document.getElementById('settings-glass-blur') ? document.getElementById('settings-glass-blur').value + 'px' : '20px';
       workspaceConfig.blobOpacity = document.getElementById('settings-blob-opacity') ? document.getElementById('settings-blob-opacity').value : '0.45';
       workspaceConfig.blobSpeed = document.getElementById('settings-blob-speed') ? document.getElementById('settings-blob-speed').value + 's' : '25s';
+      workspaceConfig.cardRadius = document.getElementById('settings-card-radius') ? document.getElementById('settings-card-radius').value + 'px' : '24px';
+      workspaceConfig.accentColor = document.getElementById('settings-accent-color') ? document.getElementById('settings-accent-color').value : '';
+      workspaceConfig.layoutMode = document.getElementById('settings-layout-mode') ? document.getElementById('settings-layout-mode').value : 'grid';
       
       workspaceConfig.showClock = document.getElementById('settings-toggle-clock').checked;
       workspaceConfig.showNotepad = document.getElementById('settings-toggle-notepad').checked;
@@ -2143,6 +2201,25 @@ function populateSettingsForm() {
     if (lbl) lbl.textContent = blobSpeed + 's';
   }
 
+  // Populate layout mode
+  const layoutSelect = document.getElementById('settings-layout-mode');
+  if (layoutSelect) layoutSelect.value = workspaceConfig.layoutMode || 'grid';
+
+  // Populate card radius
+  const cardRadiusVal = parseInt(workspaceConfig.cardRadius, 10) || 24;
+  const radiusSlider = document.getElementById('settings-card-radius');
+  if (radiusSlider) {
+    radiusSlider.value = cardRadiusVal;
+    const lbl = document.getElementById('label-card-radius');
+    if (lbl) lbl.textContent = cardRadiusVal + 'px';
+  }
+
+  // Populate accent color
+  const accentColorInput = document.getElementById('settings-accent-color');
+  if (accentColorInput) {
+    accentColorInput.value = workspaceConfig.accentColor || '#0078d4';
+  }
+
   // Integrations configs
   document.getElementById('integration-plex-url').value = integrationConfigs.plexUrl || '';
   document.getElementById('integration-plex-token').value = integrationConfigs.plexToken || '';
@@ -2222,6 +2299,25 @@ function applyWorkspaceConfig(config) {
   } else {
     document.documentElement.style.setProperty('--font-display', "'Outfit', sans-serif");
     document.documentElement.style.setProperty('--font-body', "'Inter', sans-serif");
+  }
+
+  // Apply Card corner roundness
+  document.documentElement.style.setProperty('--card-radius', config.cardRadius || '24px');
+
+  // Apply custom accent color override
+  if (config.accentColor) {
+    document.documentElement.style.setProperty('--accent-color', config.accentColor);
+    document.documentElement.style.setProperty('--accent-color-rgb', hexToRgb(config.accentColor));
+  } else {
+    document.documentElement.style.removeProperty('--accent-color');
+    document.documentElement.style.removeProperty('--accent-color-rgb');
+  }
+
+  // Apply layout mode class on main container
+  const dashboardGroups = document.getElementById('dashboard-groups');
+  if (dashboardGroups) {
+    dashboardGroups.classList.remove('groups-layout-grid', 'groups-layout-rows', 'groups-layout-list');
+    dashboardGroups.classList.add(`groups-layout-${config.layoutMode || 'grid'}`);
   }
 }
 
