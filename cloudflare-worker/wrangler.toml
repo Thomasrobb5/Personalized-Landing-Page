@@ -1,0 +1,11 @@
+name = "m365-status-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Bind your KV Namespace to store roadmap and status feeds
+[[kv_namespaces]]
+binding = "M365_CACHE"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
+[triggers]
+crons = ["0 */4 * * *"] # Fetches and caches feeds automatically every 4 hours

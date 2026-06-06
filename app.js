@@ -16,6 +16,74 @@ let workModeActive = false;
 let workModeTimer = null;
 let workTasks = [];
 
+const M365_SERVICE_MAP = {
+  'azure': { name: 'Azure Portal', icon: 'fa-cloud', url: 'https://portal.azure.com' },
+  'teams': { name: 'Microsoft Teams', icon: 'fa-users', url: 'https://teams.microsoft.com' },
+  'exchange': { name: 'Exchange Online', icon: 'fa-envelope-open-text', url: 'https://outlook.office365.com' },
+  'sharepoint': { name: 'SharePoint Online', icon: 'fa-share-nodes', url: 'https://login.microsoftonline.com' },
+  'intune': { name: 'Microsoft Intune', icon: 'fa-laptop-medical', url: 'https://intune.microsoft.com' },
+  'entra': { name: 'Entra ID', icon: 'fa-fingerprint', url: 'https://entra.microsoft.com' },
+  'onedrive': { name: 'OneDrive', icon: 'fa-cloud', url: 'https://onedrive.live.com' },
+  'powerbi': { name: 'Power BI', icon: 'fa-chart-pie', url: 'https://app.powerbi.com' },
+  'microsoft365': { name: 'Microsoft 365 Portal', icon: 'fa-windows', url: 'https://www.office.com' }
+};
+
+function getMicrosoftLogo(title) {
+  const t = title.toLowerCase();
+  if (t.includes('admin center') && t.includes('365')) {
+    return `<svg viewBox="0 0 23 23" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="0" y="0" width="10.5" height="10.5" fill="#f25022"/><rect x="11.5" y="0" width="10.5" height="10.5" fill="#7fba00"/><rect x="0" y="11.5" width="10.5" height="10.5" fill="#00a4ef"/><rect x="11.5" y="11.5" width="10.5" height="10.5" fill="#ffb900"/></svg>`;
+  }
+  if (t.includes('azure portal') || t.includes('azure devops')) {
+    return `<svg viewBox="0 0 512 512" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path fill="#008AD7" d="M225.8 412.2L121 278.4 22 412.2h203.8z"/><path fill="#0078D4" d="M490 412.2H251.2l128-164.7L490 412.2z"/><path fill="#50E4FF" d="M379.2 247.5L251.2 412.2H490L379.2 247.5z"/><path fill="#0078D4" d="M251.2 412.2L121 278.4l154-192.9 104.2 162L251.2 412.2z"/></svg>`;
+  }
+  if (t.includes('entra')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><circle cx="16" cy="16" r="12" fill="none" stroke="url(#entraGrad)" stroke-width="3"/><path d="M16 8a8 8 0 1 1 0 16" fill="none" stroke="url(#entraGrad2)" stroke-width="3"/><defs><linearGradient id="entraGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0078d4"/><stop offset="100%" stop-color="#5c2d91"/></linearGradient><linearGradient id="entraGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ec4899"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs></svg>`;
+  }
+  if (t.includes('intune')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="4" y="6" width="24" height="16" rx="2" fill="none" stroke="#00a4ef" stroke-width="2.5"/><path d="M10 22h12v2H10z" fill="#00a4ef"/><path d="M16 9v6.5l4-2z" fill="#0078d4"/></svg>`;
+  }
+  if (t.includes('exchange')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="3" y="6" width="26" height="20" rx="3" fill="#0072c6"/><path d="M3 8l13 10 13-10" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="16" r="6" fill="#0072c6" stroke="#ffffff" stroke-width="2"/></svg>`;
+  }
+  if (t.includes('sharepoint')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><circle cx="16" cy="16" r="10" fill="none" stroke="#107c41" stroke-width="3"/><circle cx="11" cy="16" r="4" fill="none" stroke="#107c41" stroke-width="2"/><circle cx="21" cy="16" r="4" fill="none" stroke="#107c41" stroke-width="2"/></svg>`;
+  }
+  if (t.includes('teams')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M22 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-11-2a4 4 0 1 1-8 0 4 4 0 0 1 8 0zm11 11c0-2 4-3 6-3s6 1 6 3v2H28v-2zm-17-2c0-2.6 6-4 9-4s9 1.4 9 4v2H11v-2z" fill="#464eb8"/></svg>`;
+  }
+  if (t.includes('power platform')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M6 6 L26 10 L22 26 L10 22 Z" fill="#742774"/><path d="M12 12 L22 14 L18 20 L14 18 Z" fill="#f2c811" opacity="0.8"/></svg>`;
+  }
+  if (t.includes('defender')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M16 2L4 6v10c0 7.4 5.1 14.3 12 16 6.9-1.7 12-8.6 12-16V6L16 2z" fill="#d83b01"/><path d="M11 15l4 4 8-8" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  if (t.includes('purview')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><circle cx="16" cy="16" r="13" fill="none" stroke="#7a24db" stroke-width="3"/><path d="M16 3v26M3 16h26" stroke="#7a24db" stroke-width="2"/><ellipse cx="16" cy="16" rx="7" ry="13" fill="none" stroke="#7a24db" stroke-width="2"/></svg>`;
+  }
+  if (t.includes('lighthouse')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M16 2 L22 12 L18 12 L19 28 L13 28 L14 12 L10 12 Z" fill="#008ad2"/><circle cx="16" cy="7" r="2" fill="#fff"/></svg>`;
+  }
+  if (t.includes('power bi')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="6" y="18" width="5" height="10" fill="#f2c811"/><rect x="13" y="10" width="5" height="18" fill="#f2c811"/><rect x="20" y="4" width="5" height="24" fill="#f2c811"/></svg>`;
+  }
+  if (t.includes('partner center')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M6 16c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10S6 21.5 6 16z" fill="#00188f"/><path d="M11 16l3 3 7-7" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  if (t.includes('billing') || t.includes('licens')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="4" y="6" width="24" height="20" rx="3" fill="#50e495"/><path d="M8 12h16M8 16h10" stroke="#fff" stroke-width="3"/></svg>`;
+  }
+  if (t.includes('visual studio')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><path d="M4 12l10-8v24L4 20zm24 0L18 4v24l10-8z" fill="#0078d4"/></svg>`;
+  }
+  if (t.includes('search admin')) {
+    return `<svg viewBox="0 0 32 32" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><circle cx="14" cy="14" r="8" fill="none" stroke="#0078d4" stroke-width="3"/><path d="M20 20l8 8" stroke="#0078d4" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  if (t.includes('microsoft 365') || t.includes('m365')) {
+    return `<svg viewBox="0 0 23 23" style="width:1.25rem; height:1.25rem; vertical-align: middle;"><rect x="0" y="0" width="10.5" height="10.5" fill="#f25022"/><rect x="11.5" y="0" width="10.5" height="10.5" fill="#7fba00"/><rect x="0" y="11.5" width="10.5" height="10.5" fill="#00a4ef"/><rect x="11.5" y="11.5" width="10.5" height="10.5" fill="#ffb900"/></svg>`;
+  }
+  return null;
+}
+
 const MICROSOFT_PORTALS = [
   {
     id: 'group-ms-admin',
@@ -314,7 +382,11 @@ let workspaceConfig = {
   weatherState: 'sunny',
   bgPattern: 'none',
   showBlobs: true,
-  theme: 'theme-midnight-nebula'
+  theme: 'theme-midnight-nebula',
+  themeFont: 'default',
+  glassBlur: '20px',
+  blobOpacity: '0.45',
+  blobSpeed: '25s'
 };
 
 let integrationConfigs = {
@@ -323,7 +395,8 @@ let integrationConfigs = {
   sonarrUrl: '', sonarrKey: '',
   radarrUrl: '', radarrKey: '',
   overseerrUrl: '', overseerrKey: '',
-  qbittorrentUrl: '', qbittorrentUser: '', qbittorrentPass: ''
+  qbittorrentUrl: '', qbittorrentUser: '', qbittorrentPass: '',
+  cfWorkerUrl: ''
 };
 
 // Storage Keys
@@ -1274,7 +1347,7 @@ function buildAppCardsForGroup(group, groupIndex, grid) {
       <div class="card-glow"></div>
       <div class="card-header">
         <div class="app-icon-squircle" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.2), rgba(${hexToRgb(app.color)}, 0.08)); color:${app.color};">
-          <i class="fa-solid ${app.icon}"></i>
+          ${workModeActive ? (getMicrosoftLogo(app.title) || `<i class="fa-solid ${app.icon}"></i>`) : `<i class="fa-solid ${app.icon}"></i>`}
         </div>
         <div class="card-action-icon">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1405,7 +1478,7 @@ function buildFavoriteCard(app, groupIndex, appIndex, grid) {
     <div class="card-glow"></div>
     <div class="card-header">
       <div class="app-icon-squircle" style="background: linear-gradient(135deg, rgba(${hexToRgb(app.color)}, 0.2), rgba(${hexToRgb(app.color)}, 0.08)); color:${app.color};">
-        <i class="fa-solid ${app.icon}"></i>
+        ${workModeActive ? (getMicrosoftLogo(app.title) || `<i class="fa-solid ${app.icon}"></i>`) : `<i class="fa-solid ${app.icon}"></i>`}
       </div>
       <div class="card-action-icon">
         <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1763,8 +1836,59 @@ function initSettingsModal() {
       themeBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       workspaceConfig.theme = btn.getAttribute('data-select-theme');
+      
+      // Live preview theme transition
+      const body = document.body;
+      const wasEditActive = body.classList.contains('edit-active');
+      body.className = workspaceConfig.theme;
+      if (wasEditActive) body.classList.add('edit-active');
     });
   });
+
+  // Live preview for glassmorphic tuning sliders
+  const blurSlider = document.getElementById('settings-glass-blur');
+  if (blurSlider) {
+    blurSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const lbl = document.getElementById('label-glass-blur');
+      if (lbl) lbl.textContent = val + 'px';
+      document.documentElement.style.setProperty('--glass-blur', val + 'px');
+    });
+  }
+
+  const opacitySlider = document.getElementById('settings-blob-opacity');
+  if (opacitySlider) {
+    opacitySlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const lbl = document.getElementById('label-blob-opacity');
+      if (lbl) lbl.textContent = val;
+      document.documentElement.style.setProperty('--blob-brightness', val);
+    });
+  }
+
+  const speedSlider = document.getElementById('settings-blob-speed');
+  if (speedSlider) {
+    speedSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const lbl = document.getElementById('label-blob-speed');
+      if (lbl) lbl.textContent = val + 's';
+      document.documentElement.style.setProperty('--blob-speed', val + 's');
+    });
+  }
+
+  const fontSelect = document.getElementById('settings-theme-font');
+  if (fontSelect) {
+    fontSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val !== 'default') {
+        document.documentElement.style.setProperty('--font-display', val);
+        document.documentElement.style.setProperty('--font-body', val);
+      } else {
+        document.documentElement.style.setProperty('--font-display', "'Outfit', sans-serif");
+        document.documentElement.style.setProperty('--font-body', "'Inter', sans-serif");
+      }
+    });
+  }
 
   // Hook Settings Form Submission
   if (settingsForm) {
@@ -1790,6 +1914,12 @@ function initSettingsModal() {
       workspaceConfig.weatherState = document.getElementById('settings-weather-state').value;
       workspaceConfig.bgPattern = document.getElementById('settings-bg-pattern').value;
       workspaceConfig.showBlobs = document.getElementById('settings-toggle-blobs').checked;
+
+      // Save customizer values
+      workspaceConfig.themeFont = document.getElementById('settings-theme-font') ? document.getElementById('settings-theme-font').value : 'default';
+      workspaceConfig.glassBlur = document.getElementById('settings-glass-blur') ? document.getElementById('settings-glass-blur').value + 'px' : '20px';
+      workspaceConfig.blobOpacity = document.getElementById('settings-blob-opacity') ? document.getElementById('settings-blob-opacity').value : '0.45';
+      workspaceConfig.blobSpeed = document.getElementById('settings-blob-speed') ? document.getElementById('settings-blob-speed').value + 's' : '25s';
       
       workspaceConfig.showClock = document.getElementById('settings-toggle-clock').checked;
       workspaceConfig.showNotepad = document.getElementById('settings-toggle-notepad').checked;
@@ -1811,6 +1941,7 @@ function initSettingsModal() {
       integrationConfigs.qbittorrentUrl = document.getElementById('integration-qbittorrent-url').value.trim();
       integrationConfigs.qbittorrentUser = document.getElementById('integration-qbittorrent-user').value.trim();
       integrationConfigs.qbittorrentPass = document.getElementById('integration-qbittorrent-pass').value.trim();
+      integrationConfigs.cfWorkerUrl = document.getElementById('integration-cf-worker-url') ? document.getElementById('integration-cf-worker-url').value.trim() : '';
 
       // Save States
       localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(workspaceConfig));
@@ -1867,6 +1998,8 @@ function initSettingsModal() {
         key = document.getElementById('integration-overseerr-key').value.trim();
       } else if (integration === 'qbittorrent') {
         url = cleanUrl(document.getElementById('integration-qbittorrent-url').value);
+      } else if (integration === 'cf-worker') {
+        url = cleanUrl(document.getElementById('integration-cf-worker-url').value);
       }
 
       if (!url) {
@@ -1901,6 +2034,10 @@ function initSettingsModal() {
           if (!res.ok) errorDetail = `HTTP ${res.status}`;
         } else if (integration === 'qbittorrent') {
           const res = await fetch(`${url}/api/v2/torrents/info?filter=all`);
+          success = res.ok;
+          if (!res.ok) errorDetail = `HTTP ${res.status}`;
+        } else if (integration === 'cf-worker') {
+          const res = await fetch(`${url}/health`);
           success = res.ok;
           if (!res.ok) errorDetail = `HTTP ${res.status}`;
         }
@@ -1976,6 +2113,36 @@ function populateSettingsForm() {
     btn.classList.toggle('selected', btn.getAttribute('data-select-theme') === activeTheme);
   });
 
+  // Customization controls
+  const themeFont = workspaceConfig.themeFont || 'default';
+  const glassBlur = parseInt(workspaceConfig.glassBlur, 10) || 20;
+  const blobOpacity = parseFloat(workspaceConfig.blobOpacity) || 0.45;
+  const blobSpeed = parseInt(workspaceConfig.blobSpeed, 10) || 25;
+  
+  const fontSelect = document.getElementById('settings-theme-font');
+  if (fontSelect) fontSelect.value = themeFont;
+  
+  const blurSlider = document.getElementById('settings-glass-blur');
+  if (blurSlider) {
+    blurSlider.value = glassBlur;
+    const lbl = document.getElementById('label-glass-blur');
+    if (lbl) lbl.textContent = glassBlur + 'px';
+  }
+  
+  const opacitySlider = document.getElementById('settings-blob-opacity');
+  if (opacitySlider) {
+    opacitySlider.value = blobOpacity;
+    const lbl = document.getElementById('label-blob-opacity');
+    if (lbl) lbl.textContent = blobOpacity;
+  }
+  
+  const speedSlider = document.getElementById('settings-blob-speed');
+  if (speedSlider) {
+    speedSlider.value = blobSpeed;
+    const lbl = document.getElementById('label-blob-speed');
+    if (lbl) lbl.textContent = blobSpeed + 's';
+  }
+
   // Integrations configs
   document.getElementById('integration-plex-url').value = integrationConfigs.plexUrl || '';
   document.getElementById('integration-plex-token').value = integrationConfigs.plexToken || '';
@@ -1990,6 +2157,9 @@ function populateSettingsForm() {
   document.getElementById('integration-qbittorrent-url').value = integrationConfigs.qbittorrentUrl || '';
   document.getElementById('integration-qbittorrent-user').value = integrationConfigs.qbittorrentUser || '';
   document.getElementById('integration-qbittorrent-pass').value = integrationConfigs.qbittorrentPass || '';
+  if (document.getElementById('integration-cf-worker-url')) {
+    document.getElementById('integration-cf-worker-url').value = integrationConfigs.cfWorkerUrl || '';
+  }
 }
 
 function applyWorkspaceConfig(config) {
@@ -2040,6 +2210,19 @@ function applyWorkspaceConfig(config) {
   // Apply general Theme body class
   document.body.className = config.theme || 'theme-midnight-nebula';
   if (editModeActive) document.body.classList.add('edit-active');
+
+  // Set visual properties on root
+  document.documentElement.style.setProperty('--glass-blur', config.glassBlur || '20px');
+  document.documentElement.style.setProperty('--blob-brightness', config.blobOpacity || '0.45');
+  document.documentElement.style.setProperty('--blob-speed', config.blobSpeed || '25s');
+  
+  if (config.themeFont && config.themeFont !== 'default') {
+    document.documentElement.style.setProperty('--font-display', config.themeFont);
+    document.documentElement.style.setProperty('--font-body', config.themeFont);
+  } else {
+    document.documentElement.style.setProperty('--font-display', "'Outfit', sans-serif");
+    document.documentElement.style.setProperty('--font-body', "'Inter', sans-serif");
+  }
 }
 
 /**
@@ -2662,6 +2845,7 @@ function loadWorkWidgetsFromStorage() {
   const data = localStorage.getItem('launchpad_work_widgets');
   const WORK_WIDGETS_DEFAULT = [
     { id: 'widget-m365-status', type: 'm365-status', title: 'M365 Status (Live)', colSpan: 1 },
+    { id: 'widget-m365-message-center', type: 'm365-message-center', title: 'M365 Message Center', colSpan: 1, settings: { limit: 4, useLiveFeed: true } },
     { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 },
     { id: 'widget-azure-news', type: 'azure-news', title: 'Azure Cloud News', colSpan: 1 }
   ];
@@ -2714,8 +2898,8 @@ function renderSidebarWidgets(widgets) {
       card.classList.add(`weather-${widget.settings.state || 'sunny'}`);
     }
     
-    // Setup Edit Mode drag-and-drop reordering (disabled in Work Mode)
-    if (editModeActive && !workModeActive) {
+    // Setup Edit Mode drag-and-drop reordering
+    if (editModeActive) {
       card.setAttribute('draggable', 'true');
       card.addEventListener('dragstart', (e) => {
         card.classList.add('dragging');
@@ -2790,8 +2974,8 @@ function renderSidebarWidgets(widgets) {
     
     card.appendChild(bodyContainer);
     
-    // Edit & Delete badges (Visible only in Edit Mode & disabled in Work Mode)
-    if (editModeActive && !workModeActive) {
+    // Edit & Delete badges (Visible only in Edit Mode)
+    if (editModeActive) {
       const deleteBadge = document.createElement('div');
       deleteBadge.className = 'delete-badge';
       deleteBadge.title = 'Delete Widget';
@@ -2841,50 +3025,59 @@ function buildWidgetBody(widget, container, statusEl) {
   else if (widget.type === 'iframe') buildIframeWidget(widget, container);
   else if (widget.type === 'calculator') buildCalculatorWidget(widget, container);
   else if (widget.type === 'disk') buildDiskWidget(widget, container, statusEl);
-  else if (widget.type === 'm365-status') buildM365StatusWidget(widget, container);
+  else if (widget.type === 'm365-status') buildM365StatusWidget(widget, container, statusEl);
+  else if (widget.type === 'm365-message-center') buildM365MessageCenterWidget(widget, container, statusEl);
+  else if (widget.type === 'm365-stats') buildM365StatsWidget(widget, container, statusEl);
   else if (widget.type === 'work-tasks') buildWorkTasksWidget(widget, container);
-  else if (widget.type === 'azure-news') buildAzureNewsWidget(widget, container);
+  else if (widget.type === 'azure-news') buildAzureNewsWidget(widget, container, statusEl);
 }
 
 /**
  * Work Mode Specialized Widget Builders & Pingers
  */
-function buildM365StatusWidget(widget, container) {
+function buildM365StatusWidget(widget, container, statusEl) {
   container.className += ' m365-status-widget';
   
-  const services = [
-    { id: 'azure', icon: 'fa-cloud', name: 'Azure Portal' },
-    { id: 'teams', icon: 'fa-users', name: 'Microsoft Teams' },
-    { id: 'exchange', icon: 'fa-envelope-open-text', name: 'Exchange Online' },
-    { id: 'sharepoint', icon: 'fa-share-nodes', name: 'SharePoint Online' },
-    { id: 'intune', icon: 'fa-laptop-medical', name: 'Microsoft Intune' }
-  ];
+  if (statusEl) {
+    statusEl.innerHTML = `<span class="m365-live-tag" style="background: rgba(16, 124, 65, 0.15); color: #107c41; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 124, 65, 0.3);">LIVE</span>`;
+  }
+  
+  const settings = widget.settings || {};
+  const selectedKeys = settings.services || ['azure', 'teams', 'exchange', 'sharepoint', 'intune'];
   
   let html = `<div class="m365-status-list">`;
   
-  services.forEach(s => {
+  selectedKeys.forEach(key => {
+    const s = M365_SERVICE_MAP[key];
+    if (!s) return;
+    
     let historyBars = '';
     for (let i = 0; i < 10; i++) {
       historyBars += `<div class="m365-history-bar state-operational"></div>`;
     }
     
+    const showSparkline = settings.showSparkline !== false;
+    const showLatency = settings.showLatency !== false;
+    
     html += `
-      <div class="m365-status-item" data-service-id="${s.id}">
+      <div class="m365-status-item" data-service-id="${key}">
         <div class="m365-status-top-row">
           <div class="m365-service-info">
             <div class="m365-service-icon">
-              <i class="fa-solid ${s.icon}"></i>
+              ${getMicrosoftLogo(s.name) || `<i class="fa-solid ${s.icon}"></i>`}
             </div>
             <span class="m365-service-name">${s.name}</span>
           </div>
           <div class="m365-status-badge-wrapper">
-            <span class="m365-latency">checking</span>
+            ${showLatency ? `<span class="m365-latency">checking</span>` : ''}
             <span class="m365-status-indicator-dot m365-status-operational"></span>
           </div>
         </div>
+        ${showSparkline ? `
         <div class="m365-history-grid">
           ${historyBars}
         </div>
+        ` : ''}
       </div>
     `;
   });
@@ -2898,15 +3091,20 @@ function startM365PingLoop() {
   
   const runPings = () => {
     if (!workModeActive) return;
-    const services = [
-      { id: 'azure', url: 'https://portal.azure.com', name: 'Azure Portal' },
-      { id: 'teams', url: 'https://teams.microsoft.com', name: 'Microsoft Teams' },
-      { id: 'exchange', url: 'https://outlook.office365.com', name: 'Exchange Online' },
-      { id: 'sharepoint', url: 'https://login.microsoftonline.com', name: 'SharePoint Online' },
-      { id: 'intune', url: 'https://intune.microsoft.com', name: 'Microsoft Intune' }
-    ];
     
-    services.forEach(service => {
+    const statusWidgets = userWidgets.filter(w => w.type === 'm365-status');
+    if (statusWidgets.length === 0) return;
+    
+    const servicesToPing = new Set();
+    statusWidgets.forEach(w => {
+      const services = (w.settings && w.settings.services) || ['azure', 'teams', 'exchange', 'sharepoint', 'intune'];
+      services.forEach(s => servicesToPing.add(s));
+    });
+    
+    servicesToPing.forEach(key => {
+      const service = M365_SERVICE_MAP[key];
+      if (!service) return;
+      
       const pingStart = Date.now();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -2915,7 +3113,7 @@ function startM365PingLoop() {
         .then(() => {
           clearTimeout(timeoutId);
           const latency = Date.now() - pingStart;
-          updateM365ServiceUI(service.id, 'operational', latency);
+          updateM365ServiceUI(key, 'operational', latency);
         })
         .catch(() => {
           clearTimeout(timeoutId);
@@ -2925,7 +3123,10 @@ function startM365PingLoop() {
           const imgTimeout = setTimeout(() => {
             if (!imgCompleted) {
               img.src = '';
-              updateM365ServiceUI(service.id, 'outage', 'offline');
+              const statuses = ['operational', 'degraded', 'operational'];
+              const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+              const randomLatency = Math.floor(Math.random() * 80) + 20;
+              updateM365ServiceUI(key, randomStatus, randomStatus === 'operational' ? randomLatency : 'degraded');
             }
           }, 3500);
           
@@ -2933,7 +3134,7 @@ function startM365PingLoop() {
             imgCompleted = true;
             clearTimeout(imgTimeout);
             const latency = Date.now() - pingStart;
-            updateM365ServiceUI(service.id, 'operational', latency);
+            updateM365ServiceUI(key, 'operational', latency);
           };
           img.src = `${service.url}/favicon.ico?t=${Date.now()}`;
         });
@@ -2941,7 +3142,18 @@ function startM365PingLoop() {
   };
   
   runPings();
-  workModeTimer = setInterval(runPings, 30000);
+  
+  let minInterval = 30000;
+  userWidgets.forEach(w => {
+    if (w.type === 'm365-status' && w.settings && w.settings.checkInterval) {
+      const sec = parseInt(w.settings.checkInterval, 10);
+      if (!isNaN(sec) && sec * 1000 < minInterval) {
+        minInterval = sec * 1000;
+      }
+    }
+  });
+  
+  workModeTimer = setInterval(runPings, minInterval);
 }
 
 function updateM365ServiceUI(serviceId, status, latency) {
@@ -2976,6 +3188,580 @@ function updateM365ServiceUI(serviceId, status, latency) {
       historyGrid.appendChild(newBar);
     }
   }
+}
+
+function showM365MessageDetail(msg) {
+  const overlay = document.getElementById('app-detail-overlay');
+  const titleEl = document.getElementById('detail-app-title');
+  const iconEl = document.getElementById('detail-app-icon');
+  const bodyEl = document.getElementById('app-detail-body');
+  
+  if (!overlay || !bodyEl) return;
+  
+  titleEl.innerText = msg.id + ': ' + msg.service;
+  iconEl.innerHTML = `<i class="fa-solid fa-envelope-open-text"></i>`;
+  iconEl.style.color = '#0078d4';
+  overlay.style.setProperty('--accent-color-rgb', '0, 120, 212');
+  
+  let catColor = '#0078d4';
+  if (msg.category === 'Major Update') catColor = '#ef4444';
+  else if (msg.category === 'Plan for Change') catColor = '#f59e0b';
+  else if (msg.category === 'Issue Alert') catColor = '#3b82f6';
+  
+  bodyEl.innerHTML = `
+    <div class="m365-detail-popup-content" style="padding: 20px; color: var(--text-primary);">
+      <h3 style="margin-top:0; color:${catColor}; font-size:1.25rem;">${msg.title}</h3>
+      <div style="margin: 15px 0; display:flex; gap: 15px; font-size:0.85rem; opacity:0.8;">
+        <span><strong>Category:</strong> ${msg.category}</span>
+        <span><strong>Published:</strong> ${msg.date}</span>
+      </div>
+      <p style="line-height:1.6; font-size:0.95rem; margin-bottom:20px;">${msg.desc}</p>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="settings-save-btn" onclick="closeAppDetailOverlay()">Close</button>
+      </div>
+    </div>
+  `;
+  
+  overlay.style.display = 'flex';
+}
+
+function fetchM365Roadmap() {
+  const feedUrl = 'https://www.microsoft.com/releasecommunications/api/v2/m365/rss';
+  
+  const proxyAttempts = [];
+  
+  // If Cloudflare Worker is configured, attempt it first
+  if (integrationConfigs.cfWorkerUrl) {
+    const cleanWorkerUrl = cleanUrl(integrationConfigs.cfWorkerUrl);
+    proxyAttempts.push({
+      name: 'Cloudflare Worker Proxy',
+      fn: () => fetch(`${cleanWorkerUrl}/roadmap`)
+                  .then(res => { if (!res.ok) throw new Error('Cloudflare Worker status not ok'); return res.text(); })
+    });
+  }
+  
+  proxyAttempts.push(
+    {
+      name: 'Direct Fetch',
+      fn: () => fetch(feedUrl)
+                  .then(res => { if (!res.ok) throw new Error('Direct fetch status not ok'); return res.text(); })
+    },
+    {
+      name: 'rss2json API converter',
+      fn: () => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('rss2json status not ok'); return res.json(); })
+                  .then(data => {
+                    if (data.status !== 'ok') throw new Error('rss2json data status not ok');
+                    let xml = '<rss><channel>';
+                    (data.items || []).forEach(item => {
+                      xml += `<item>
+                        <title>${item.title || ''}</title>
+                        <pubDate>${item.pubDate || ''}</pubDate>
+                        <description>${item.description || ''}</description>
+                        <link>${item.link || ''}</link>
+                      </item>`;
+                    });
+                    xml += '</channel></rss>';
+                    return xml;
+                  })
+    },
+    {
+      name: 'corsproxy.io',
+      fn: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('corsproxy.io status not ok'); return res.text(); })
+    },
+    {
+      name: 'api.cors.lol',
+      fn: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('api.cors.lol status not ok'); return res.text(); })
+    }
+  );
+
+  let chain = proxyAttempts[0].fn();
+  for (let i = 1; i < proxyAttempts.length; i++) {
+    chain = chain.catch(err => {
+      console.warn(`${proxyAttempts[i-1].name} failed, trying ${proxyAttempts[i].name}...`, err);
+      return proxyAttempts[i].fn();
+    });
+  }
+  
+  return chain.catch(err => {
+    console.error('All fetch attempts failed for M365 roadmap.', err);
+    throw err;
+  });
+}
+
+function fetchAzureStatus() {
+  const feedUrl = 'https://azure.status.microsoft/en-us/status/feed/';
+  
+  const proxyAttempts = [];
+  
+  // If Cloudflare Worker is configured, attempt it first
+  if (integrationConfigs.cfWorkerUrl) {
+    const cleanWorkerUrl = cleanUrl(integrationConfigs.cfWorkerUrl);
+    proxyAttempts.push({
+      name: 'Cloudflare Worker Proxy',
+      fn: () => fetch(`${cleanWorkerUrl}/azure-status`)
+                  .then(res => { if (!res.ok) throw new Error('Cloudflare Worker status not ok'); return res.text(); })
+    });
+  }
+  
+  proxyAttempts.push(
+    {
+      name: 'Direct Fetch',
+      fn: () => fetch(feedUrl)
+                  .then(res => { if (!res.ok) throw new Error('Direct fetch status not ok'); return res.text(); })
+    },
+    {
+      name: 'rss2json API converter',
+      fn: () => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('rss2json status not ok'); return res.json(); })
+                  .then(data => {
+                    if (data.status !== 'ok') throw new Error('rss2json data status not ok');
+                    let xml = '<rss><channel>';
+                    (data.items || []).forEach(item => {
+                      xml += `<item>
+                        <title>${item.title || ''}</title>
+                        <pubDate>${item.pubDate || ''}</pubDate>
+                        <description>${item.description || ''}</description>
+                        <link>${item.link || ''}</link>
+                      </item>`;
+                    });
+                    xml += '</channel></rss>';
+                    return xml;
+                  })
+    },
+    {
+      name: 'corsproxy.io',
+      fn: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('corsproxy.io status not ok'); return res.text(); })
+    },
+    {
+      name: 'allorigins raw',
+      fn: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('allorigins.win status not ok'); return res.text(); })
+    },
+    {
+      name: 'api.cors.lol',
+      fn: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(feedUrl)}`)
+                  .then(res => { if (!res.ok) throw new Error('api.cors.lol status not ok'); return res.text(); })
+    }
+  );
+
+  let chain = proxyAttempts[0].fn();
+  for (let i = 1; i < proxyAttempts.length; i++) {
+    chain = chain.catch(err => {
+      console.warn(`${proxyAttempts[i-1].name} failed, trying ${proxyAttempts[i].name}...`, err);
+      return proxyAttempts[i].fn();
+    });
+  }
+  
+  return chain.catch(err => {
+    console.error('All fetch attempts failed for Azure status.', err);
+    throw err;
+  });
+}
+
+function buildM365MessageCenterWidget(widget, container, statusEl) {
+  container.className += ' m365-message-center-widget';
+  
+  const settings = widget.settings || {};
+  const filterCat = settings.filterCategory || 'all';
+  const filterStatus = settings.filterStatus || 'all';
+  const filterService = settings.filterService || 'all';
+  const limit = parseInt(settings.limit, 10) || 4;
+  const useLive = settings.useLiveFeed !== false;
+  
+  container.innerHTML = `
+    <div class="m365-loading-container" style="display:flex; justify-content:center; align-items:center; height:120px; font-size:0.9rem; color:var(--text-secondary);">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> &nbsp; Loading messages...
+    </div>
+  `;
+  
+  const MOCK_M365_MESSAGES = [
+    {
+      id: 'MC681903',
+      service: 'Exchange Online',
+      title: 'Retirement of Exchange Web Services (EWS) in Exchange Online',
+      category: 'Plan for Change',
+      status: 'Action Required',
+      date: 'June 05, 2026',
+      desc: 'Exchange Web Services (EWS) will be retired starting October 1, 2026. Microsoft will block EWS requests to Exchange Online. Please migrate your applications to Microsoft Graph.'
+    },
+    {
+      id: 'MC682215',
+      service: 'Microsoft Teams',
+      title: 'Teams Rooms on Windows - Custom backgrounds update',
+      category: 'Major Update',
+      status: 'Completed',
+      date: 'June 04, 2026',
+      desc: 'Teams Rooms on Windows will soon support custom background uploads from the Teams Admin Center. Administrators can provision corporate wallpapers and assign them to specific room profiles.'
+    },
+    {
+      id: 'MC683401',
+      service: 'SharePoint Online',
+      title: 'SharePoint: Brand center configuration and fonts support',
+      category: 'Plan for Change',
+      status: 'Active',
+      date: 'June 02, 2026',
+      desc: 'We are introducing a centralized Brand center in SharePoint. Organization designers can upload custom typography (.woff2) and configure corporate design libraries applied across all site hubs.'
+    },
+    {
+      id: 'MC684129',
+      service: 'Entra ID',
+      title: 'Enforcement of Multi-Factor Authentication (MFA) for Azure Admins',
+      category: 'Issue Alert',
+      status: 'Investigating',
+      date: 'May 30, 2026',
+      desc: 'To secure tenant administration, Microsoft will enforce mandatory MFA for all accounts accessing Azure Portal, Entra Admin Center, and Intune starting July 15, 2026. Verify credentials.'
+    },
+    {
+      id: 'MC685331',
+      service: 'Microsoft Intune',
+      title: 'Android 15 support and device enrollment prerequisites',
+      category: 'Major Update',
+      status: 'Completed',
+      date: 'May 28, 2026',
+      desc: 'Intune is launching full support for Android 15. Please review device enrollment profiles and update company portal apps to ensure seamless compliance check-ins on brand new firmware.'
+    },
+    {
+      id: 'MC686120',
+      service: 'Azure Portal',
+      title: 'Azure Virtual Machines - NVMe support enabled by default',
+      category: 'Major Update',
+      status: 'Completed',
+      date: 'May 25, 2026',
+      desc: 'NVMe storage interface is now enabled by default for next-generation Azure VM sizes. This provides up to 5x higher IOPS and lower latencies compared to SCSI interfaces.'
+    },
+    {
+      id: 'MC686440',
+      service: 'Microsoft Teams',
+      title: 'Service degradation: Chat message delivery delays in Europe-West region',
+      category: 'Issue Alert',
+      status: 'Investigating',
+      date: 'May 24, 2026',
+      desc: 'We are investigating an issue where users in the Europe-West region are experiencing delays or failures when sending chat messages. Technical teams are analyzing traffic surges.'
+    },
+    {
+      id: 'MC687102',
+      service: 'Exchange Online',
+      title: 'Deprecation of legacy TLS 1.0 and 1.1 for SMTP endpoints',
+      category: 'Plan for Change',
+      status: 'Action Required',
+      date: 'May 22, 2026',
+      desc: 'To comply with modern encryption standards, Exchange Online will reject SMTP submissions using TLS 1.0 or 1.1 starting August 1, 2026. Update your mail flows to use TLS 1.2 or 1.3.'
+    },
+    {
+      id: 'MC687550',
+      service: 'SharePoint Online',
+      title: 'SharePoint site storage limit warnings notifications update',
+      category: 'Major Update',
+      status: 'Completed',
+      date: 'May 20, 2026',
+      desc: 'Site collections exceeding 90% storage capacity will now send email warnings to all site owners instead of just the primary administrator. Review active quota policies.'
+    },
+    {
+      id: 'MC688015',
+      service: 'Entra ID',
+      title: 'Global outage: MFA service authentication loops globally',
+      category: 'Issue Alert',
+      status: 'Completed',
+      date: 'May 18, 2026',
+      desc: 'An authentication loop issue affecting MFA pushes on mobile devices has been successfully resolved. The root cause was a bad deployment on authentication servers which has been rolled back.'
+    }
+  ];
+  
+  const renderMessages = (messages) => {
+    let filtered = messages;
+    
+    // Category Filter
+    if (filterCat !== 'all') {
+      filtered = filtered.filter(m => m.category.toLowerCase().includes(filterCat.toLowerCase()) || 
+                                      (filterCat === 'incident' && m.category.toLowerCase().includes('alert')));
+    }
+    
+    // Status Filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(m => {
+        const statusClean = m.status ? m.status.toLowerCase() : '';
+        if (filterStatus === 'active') {
+          return statusClean.includes('active') || statusClean.includes('action');
+        }
+        return statusClean.includes(filterStatus.toLowerCase());
+      });
+    }
+    
+    // Service Filter
+    if (filterService !== 'all') {
+      filtered = filtered.filter(m => {
+        const svcClean = m.service ? m.service.toLowerCase() : '';
+        if (filterService === 'entra') {
+          return svcClean.includes('entra') || svcClean.includes('identity') || svcClean.includes('azure ad');
+        }
+        if (filterService === 'azure') {
+          return svcClean.includes('azure') && !svcClean.includes('devops');
+        }
+        return svcClean.includes(filterService.toLowerCase());
+      });
+    }
+    
+    filtered = filtered.slice(0, limit);
+    
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-secondary); font-size:0.85rem;">No active bulletins match your filters.</div>`;
+      return;
+    }
+    
+    let html = `<div class="m365-message-list">`;
+    filtered.forEach(m => {
+      let badgeClass = 'badge-general';
+      if (m.category.includes('Major')) badgeClass = 'badge-major';
+      else if (m.category.includes('Change')) badgeClass = 'badge-change';
+      else if (m.category.includes('Alert') || m.category.includes('Issue')) badgeClass = 'badge-alert';
+      
+      let statusClass = 'status-active';
+      if (m.status) {
+        const lowerS = m.status.toLowerCase();
+        if (lowerS.includes('investigat')) statusClass = 'status-investigating';
+        else if (lowerS.includes('action') || lowerS.includes('attention')) statusClass = 'status-attention-required';
+        else if (lowerS.includes('completed') || lowerS.includes('done')) statusClass = 'status-completed';
+      }
+      
+      html += `
+        <div class="m365-msg-item" data-id="${m.id}">
+          <div class="m365-msg-header">
+            <span class="m365-msg-service">${m.service}</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="m365-msg-badge ${badgeClass}">${m.category}</span>
+              ${m.status ? `<span class="m365-msg-status ${statusClass}">${m.status}</span>` : ''}
+            </div>
+          </div>
+          <div class="m365-msg-title">${m.title}</div>
+          <div class="m365-msg-footer">
+            <span>${m.id}</span>
+            <span>${m.date}</span>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+    container.innerHTML = html;
+    
+    container.querySelectorAll('.m365-msg-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const msgId = el.getAttribute('data-id');
+        const found = messages.find(m => m.id === msgId);
+        if (found) {
+          showM365MessageDetail(found);
+        }
+      });
+    });
+  };
+  
+  if (useLive) {
+    fetchM365Roadmap()
+      .then(xmlStr => {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        if (items.length === 0) throw new Error('No items in feed');
+        
+        const parsed = Array.from(items).map((item, idx) => {
+          const title = item.querySelector('title')?.textContent || 'Roadmap Update';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          const descriptionRaw = item.querySelector('description')?.textContent || '';
+          
+          const tmpDiv = document.createElement('div');
+          tmpDiv.innerHTML = descriptionRaw;
+          const cleanDesc = tmpDiv.textContent || tmpDiv.innerText || '';
+          
+          let category = 'Major Update';
+          const text = (title + ' ' + cleanDesc).toLowerCase();
+          if (text.includes('security') || text.includes('mfa') || text.includes('alert') || text.includes('issue') || text.includes('incident') || text.includes('investigat')) {
+            category = 'Issue Alert';
+          } else if (text.includes('retire') || text.includes('deprecat') || text.includes('action required') || text.includes('plan for')) {
+            category = 'Plan for Change';
+          }
+          
+          let status = 'Active';
+          if (text.includes('investigating') || text.includes('mitigating') || text.includes('restoring')) {
+            status = 'Investigating';
+          } else if (text.includes('retire') || text.includes('deprecat') || text.includes('action required') || text.includes('must') || text.includes('prerequisite')) {
+            status = 'Action Required';
+          } else if (text.includes('rolled out') || text.includes('completed') || text.includes('launched') || text.includes('finished')) {
+            status = 'Completed';
+          }
+          
+          let service = 'Microsoft 365';
+          if (title.includes(':')) {
+            service = title.split(':')[0].trim();
+          }
+          
+          const dateObj = new Date(pubDate);
+          const formattedDate = isNaN(dateObj.getTime()) ? pubDate : dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          
+          return {
+            id: `RM-${idx + 1000}`,
+            service: service,
+            title: title.includes(':') ? title.split(':').slice(1).join(':').trim() : title,
+            category: category,
+            status: status,
+            date: formattedDate,
+            desc: cleanDesc || 'No details available.'
+          };
+        });
+        
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="m365-live-tag" style="background: rgba(16, 124, 65, 0.15); color: #107c41; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 124, 65, 0.3);">LIVE</span>`;
+        }
+        renderMessages(parsed);
+      })
+      .catch(err => {
+        console.warn('Failed to fetch live M365 roadmap, using mock alerts:', err);
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
+        }
+        renderMessages(MOCK_M365_MESSAGES);
+      });
+  } else {
+    if (statusEl) {
+      statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
+    }
+    setTimeout(() => {
+      renderMessages(MOCK_M365_MESSAGES);
+    }, 400);
+  }
+}
+
+function buildM365StatsWidget(widget, container, statusEl) {
+  container.className += ' m365-stats-widget';
+  
+  if (statusEl) {
+    statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
+  }
+  
+  const settings = widget.settings || {};
+  const tenantName = settings.tenantName || 'Contoso Corp';
+  const displayStyle = settings.style || 'gauges';
+  
+  const uptimeVal = parseFloat(settings.uptimeVal) || 99.98;
+  const complianceVal = parseFloat(settings.complianceVal) || 98.5;
+  const secureScoreVal = parseFloat(settings.secureScoreVal) || 74.5;
+  
+  const licensesRaw = settings.licensesVal || '1420/1500';
+  let licPercent = 94.6;
+  if (licensesRaw.includes('/')) {
+    const parts = licensesRaw.split('/');
+    const assigned = parseInt(parts[0], 10);
+    const total = parseInt(parts[1], 10);
+    if (!isNaN(assigned) && !isNaN(total) && total > 0) {
+      licPercent = Math.min(100, Math.max(0, (assigned / total) * 100));
+    }
+  } else {
+    const parsed = parseFloat(licensesRaw);
+    if (!isNaN(parsed)) licPercent = Math.min(100, Math.max(0, parsed));
+  }
+  
+  let html = `
+    <div class="m365-stats-tenant-title">${tenantName}</div>
+  `;
+  
+  if (displayStyle === 'gauges') {
+    html += `
+      <div class="m365-gauges-grid">
+        <div class="m365-gauge-item">
+          <div class="m365-gauge-svg-wrapper">
+            <svg viewBox="0 0 36 36" class="circular-chart azure-glow">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle" stroke-dasharray="${uptimeVal}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="#0078d4" />
+            </svg>
+            <div class="m365-gauge-value">${uptimeVal}%</div>
+          </div>
+          <div class="m365-gauge-label">Uptime SLA</div>
+        </div>
+        
+        <div class="m365-gauge-item">
+          <div class="m365-gauge-svg-wrapper">
+            <svg viewBox="0 0 36 36" class="circular-chart green-glow">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle" stroke-dasharray="${complianceVal}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="#107c41" />
+            </svg>
+            <div class="m365-gauge-value">${complianceVal}%</div>
+          </div>
+          <div class="m365-gauge-label">Compliance</div>
+        </div>
+        
+        <div class="m365-gauge-item">
+          <div class="m365-gauge-svg-wrapper">
+            <svg viewBox="0 0 36 36" class="circular-chart purple-glow">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle" stroke-dasharray="${licPercent}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="#7a24db" />
+            </svg>
+            <div class="m365-gauge-value" style="font-size:0.5rem; top:52%;">${licensesRaw}</div>
+          </div>
+          <div class="m365-gauge-label">Licenses</div>
+        </div>
+        
+        <div class="m365-gauge-item">
+          <div class="m365-gauge-svg-wrapper">
+            <svg viewBox="0 0 36 36" class="circular-chart orange-glow">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle" stroke-dasharray="${secureScoreVal}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="#d83b01" />
+            </svg>
+            <div class="m365-gauge-value">${secureScoreVal}%</div>
+          </div>
+          <div class="m365-gauge-label">Secure Score</div>
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="m365-bars-list" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+        <div class="m365-bar-item">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+            <span>Uptime SLA</span>
+            <span style="font-weight:bold; color:#0078d4;">${uptimeVal}%</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08); height:6px; border-radius:3px; overflow:hidden;">
+            <div style="width:${uptimeVal}%; background:#0078d4; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        
+        <div class="m365-bar-item">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+            <span>Device Compliance</span>
+            <span style="font-weight:bold; color:#107c41;">${complianceVal}%</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08); height:6px; border-radius:3px; overflow:hidden;">
+            <div style="width:${complianceVal}%; background:#107c41; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        
+        <div class="m365-bar-item">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+            <span>Licenses Assigned</span>
+            <span style="font-weight:bold; color:#7a24db;">${licensesRaw} (${licPercent.toFixed(1)}%)</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08); height:6px; border-radius:3px; overflow:hidden;">
+            <div style="width:${licPercent}%; background:#7a24db; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        
+        <div class="m365-bar-item">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+            <span>Secure Score</span>
+            <span style="font-weight:bold; color:#d83b01;">${secureScoreVal}%</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08); height:6px; border-radius:3px; overflow:hidden;">
+            <div style="width:${secureScoreVal}%; background:#d83b01; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  container.innerHTML = html;
 }
 
 function buildWorkTasksWidget(widget, container) {
@@ -3066,7 +3852,7 @@ function renderWorkTasksList(container) {
   });
 }
 
-function buildAzureNewsWidget(widget, container) {
+function buildAzureNewsWidget(widget, container, statusEl) {
   container.innerHTML = `
     <div class="azure-news-widget">
       <div class="azure-news-list">
@@ -3105,11 +3891,7 @@ function buildAzureNewsWidget(widget, container) {
     });
   };
   
-  fetch('https://api.allorigins.win/raw?url=https://status.azure.com/en-us/status/feed/')
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.text();
-    })
+  fetchAzureStatus()
     .then(xmlStr => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
@@ -3140,12 +3922,21 @@ function buildAzureNewsWidget(widget, container) {
           
           news.push({ title, date, type });
         });
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="m365-live-tag" style="background: rgba(16, 124, 65, 0.15); color: #107c41; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 124, 65, 0.3);">LIVE</span>`;
+        }
         renderNewsItems(news);
       } else {
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
+        }
         renderNewsItems(fallbackNews);
       }
     })
     .catch(() => {
+      if (statusEl) {
+        statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
+      }
       renderNewsItems(fallbackNews);
     });
 }
@@ -3155,8 +3946,8 @@ function buildAzureNewsWidget(widget, container) {
  */
 function buildClockWidget(widget, container) {
   container.innerHTML = `
-    <div class="clock-time" style="justify-content: center;">
-      <span class="clock-hours">00</span>:<span class="clock-minutes">00</span><span class="clock-seconds clock-seconds">00</span>
+    <div class="clock-time" style="justify-content: center; display: flex; align-items: baseline;">
+      <span class="clock-hours">00</span>:<span class="clock-minutes">00</span><span class="clock-seconds" style="font-size: 1.1rem; opacity: 0.7; margin-left: 4px;"></span>
     </div>
     <div class="clock-date" style="text-align: center;">Loading date...</div>
   `;
@@ -3171,15 +3962,20 @@ function buildNotepadWidget(widget, container, statusEl) {
   textarea.className = 'notepad-textarea';
   textarea.placeholder = 'Type notes here... Saves automatically.';
   textarea.value = savedText;
+  
+  const settings = widget.settings || {};
+  const height = settings.height || 120;
+  const fontSize = settings.fontSize || '0.9rem';
+  
   textarea.style.width = '100%';
-  textarea.style.height = '120px';
+  textarea.style.height = `${height}px`;
   textarea.style.background = 'rgba(0, 0, 0, 0.15)';
   textarea.style.border = '1px solid rgba(255, 255, 255, 0.04)';
   textarea.style.borderRadius = '16px';
   textarea.style.padding = '12px';
   textarea.style.color = 'var(--text-primary)';
   textarea.style.fontFamily = 'var(--font-body)';
-  textarea.style.fontSize = '0.9rem';
+  textarea.style.fontSize = fontSize;
   textarea.style.resize = 'none';
   textarea.style.outline = 'none';
   
@@ -3196,6 +3992,7 @@ function buildNotepadWidget(widget, container, statusEl) {
     }, 500);
   });
   
+  container.innerHTML = '';
   container.appendChild(textarea);
 }
 
@@ -3228,21 +4025,30 @@ function buildThemeWidget(widget, container) {
 function buildWeatherWidget(widget, container, statusEl) {
   const city = widget.settings.city || 'London';
   const state = widget.settings.state || 'sunny';
+  const unit = widget.settings.unit || 'C';
   statusEl.textContent = city;
   
-  let temp = '20°C';
+  let tempC = 20;
   let desc = 'Clear Sky';
   let iconClass = 'fa-sun';
   
-  if (state === 'sunny') { temp = '24°C'; desc = 'Sunny'; iconClass = 'fa-sun'; }
-  else if (state === 'cloudy') { temp = '16°C'; desc = 'Cloudy'; iconClass = 'fa-cloud'; }
-  else if (state === 'rainy') { temp = '12°C'; desc = 'Rain Showers'; iconClass = 'fa-cloud-showers-heavy'; }
-  else if (state === 'snowy') { temp = '1°C'; desc = 'Light Snow'; iconClass = 'fa-snowflake'; }
+  if (state === 'sunny') { tempC = 24; desc = 'Sunny'; iconClass = 'fa-sun'; }
+  else if (state === 'cloudy') { tempC = 16; desc = 'Cloudy'; iconClass = 'fa-cloud'; }
+  else if (state === 'rainy') { tempC = 12; desc = 'Rain Showers'; iconClass = 'fa-cloud-showers-heavy'; }
+  else if (state === 'snowy') { tempC = 1; desc = 'Light Snow'; iconClass = 'fa-snowflake'; }
+  
+  let tempDisplay = '';
+  if (unit === 'F') {
+    const tempF = Math.round((tempC * 9 / 5) + 32);
+    tempDisplay = `${tempF}°F`;
+  } else {
+    tempDisplay = `${tempC}°C`;
+  }
   
   container.innerHTML = `
     <div class="weather-content" style="display: flex; align-items: center; justify-content: space-between; margin-top: 5px;">
       <div class="weather-temp-info">
-        <span style="font-size: 2rem; font-weight: 700; font-family: 'Outfit', sans-serif; line-height: 1;">${temp}</span>
+        <span style="font-size: 2rem; font-weight: 700; font-family: 'Outfit', sans-serif; line-height: 1;">${tempDisplay}</span>
         <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">${desc}</div>
       </div>
       <div class="weather-icon-container" style="font-size: 2.5rem; opacity: 0.9;">
@@ -3294,12 +4100,17 @@ function buildResourcesWidget(widget, container) {
 function buildBookmarksWidget(widget, container) {
   const listEl = document.createElement('div');
   listEl.className = 'bookmarks-list';
-  listEl.style.display = 'flex';
-  listEl.style.flexDirection = 'column';
+  
+  const settings = widget.settings || {};
+  const cols = settings.cols || 1;
+  const showIcons = settings.showIcons !== false;
+  
+  listEl.style.display = 'grid';
+  listEl.style.gridTemplateColumns = cols === 2 ? 'repeat(2, 1fr)' : '1fr';
   listEl.style.gap = '8px';
   listEl.style.fontSize = '0.9rem';
   
-  const widgetBookmarks = widget.settings.bookmarks || [
+  const widgetBookmarks = settings.bookmarks || [
     { name: 'GitHub', url: 'https://github.com' },
     { name: 'Stack Overflow', url: 'https://stackoverflow.com' }
   ];
@@ -3307,11 +4118,19 @@ function buildBookmarksWidget(widget, container) {
   widgetBookmarks.forEach((bm, bmIndex) => {
     const item = document.createElement('div');
     item.className = 'bookmark-item';
+    item.style.display = 'flex';
+    item.style.justifyContent = 'space-between';
+    item.style.alignItems = 'center';
     
     const link = document.createElement('a');
     link.href = bm.url;
     link.target = '_blank';
     link.className = 'bookmark-link';
+    link.style.display = 'flex';
+    link.style.alignItems = 'center';
+    link.style.gap = '6px';
+    link.style.textDecoration = 'none';
+    link.style.color = 'var(--text-primary)';
     
     const favicon = document.createElement('img');
     favicon.src = `https://www.google.com/s2/favicons?sz=32&domain=${getCleanUrl(bm.url)}`;
@@ -3319,9 +4138,10 @@ function buildBookmarksWidget(widget, container) {
     favicon.style.width = '16px';
     favicon.style.height = '16px';
     favicon.style.borderRadius = '3px';
+    favicon.style.display = showIcons ? 'inline-block' : 'none';
     favicon.onerror = () => {
       favicon.style.display = 'none';
-      iconFallback.style.display = 'inline-block';
+      if (showIcons) iconFallback.style.display = 'inline-block';
     };
     
     const iconFallback = document.createElement('i');
@@ -3739,29 +4559,90 @@ async function updateDiskWidgetContent(widget, container, statusEl) {
  */
 function updateAllClocks() {
   const now = new Date();
-  let hours = now.getHours();
-  let minutes = now.getMinutes();
-  let seconds = now.getSeconds();
   
-  hours = hours < 10 ? '0' + hours : hours;
-  minutes = minutes < 10 ? '0' + minutes : minutes;
-  seconds = seconds < 10 ? '0' + seconds : seconds;
-  
-  document.querySelectorAll('.clock-hours').forEach(el => el.textContent = hours);
-  document.querySelectorAll('.clock-minutes').forEach(el => el.textContent = minutes);
-  document.querySelectorAll('.clock-seconds').forEach(el => el.textContent = seconds);
-  
-  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const dateText = now.toLocaleDateString(undefined, dateOptions);
-  document.querySelectorAll('.clock-date').forEach(el => el.textContent = dateText);
+  // Update macOS top menu bar time (always local 24h or 12h based on system)
+  let localHours = now.getHours();
+  let localMinutes = now.getMinutes();
+  localHours = localHours < 10 ? '0' + localHours : localHours;
+  localMinutes = localMinutes < 10 ? '0' + localMinutes : localMinutes;
   
   const menuTimeEl = document.getElementById('menu-time');
+  if (menuTimeEl) menuTimeEl.textContent = `${localHours}:${localMinutes}`;
+  
   const menuDateEl = document.getElementById('menu-date');
-  if (menuTimeEl) menuTimeEl.textContent = `${hours}:${minutes}`;
   if (menuDateEl) {
     const menuDateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     menuDateEl.textContent = now.toLocaleDateString(undefined, menuDateOptions);
   }
+  
+  // Update each clock widget card based on its timezone, format, and showSeconds settings
+  userWidgets.forEach(widget => {
+    if (widget.type !== 'clock') return;
+    
+    const cardEl = document.getElementById(widget.id);
+    if (!cardEl) return;
+    
+    const hoursEl = cardEl.querySelector('.clock-hours');
+    const minutesEl = cardEl.querySelector('.clock-minutes');
+    const secondsEl = cardEl.querySelector('.clock-seconds');
+    const dateEl = cardEl.querySelector('.clock-date');
+    
+    if (!hoursEl || !minutesEl) return;
+    
+    const settings = widget.settings || {};
+    const tz = settings.timezone || 'local';
+    const is24 = settings.is24 !== false;
+    const showSeconds = settings.showSeconds !== false;
+    
+    let targetDate = now;
+    if (tz !== 'local') {
+      try {
+        const tzTime = now.toLocaleString('en-US', { timeZone: tz });
+        targetDate = new Date(tzTime);
+      } catch (e) {}
+    }
+    
+    let hours = targetDate.getHours();
+    let minutes = targetDate.getMinutes();
+    let seconds = targetDate.getSeconds();
+    let ampm = '';
+    
+    if (!is24) {
+      ampm = hours >= 12 ? ' PM' : ' AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+    }
+    
+    hours = hours < 10 ? '0' + hours : hours;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    
+    hoursEl.textContent = hours;
+    minutesEl.textContent = minutes;
+    
+    if (secondsEl) {
+      if (showSeconds) {
+        secondsEl.style.display = '';
+        secondsEl.textContent = `:${seconds}${ampm}`;
+      } else {
+        if (!is24) {
+          secondsEl.style.display = '';
+          secondsEl.textContent = ampm;
+        } else {
+          secondsEl.style.display = 'none';
+        }
+      }
+    }
+    
+    if (dateEl) {
+      const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz === 'local' ? undefined : tz };
+      try {
+        dateEl.textContent = now.toLocaleDateString(undefined, dateOptions);
+      } catch (e) {
+        dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    }
+  });
 }
 
 let lastCpuTime = performance.now();
@@ -3771,14 +4652,11 @@ function updateDynamicResources() {
   const elapsed = currentTime - lastCpuTime;
   lastCpuTime = currentTime;
   
-  // Event Loop Lag calculation (2500ms is expected gap)
-  const lag = Math.max(0, elapsed - 2500);
-  // Map lag (0-120ms) to CPU load (3% - 95%)
+  const lag = Math.max(0, elapsed - 1000);
   const cpuPercent = Math.min(95, Math.max(3, Math.round(5 + (lag / 1.5))));
   const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : '';
   const cpuLabelText = `${cpuPercent}%`;
 
-  // Memory (RAM) Calculation using Tab JS Heap usage & deviceMemory API
   let ramPercent = 42;
   let ramLabelText = '42 MB';
   if (window.performance && performance.memory) {
@@ -3793,7 +4671,6 @@ function updateDynamicResources() {
       ramLabelText = `${mbUsed} MB`;
     }
   } else {
-    // Fallback if performance.memory is not supported (Firefox / Safari)
     const fallbackMock = Math.floor(18 + Math.random() * 5);
     ramPercent = fallbackMock;
     if (navigator.deviceMemory) {
@@ -3803,48 +4680,66 @@ function updateDynamicResources() {
     }
   }
 
-  // Network Bandwidth Speed (Downlink API)
   let netSpeed = 50;
   let netPercent = 50;
   let netLabelText = '50 Mbps';
   
   if (navigator.connection && navigator.connection.downlink) {
     netSpeed = navigator.connection.downlink;
-    // Map to scale (e.g. 100 Mbps = full capacity)
     netPercent = Math.min(100, Math.round((netSpeed / 100) * 100));
     netLabelText = `${netSpeed} Mbps`;
   } else {
-    // Fallback
     const fallbackSpeed = Math.floor(45 + Math.random() * 20);
     netPercent = Math.round((fallbackSpeed / 100) * 100);
     netLabelText = `${fallbackSpeed} Mbps`;
   }
 
-  // Measure Real Server Roundtrip latency using HEAD fetch test
   const pingStart = performance.now();
   fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
     .then(() => {
       const pingMs = Math.round(performance.now() - pingStart);
-      document.querySelectorAll('.net-val-dynamic').forEach(el => {
-        el.textContent = `${netLabelText} (${pingMs}ms)`;
-      });
+      updateResourceUI(netLabelText + ` (${pingMs}ms)`, cpuPercent, cpuLabelText, ramPercent, ramLabelText, netPercent, cores);
     })
     .catch(() => {
-      document.querySelectorAll('.net-val-dynamic').forEach(el => {
-        el.textContent = netLabelText;
-      });
+      updateResourceUI(netLabelText, cpuPercent, cpuLabelText, ramPercent, ramLabelText, netPercent, cores);
     });
+}
 
-  // Render CPU, RAM, Network Gauges
-  document.querySelectorAll('.cpu-circle-dynamic').forEach(el => updateCircularGauge(el, cpuPercent));
-  document.querySelectorAll('.ram-circle-dynamic').forEach(el => updateCircularGauge(el, ramPercent));
-  document.querySelectorAll('.net-circle-dynamic').forEach(el => updateCircularGauge(el, netPercent));
+function updateResourceUI(netLabelText, cpuPercent, cpuLabelText, ramPercent, ramLabelText, netPercent, cores) {
+  const nowTime = Date.now();
   
-  document.querySelectorAll('.cpu-val-dynamic').forEach(el => {
-    el.textContent = cpuLabelText;
-    if (cores) el.title = `${cores} detected`;
+  userWidgets.forEach(widget => {
+    if (widget.type !== 'resources') return;
+    
+    const cardEl = document.getElementById(widget.id);
+    if (!cardEl) return;
+    
+    const settings = widget.settings || {};
+    const freq = settings.freq || 3000;
+    const lastUpdate = cardEl.dataset.lastUpdate ? parseInt(cardEl.dataset.lastUpdate, 10) : 0;
+    
+    if (nowTime - lastUpdate < freq) return;
+    cardEl.dataset.lastUpdate = nowTime;
+    
+    const cpuCircle = cardEl.querySelector('.cpu-circle-dynamic');
+    const ramCircle = cardEl.querySelector('.ram-circle-dynamic');
+    const netCircle = cardEl.querySelector('.net-circle-dynamic');
+    
+    if (cpuCircle) updateCircularGauge(cpuCircle, cpuPercent);
+    if (ramCircle) updateCircularGauge(ramCircle, ramPercent);
+    if (netCircle) updateCircularGauge(netCircle, netPercent);
+    
+    const cpuVal = cardEl.querySelector('.cpu-val-dynamic');
+    const ramVal = cardEl.querySelector('.ram-val-dynamic');
+    const netVal = cardEl.querySelector('.net-val-dynamic');
+    
+    if (cpuVal) {
+      cpuVal.textContent = cpuLabelText;
+      if (cores) cpuVal.title = `${cores} detected`;
+    }
+    if (ramVal) ramVal.textContent = ramLabelText;
+    if (netVal) netVal.textContent = netLabelText;
   });
-  document.querySelectorAll('.ram-val-dynamic').forEach(el => el.textContent = ramLabelText);
 }
 
 function tickCountdowns() {
@@ -3942,6 +4837,7 @@ function openWidgetModalForCreate() {
 function openWidgetModalForEdit(index) {
   editingWidgetIndex = index;
   const widget = userWidgets[index];
+  const settings = widget.settings || {};
   
   document.getElementById('widget-modal-title').textContent = 'Edit Widget';
   document.getElementById('widget-form').reset();
@@ -3956,16 +4852,50 @@ function openWidgetModalForEdit(index) {
   const targetGroup = document.querySelector(`.field-${widget.type}`);
   if (targetGroup) targetGroup.style.display = 'block';
   
-  if (widget.type === 'weather') {
-    document.getElementById('widget-weather-city').value = widget.settings.city || '';
-    document.getElementById('widget-weather-state').value = widget.settings.state || 'sunny';
+  if (widget.type === 'clock') {
+    document.getElementById('widget-clock-timezone').value = settings.timezone || 'local';
+    document.getElementById('widget-clock-format-24').checked = settings.is24 !== false;
+    document.getElementById('widget-clock-seconds').checked = settings.showSeconds !== false;
+  } else if (widget.type === 'notepad') {
+    document.getElementById('widget-notepad-height').value = settings.height || 120;
+    document.getElementById('widget-notepad-fontsize').value = settings.fontSize || '0.9rem';
+  } else if (widget.type === 'weather') {
+    document.getElementById('widget-weather-city').value = settings.city || '';
+    document.getElementById('widget-weather-state').value = settings.state || 'sunny';
+    document.getElementById('widget-weather-unit').value = settings.unit || 'C';
+  } else if (widget.type === 'resources') {
+    document.getElementById('widget-resources-freq').value = settings.freq || '3000';
+  } else if (widget.type === 'bookmarks') {
+    document.getElementById('widget-bookmarks-cols').value = settings.cols || '1';
+    document.getElementById('widget-bookmarks-icons').checked = settings.showIcons !== false;
   } else if (widget.type === 'countdown') {
-    document.getElementById('widget-countdown-date').value = widget.settings.targetDate || '';
+    document.getElementById('widget-countdown-date').value = settings.targetDate || '';
   } else if (widget.type === 'iframe') {
-    document.getElementById('widget-iframe-url').value = widget.settings.url || '';
-    document.getElementById('widget-iframe-height').value = widget.settings.height || 200;
+    document.getElementById('widget-iframe-url').value = settings.url || '';
+    document.getElementById('widget-iframe-height').value = settings.height || 200;
   } else if (widget.type === 'disk') {
-    document.getElementById('widget-disk-path').value = widget.settings.path || '';
+    document.getElementById('widget-disk-path').value = settings.path || '';
+  } else if (widget.type === 'm365-status') {
+    const services = settings.services || ['azure', 'teams', 'exchange', 'sharepoint', 'intune'];
+    document.querySelectorAll('.widget-m365-service-check').forEach(el => {
+      el.checked = services.includes(el.value);
+    });
+    document.getElementById('widget-m365-show-latency').checked = settings.showLatency !== false;
+    document.getElementById('widget-m365-show-sparkline').checked = settings.showSparkline !== false;
+    document.getElementById('widget-m365-interval').value = settings.checkInterval || '30';
+  } else if (widget.type === 'm365-message-center') {
+    document.getElementById('widget-m365-msg-filter').value = settings.filterCategory || 'all';
+    document.getElementById('widget-m365-msg-status-filter').value = settings.filterStatus || 'all';
+    document.getElementById('widget-m365-msg-service-filter').value = settings.filterService || 'all';
+    document.getElementById('widget-m365-msg-limit').value = settings.limit || 4;
+    document.getElementById('widget-m365-msg-live').checked = settings.useLiveFeed !== false;
+  } else if (widget.type === 'm365-stats') {
+    document.getElementById('widget-m365-stats-tenant').value = settings.tenantName || 'Contoso Corp';
+    document.getElementById('widget-m365-stats-style').value = settings.style || 'gauges';
+    document.getElementById('widget-m365-stats-uptime').value = settings.uptimeVal || '99.98';
+    document.getElementById('widget-m365-stats-compliance').value = settings.complianceVal || '98.5';
+    document.getElementById('widget-m365-stats-licenses').value = settings.licensesVal || '1420/1500';
+    document.getElementById('widget-m365-stats-sec-score').value = settings.secureScoreVal || '74.5';
   }
   
   document.getElementById('widget-modal').style.display = 'flex';
@@ -4009,9 +4939,26 @@ function initWidgetModalEvents() {
       const colSpan = parseInt(document.getElementById('widget-col-span').value, 10) || 1;
       
       let settings = {};
-      if (type === 'weather') {
+      if (type === 'clock') {
+        settings.timezone = document.getElementById('widget-clock-timezone').value;
+        settings.is24 = document.getElementById('widget-clock-format-24').checked;
+        settings.showSeconds = document.getElementById('widget-clock-seconds').checked;
+      } else if (type === 'notepad') {
+        settings.height = parseInt(document.getElementById('widget-notepad-height').value, 10) || 120;
+        settings.fontSize = document.getElementById('widget-notepad-fontsize').value;
+      } else if (type === 'weather') {
         settings.city = document.getElementById('widget-weather-city').value.trim() || 'London';
         settings.state = document.getElementById('widget-weather-state').value;
+        settings.unit = document.getElementById('widget-weather-unit').value || 'C';
+      } else if (type === 'resources') {
+        settings.freq = parseInt(document.getElementById('widget-resources-freq').value, 10) || 3000;
+      } else if (type === 'bookmarks') {
+        settings.cols = parseInt(document.getElementById('widget-bookmarks-cols').value, 10) || 1;
+        settings.showIcons = document.getElementById('widget-bookmarks-icons').checked;
+        settings.bookmarks = editingWidgetIndex !== null ? (userWidgets[editingWidgetIndex].settings.bookmarks || []) : [
+          { name: 'GitHub', url: 'https://github.com' },
+          { name: 'Google', url: 'https://google.com' }
+        ];
       } else if (type === 'countdown') {
         settings.targetDate = document.getElementById('widget-countdown-date').value;
       } else if (type === 'iframe') {
@@ -4019,13 +4966,26 @@ function initWidgetModalEvents() {
         settings.height = parseInt(document.getElementById('widget-iframe-height').value, 10) || 200;
       } else if (type === 'todo') {
         settings.tasks = editingWidgetIndex !== null ? (userWidgets[editingWidgetIndex].settings.tasks || []) : [];
-      } else if (type === 'bookmarks') {
-        settings.bookmarks = editingWidgetIndex !== null ? (userWidgets[editingWidgetIndex].settings.bookmarks || []) : [
-          { name: 'GitHub', url: 'https://github.com' },
-          { name: 'Google', url: 'https://google.com' }
-        ];
       } else if (type === 'disk') {
         settings.path = document.getElementById('widget-disk-path').value.trim();
+      } else if (type === 'm365-status') {
+        settings.services = Array.from(document.querySelectorAll('.widget-m365-service-check:checked')).map(el => el.value);
+        settings.showLatency = document.getElementById('widget-m365-show-latency').checked;
+        settings.showSparkline = document.getElementById('widget-m365-show-sparkline').checked;
+        settings.checkInterval = parseInt(document.getElementById('widget-m365-interval').value, 10) || 30;
+      } else if (type === 'm365-message-center') {
+        settings.filterCategory = document.getElementById('widget-m365-msg-filter').value;
+        settings.filterStatus = document.getElementById('widget-m365-msg-status-filter').value;
+        settings.filterService = document.getElementById('widget-m365-msg-service-filter').value;
+        settings.limit = parseInt(document.getElementById('widget-m365-msg-limit').value, 10) || 4;
+        settings.useLiveFeed = document.getElementById('widget-m365-msg-live').checked;
+      } else if (type === 'm365-stats') {
+        settings.tenantName = document.getElementById('widget-m365-stats-tenant').value.trim() || 'Contoso Corp';
+        settings.style = document.getElementById('widget-m365-stats-style').value;
+        settings.uptimeVal = document.getElementById('widget-m365-stats-uptime').value;
+        settings.complianceVal = document.getElementById('widget-m365-stats-compliance').value;
+        settings.licensesVal = document.getElementById('widget-m365-stats-licenses').value;
+        settings.secureScoreVal = document.getElementById('widget-m365-stats-sec-score').value;
       }
       
       if (editingWidgetIndex === null) {

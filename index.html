@@ -353,34 +353,125 @@
         <!-- Tab 2: Themes & Glow -->
         <div id="settings-tab-themes" class="settings-tab-content">
           <div class="form-group">
-            <label>Workspace Theme</label>
-            <div class="settings-theme-selector-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;">
+            <label style="font-weight: 600; margin-bottom: 4px; display: block;">Workspace Theme</label>
+            
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 8px; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.05em;">Casual Themes</div>
+            <div class="settings-theme-selector-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px;">
               <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-midnight-nebula">
-                <span class="theme-color-dot" style="background: #4f46e5;"></span> Midnight Nebula
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #4f46e5, #db2777);"></span> Midnight Nebula
               </button>
               <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-aurora-borealis">
-                <span class="theme-color-dot" style="background: #059669;"></span> Aurora Borealis
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #059669, #0891b2);"></span> Aurora Borealis
               </button>
               <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-solar-eclipse">
-                <span class="theme-color-dot" style="background: #d97706;"></span> Solar Eclipse
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #d97706, #dc2626);"></span> Solar Eclipse
               </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-pastel-dream">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #fed7aa, #ccfbf1);"></span> Pastel Dream
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-sunset-breeze">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #fda4af, #3b0764);"></span> Sunset Breeze
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-cozy-forest">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #3f6212, #854d0e);"></span> Cozy Forest
+              </button>
+            </div>
+
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 8px; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.05em;">Dramatic Themes</div>
+            <div class="settings-theme-selector-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px;">
               <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-cyberpunk">
-                <span class="theme-color-dot" style="background: #ff007f;"></span> Cyberpunk Cyber
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #ff007f, #00f0ff);"></span> Cyberpunk Cyber
               </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-synthwave">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #ff007f, #ff7c00);"></span> Neon Synthwave
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-oled-black">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #39ff14, #000000);"></span> OLED High-Con
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-volcanic">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #ff3c00, #ff9900);"></span> Volcanic Ash
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-ice-glacier">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #00d2ff, #ffffff);"></span> Glacial Ice
+              </button>
+            </div>
+
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 8px; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.05em;">Professional Themes</div>
+            <div class="settings-theme-selector-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px;">
               <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-slate-glass">
-                <span class="theme-color-dot" style="background: #64748b;"></span> Slate Glass
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #64748b, #1e293b);"></span> Slate Glass
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-corporate-azure">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #0078d4, #002050);"></span> Corporate Azure
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-executive-carbon">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #2c2c2c, #121212);"></span> Executive Carbon
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-warm-espresso">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #8b5a2b, #17110d);"></span> Warm Espresso
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-minimalist-light">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #bfdbfe, #f3f4f6);"></span> Minimalist Light
+              </button>
+              <button type="button" class="btn-macos theme-selector-item" data-select-theme="theme-retro-terminal">
+                <span class="theme-color-dot" style="background: linear-gradient(135deg, #39ff14, #000c00);"></span> Retro Terminal
               </button>
             </div>
           </div>
-          <div class="form-group">
-            <label for="settings-bg-pattern">Background Pattern Overlay</label>
-            <select id="settings-bg-pattern">
-              <option value="none">Clean Frosted Glass</option>
-              <option value="dots">Dotted Matrix</option>
-              <option value="grid">Cyber Grid Lines</option>
-              <option value="stripes">Diagonal Stripes</option>
-            </select>
+
+          <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label for="settings-bg-pattern">Background Pattern</label>
+              <select id="settings-bg-pattern">
+                <option value="none">Clean Frosted Glass</option>
+                <option value="dots">Dotted Matrix</option>
+                <option value="grid">Cyber Grid Lines</option>
+                <option value="stripes">Diagonal Stripes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="settings-theme-font">Workspace Font</label>
+              <select id="settings-theme-font">
+                <option value="default">Default (Outfit / Inter)</option>
+                <option value="'Inter', sans-serif">Clean Sans (Inter)</option>
+                <option value="'Courier New', Courier, monospace">Monospace Code (Courier)</option>
+                <option value="'Georgia', serif">Elegant Serif (Georgia)</option>
+                <option value="'Outfit', sans-serif">Modern Round (Outfit)</option>
+              </select>
+            </div>
           </div>
+
+          <!-- Glass customizer controls -->
+          <div class="form-group" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 16px; margin-bottom: 12px;">
+            <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 10px; color: var(--text-primary);"><i class="fa-solid fa-sliders"></i> Glassmorphic Tuning</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; color: var(--text-secondary);">
+                  <span>Frosted Glass Blur</span>
+                  <span id="label-glass-blur">20px</span>
+                </div>
+                <input type="range" id="settings-glass-blur" min="0" max="40" value="20" style="width: 100%; cursor: pointer;">
+              </div>
+              
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; color: var(--text-secondary);">
+                  <span>Background Glow Opacity</span>
+                  <span id="label-blob-opacity">0.45</span>
+                </div>
+                <input type="range" id="settings-blob-opacity" min="0" max="1" step="0.05" value="0.45" style="width: 100%; cursor: pointer;">
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; color: var(--text-secondary);">
+                  <span>Glow Animation Speed</span>
+                  <span id="label-blob-speed">25s</span>
+                </div>
+                <input type="range" id="settings-blob-speed" min="5" max="60" value="25" style="width: 100%; cursor: pointer;">
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; margin-top: 10px;">
               <input type="checkbox" id="settings-toggle-blobs" checked> Enable Background Glow Blobs
@@ -471,9 +562,19 @@
               <input type="text" id="integration-qbittorrent-user" placeholder="Username">
               <input type="password" id="integration-qbittorrent-pass" placeholder="Password">
             </div>
-            <div style="display: flex; align-items: center; margin-bottom: 6px; gap: 8px;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
               <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="qbittorrent" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
               <span id="test-status-qbittorrent" style="font-size:0.75rem; font-weight:500;"></span>
+            </div>
+
+            <!-- Cloudflare Worker Proxy -->
+            <div class="integration-section-header">Cloudflare Worker Proxy</div>
+            <div class="form-group" style="margin-bottom: 6px;">
+              <input type="url" id="integration-cf-worker-url" placeholder="https://m365-status-proxy.your-subdomain.workers.dev" style="width: 100%;">
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 6px; gap: 8px;">
+              <button type="button" class="btn-macos btn-macos-secondary test-integration-btn" data-integration="cf-worker" style="padding: 4px 8px; font-size: 0.75rem;"><i class="fa-solid fa-vial"></i> Test Connection</button>
+              <span id="test-status-cf-worker" style="font-size:0.75rem; font-weight:500;"></span>
             </div>
           </div>
           
@@ -539,6 +640,10 @@
             <option value="iframe">Iframe Embed Screen</option>
             <option value="calculator">Calculator</option>
             <option value="disk">Disk Storage Space (Sonarr)</option>
+            <!-- Microsoft 365 Enterprise Widgets -->
+            <option value="m365-status">M365 Service Health Monitor</option>
+            <option value="m365-message-center">M365 Message Center Feed</option>
+            <option value="m365-stats">M365 Tenant Uptime & Stats</option>
           </select>
         </div>
 
@@ -557,20 +662,100 @@
 
         <!-- Dynamic inputs shown based on selected widget type -->
         <div id="widget-config-fields">
+          <!-- Clock Config -->
+          <div class="widget-type-fields field-clock" style="display: none;">
+            <div class="form-group">
+              <label for="widget-clock-timezone">Timezone Offset</label>
+              <select id="widget-clock-timezone">
+                <option value="local">Local Browser Time</option>
+                <option value="0">UTC (GMT)</option>
+                <option value="1">UTC+1 (BST/CET)</option>
+                <option value="-5">UTC-5 (EST)</option>
+                <option value="-8">UTC-8 (PST)</option>
+                <option value="8">UTC+8 (SGT/CST)</option>
+              </select>
+            </div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="widget-clock-format-24" checked> 24-Hour Format
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" id="widget-clock-seconds" checked> Show Seconds
+              </label>
+            </div>
+          </div>
+
+          <!-- Notepad Config -->
+          <div class="widget-type-fields field-notepad" style="display: none;">
+            <div class="form-group">
+              <label for="widget-notepad-height">Editor Height (px)</label>
+              <input type="number" id="widget-notepad-height" placeholder="120" min="80" max="600" value="120">
+            </div>
+            <div class="form-group">
+              <label for="widget-notepad-fontsize">Font Size</label>
+              <select id="widget-notepad-fontsize">
+                <option value="0.8rem">Small (13px)</option>
+                <option value="0.9rem" selected>Medium (15px)</option>
+                <option value="1.05rem">Large (17px)</option>
+                <option value="1.2rem">Extra Large (19px)</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Weather Config -->
           <div class="widget-type-fields field-weather" style="display: none;">
             <div class="form-group">
               <label for="widget-weather-city">City</label>
               <input type="text" id="widget-weather-city" placeholder="e.g. London">
             </div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="widget-weather-state">Default Condition</label>
+                <select id="widget-weather-state">
+                  <option value="sunny">Sunny</option>
+                  <option value="cloudy">Cloudy</option>
+                  <option value="rainy">Rainy</option>
+                  <option value="snowy">Snowy</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="widget-weather-unit">Temp Unit</label>
+                <select id="widget-weather-unit">
+                  <option value="C">Celsius (°C)</option>
+                  <option value="F">Fahrenheit (°F)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Resources Config -->
+          <div class="widget-type-fields field-resources" style="display: none;">
             <div class="form-group">
-              <label for="widget-weather-state">Default Condition</label>
-              <select id="widget-weather-state">
-                <option value="sunny">Sunny</option>
-                <option value="cloudy">Cloudy</option>
-                <option value="rainy">Rainy</option>
-                <option value="snowy">Snowy</option>
+              <label for="widget-resources-freq">Monitor Refresh Rate</label>
+              <select id="widget-resources-freq">
+                <option value="1000">Fast (Every 1s)</option>
+                <option value="3000" selected>Balanced (Every 3s)</option>
+                <option value="5000">Eco (Every 5s)</option>
+                <option value="10000">Slow (Every 10s)</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Bookmarks Config -->
+          <div class="widget-type-fields field-bookmarks" style="display: none;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="widget-bookmarks-cols">Grid Columns</label>
+                <select id="widget-bookmarks-cols">
+                  <option value="1">1 Column List</option>
+                  <option value="2">2 Columns Grid</option>
+                </select>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; height: 100%;">
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; margin-top: 20px;">
+                  <input type="checkbox" id="widget-bookmarks-icons" checked> Show Favicons
+                </label>
+              </div>
             </div>
           </div>
 
@@ -599,6 +784,141 @@
             <div class="form-group">
               <label for="widget-disk-path">Disk Path Filter (Optional)</label>
               <input type="text" id="widget-disk-path" placeholder="e.g. /Plex_Media (leave empty for all)">
+            </div>
+          </div>
+
+          <!-- M365 Status Monitor Config -->
+          <div class="widget-type-fields field-m365-status" style="display: none;">
+            <div class="form-group">
+              <label style="font-weight: 600; margin-bottom: 6px; display: block;">Select Services to Monitor</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04);">
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="azure" checked> Azure Portal
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="teams" checked> MS Teams
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="exchange" checked> Exchange Online
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="sharepoint" checked> SharePoint Online
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="intune" checked> Intune Endpoint
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="entra" checked> Entra ID
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="onedrive" checked> OneDrive
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem;">
+                  <input type="checkbox" class="widget-m365-service-check" value="powerbi" checked> Power BI
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.825rem; grid-column: span 2;">
+                  <input type="checkbox" class="widget-m365-service-check" value="microsoft365" checked> Microsoft 365 Portal
+                </label>
+              </div>
+            </div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.85rem;">
+                <input type="checkbox" id="widget-m365-show-latency" checked> Display Latency
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; font-size: 0.85rem;">
+                <input type="checkbox" id="widget-m365-show-sparkline" checked> Sparkline History
+              </label>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label for="widget-m365-interval">Health Check Frequency</label>
+              <select id="widget-m365-interval">
+                <option value="15">Fast (Every 15s)</option>
+                <option value="30" selected>Standard (Every 30s)</option>
+                <option value="60">Eco (Every 60s)</option>
+                <option value="300">Slow (Every 5 mins)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- M365 Message Center Config -->
+          <div class="widget-type-fields field-m365-message-center" style="display: none;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+              <div class="form-group">
+                <label for="widget-m365-msg-filter">Category Filter</label>
+                <select id="widget-m365-msg-filter">
+                  <option value="all">All Categories</option>
+                  <option value="major">Major Updates</option>
+                  <option value="change">Plan for Change</option>
+                  <option value="incident">Service Issues</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-msg-status-filter">Status Filter</label>
+                <select id="widget-m365-msg-status-filter">
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active / Action Required</option>
+                  <option value="investigating">Investigating</option>
+                  <option value="completed">Completed / Informational</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+              <div class="form-group">
+                <label for="widget-m365-msg-service-filter">Service Filter</label>
+                <select id="widget-m365-msg-service-filter">
+                  <option value="all">All Services</option>
+                  <option value="teams">Microsoft Teams</option>
+                  <option value="exchange">Exchange Online</option>
+                  <option value="sharepoint">SharePoint Online</option>
+                  <option value="entra">Entra ID / Identity</option>
+                  <option value="azure">Azure Portal / Dev</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-msg-limit">Messages Count</label>
+                <input type="number" id="widget-m365-msg-limit" min="1" max="50" value="4">
+              </div>
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; margin-top: 5px;">
+                <input type="checkbox" id="widget-m365-msg-live" checked> Live M365 Feed (Fallback to Mock if unavailable)
+              </label>
+            </div>
+          </div>
+
+          <!-- M365 Stats Config -->
+          <div class="widget-type-fields field-m365-stats" style="display: none;">
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="widget-m365-stats-tenant">Tenant Name</label>
+                <input type="text" id="widget-m365-stats-tenant" placeholder="Contoso Corp">
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-stats-style">Display Style</label>
+                <select id="widget-m365-stats-style">
+                  <option value="gauges">Radial Gauges</option>
+                  <option value="bars">Horizontal Bars</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size: 0.8rem; font-weight: 600; margin-top: 10px; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase;">Administrative KPIs</div>
+            <div class="form-row-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div class="form-group">
+                <label for="widget-m365-stats-uptime">SLA Uptime (%)</label>
+                <input type="text" id="widget-m365-stats-uptime" value="99.98">
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-stats-compliance">Device Compliance (%)</label>
+                <input type="text" id="widget-m365-stats-compliance" value="98.5">
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-stats-licenses">Licenses Assigned</label>
+                <input type="text" id="widget-m365-stats-licenses" value="1420/1500">
+              </div>
+              <div class="form-group">
+                <label for="widget-m365-stats-sec-score">Secure Score (%)</label>
+                <input type="text" id="widget-m365-stats-sec-score" value="74.5">
+              </div>
             </div>
           </div>
         </div>
