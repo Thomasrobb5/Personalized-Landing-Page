@@ -396,7 +396,7 @@ let integrationConfigs = {
   radarrUrl: '', radarrKey: '',
   overseerrUrl: '', overseerrKey: '',
   qbittorrentUrl: '', qbittorrentUser: '', qbittorrentPass: '',
-  cfWorkerUrl: ''
+  cfWorkerUrl: 'https://m365-status-proxy.thomasrobb5.workers.dev'
 };
 
 // Storage Keys
