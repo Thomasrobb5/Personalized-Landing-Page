@@ -552,6 +552,43 @@ document.addEventListener('DOMContentLoaded', () => {
   workGroups = loadWorkGroupsFromStorage();
   personalWidgets = loadWidgetsFromStorage();
   workWidgets = loadWorkWidgetsFromStorage();
+
+  // Migrate work widgets: remove azure-news and set limit of message center to 10
+  let workWidgetsModified = false;
+  const initialWorkWidgetsLength = workWidgets.length;
+  workWidgets = workWidgets.filter(w => w.type !== 'azure-news');
+  if (workWidgets.length !== initialWorkWidgetsLength) {
+    workWidgetsModified = true;
+  }
+  workWidgets.forEach(w => {
+    if (w.type === 'm365-message-center') {
+      if (!w.settings) w.settings = {};
+      if (w.settings.limit === 4 || w.settings.limit === undefined) {
+        w.settings.limit = 10;
+        workWidgetsModified = true;
+      }
+    }
+  });
+  if (workWidgetsModified) {
+    localStorage.setItem('launchpad_work_widgets', JSON.stringify(workWidgets));
+  }
+
+  // Migrate work tasks: clear if they are the default demo tasks
+  const savedTasks = localStorage.getItem('launchpad_work_tasks');
+  if (savedTasks) {
+    try {
+      const parsedTasks = JSON.parse(savedTasks);
+      if (parsedTasks.length === 3 &&
+          parsedTasks[0].text === 'Review Azure Active Directory logs' &&
+          parsedTasks[1].text === 'Audit Intune enrollment compliance' &&
+          parsedTasks[2].text === 'Verify Exchange mail flow rules') {
+        localStorage.setItem('launchpad_work_tasks', JSON.stringify([]));
+      }
+    } catch (e) {}
+  } else {
+    localStorage.setItem('launchpad_work_tasks', JSON.stringify([]));
+  }
+
   loadWorkspaceConfig();
   loadIntegrationConfigs();
   workModeActive = localStorage.getItem('launchpad_work_mode_active') === 'true';
@@ -2941,9 +2978,8 @@ function loadWorkWidgetsFromStorage() {
   const data = localStorage.getItem('launchpad_work_widgets');
   const WORK_WIDGETS_DEFAULT = [
     { id: 'widget-m365-status', type: 'm365-status', title: 'M365 Status (Live)', colSpan: 1 },
-    { id: 'widget-m365-message-center', type: 'm365-message-center', title: 'M365 Message Center', colSpan: 1, settings: { limit: 4, useLiveFeed: true } },
-    { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 },
-    { id: 'widget-azure-news', type: 'azure-news', title: 'Azure Cloud News', colSpan: 1 }
+    { id: 'widget-m365-message-center', type: 'm365-message-center', title: 'M365 Message Center', colSpan: 1, settings: { limit: 10, useLiveFeed: true } },
+    { id: 'widget-work-tasks', type: 'work-tasks', title: 'Work Tasks', colSpan: 1 }
   ];
   if (!data) {
     localStorage.setItem('launchpad_work_widgets', JSON.stringify(WORK_WIDGETS_DEFAULT));
@@ -3049,7 +3085,6 @@ function renderSidebarWidgets(widgets) {
     else if (widget.type === 'disk') iconClass = 'fa-hard-drive';
     else if (widget.type === 'm365-status') iconClass = 'fa-user-shield';
     else if (widget.type === 'work-tasks') iconClass = 'fa-list-check';
-    else if (widget.type === 'azure-news') iconClass = 'fa-rss';
     
     titleEl.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${widget.title}`;
     header.appendChild(titleEl);
@@ -3125,7 +3160,6 @@ function buildWidgetBody(widget, container, statusEl) {
   else if (widget.type === 'm365-message-center') buildM365MessageCenterWidget(widget, container, statusEl);
   else if (widget.type === 'm365-stats') buildM365StatsWidget(widget, container, statusEl);
   else if (widget.type === 'work-tasks') buildWorkTasksWidget(widget, container);
-  else if (widget.type === 'azure-news') buildAzureNewsWidget(widget, container, statusEl);
 }
 
 /**
@@ -3387,76 +3421,7 @@ function fetchM365Roadmap() {
   });
 }
 
-function fetchAzureStatus() {
-  const feedUrl = 'https://azure.status.microsoft/en-us/status/feed/';
-  
-  const proxyAttempts = [];
-  
-  // If Cloudflare Worker is configured, attempt it first
-  if (integrationConfigs.cfWorkerUrl) {
-    const cleanWorkerUrl = cleanUrl(integrationConfigs.cfWorkerUrl);
-    proxyAttempts.push({
-      name: 'Cloudflare Worker Proxy',
-      fn: () => fetch(`${cleanWorkerUrl}/azure-status`)
-                  .then(res => { if (!res.ok) throw new Error('Cloudflare Worker status not ok'); return res.text(); })
-    });
-  }
-  
-  proxyAttempts.push(
-    {
-      name: 'Direct Fetch',
-      fn: () => fetch(feedUrl)
-                  .then(res => { if (!res.ok) throw new Error('Direct fetch status not ok'); return res.text(); })
-    },
-    {
-      name: 'rss2json API converter',
-      fn: () => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`)
-                  .then(res => { if (!res.ok) throw new Error('rss2json status not ok'); return res.json(); })
-                  .then(data => {
-                    if (data.status !== 'ok') throw new Error('rss2json data status not ok');
-                    let xml = '<rss><channel>';
-                    (data.items || []).forEach(item => {
-                      xml += `<item>
-                        <title>${item.title || ''}</title>
-                        <pubDate>${item.pubDate || ''}</pubDate>
-                        <description>${item.description || ''}</description>
-                        <link>${item.link || ''}</link>
-                      </item>`;
-                    });
-                    xml += '</channel></rss>';
-                    return xml;
-                  })
-    },
-    {
-      name: 'corsproxy.io',
-      fn: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(feedUrl)}`)
-                  .then(res => { if (!res.ok) throw new Error('corsproxy.io status not ok'); return res.text(); })
-    },
-    {
-      name: 'allorigins raw',
-      fn: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`)
-                  .then(res => { if (!res.ok) throw new Error('allorigins.win status not ok'); return res.text(); })
-    },
-    {
-      name: 'api.cors.lol',
-      fn: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(feedUrl)}`)
-                  .then(res => { if (!res.ok) throw new Error('api.cors.lol status not ok'); return res.text(); })
-    }
-  );
 
-  let chain = proxyAttempts[0].fn();
-  for (let i = 1; i < proxyAttempts.length; i++) {
-    chain = chain.catch(err => {
-      console.warn(`${proxyAttempts[i-1].name} failed, trying ${proxyAttempts[i].name}...`, err);
-      return proxyAttempts[i].fn();
-    });
-  }
-  
-  return chain.catch(err => {
-    console.error('All fetch attempts failed for Azure status.', err);
-    throw err;
-  });
-}
 
 function buildM365MessageCenterWidget(widget, container, statusEl) {
   container.className += ' m365-message-center-widget';
@@ -3465,7 +3430,7 @@ function buildM365MessageCenterWidget(widget, container, statusEl) {
   const filterCat = settings.filterCategory || 'all';
   const filterStatus = settings.filterStatus || 'all';
   const filterService = settings.filterService || 'all';
-  const limit = parseInt(settings.limit, 10) || 4;
+  const limit = parseInt(settings.limit, 10) || 10;
   const useLive = settings.useLiveFeed !== false;
   
   container.innerHTML = `
@@ -3869,11 +3834,7 @@ function buildWorkTasksWidget(widget, container) {
       workTasks = [];
     }
   } else {
-    workTasks = [
-      { id: 'wt-1', text: 'Review Azure Active Directory logs', completed: false },
-      { id: 'wt-2', text: 'Audit Intune enrollment compliance', completed: true },
-      { id: 'wt-3', text: 'Verify Exchange mail flow rules', completed: false }
-    ];
+    workTasks = [];
     localStorage.setItem('launchpad_work_tasks', JSON.stringify(workTasks));
   }
   
@@ -3948,94 +3909,7 @@ function renderWorkTasksList(container) {
   });
 }
 
-function buildAzureNewsWidget(widget, container, statusEl) {
-  container.innerHTML = `
-    <div class="azure-news-widget">
-      <div class="azure-news-list">
-        <span style="font-size:0.75rem; opacity:0.6;"><i class="fa-solid fa-spinner fa-spin"></i> Fetching Azure news...</span>
-      </div>
-    </div>
-  `;
-  
-  const listEl = container.querySelector('.azure-news-list');
-  
-  const fallbackNews = [
-    { title: 'Azure Cosmos DB - Scheduled Maintenance Windows', date: 'Just now', type: 'update' },
-    { title: 'Network Infrastructure Advisory: Europe West Region', date: '30 mins ago', type: 'incident' },
-    { title: 'Resolved: Azure Active Directory MFA Access Issues', date: '2 hours ago', type: 'resolved' },
-    { title: 'General Availability: Azure Functions V4 Update', date: 'Yesterday', type: 'update' }
-  ];
-  
-  const renderNewsItems = (items) => {
-    listEl.innerHTML = '';
-    items.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'azure-news-item';
-      
-      let badgeClass = 'news-update';
-      if (item.type === 'incident') badgeClass = 'news-incident';
-      if (item.type === 'resolved') badgeClass = 'news-resolved';
-      
-      div.innerHTML = `
-        <h4 class="azure-news-title">${item.title}</h4>
-        <div class="azure-news-date-tag">
-          <span>${item.date}</span>
-          <span class="azure-news-badge ${badgeClass}">${item.type}</span>
-        </div>
-      `;
-      listEl.appendChild(div);
-    });
-  };
-  
-  fetchAzureStatus()
-    .then(xmlStr => {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
-      const items = xmlDoc.querySelectorAll('item');
-      const news = [];
-      
-      if (items.length > 0) {
-        items.forEach((item, index) => {
-          if (index >= 4) return;
-          const title = item.querySelector('title')?.textContent || 'Azure Service Notice';
-          const pubDateStr = item.querySelector('pubDate')?.textContent || '';
-          
-          let date = 'Recent';
-          if (pubDateStr) {
-            try {
-              const pubDate = new Date(pubDateStr);
-              const diffMins = Math.round((Date.now() - pubDate) / 60000);
-              if (diffMins < 60) date = `${diffMins} mins ago`;
-              else if (diffMins < 1440) date = `${Math.round(diffMins/60)} hours ago`;
-              else date = pubDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            } catch (err) {}
-          }
-          
-          let type = 'update';
-          const titleLower = title.toLowerCase();
-          if (titleLower.includes('resolved') || titleLower.includes('mitigated')) type = 'resolved';
-          else if (titleLower.includes('advisory') || titleLower.includes('investigating') || titleLower.includes('degraded') || titleLower.includes('outage')) type = 'incident';
-          
-          news.push({ title, date, type });
-        });
-        if (statusEl) {
-          statusEl.innerHTML = `<span class="m365-live-tag" style="background: rgba(16, 124, 65, 0.15); color: #107c41; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 124, 65, 0.3);">LIVE</span>`;
-        }
-        renderNewsItems(news);
-      } else {
-        if (statusEl) {
-          statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
-        }
-        renderNewsItems(fallbackNews);
-      }
-    })
-    .catch(() => {
-      if (statusEl) {
-        statusEl.innerHTML = `<span class="m365-mock-tag" style="background: rgba(120, 120, 120, 0.15); color: var(--text-secondary); font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(120, 120, 120, 0.3);">SIMULATED</span>`;
-      }
-      renderNewsItems(fallbackNews);
-    });
-}
+
 
 /**
  * Specialized Widget Builders
@@ -4983,7 +4857,7 @@ function openWidgetModalForEdit(index) {
     document.getElementById('widget-m365-msg-filter').value = settings.filterCategory || 'all';
     document.getElementById('widget-m365-msg-status-filter').value = settings.filterStatus || 'all';
     document.getElementById('widget-m365-msg-service-filter').value = settings.filterService || 'all';
-    document.getElementById('widget-m365-msg-limit').value = settings.limit || 4;
+    document.getElementById('widget-m365-msg-limit').value = settings.limit || 10;
     document.getElementById('widget-m365-msg-live').checked = settings.useLiveFeed !== false;
   } else if (widget.type === 'm365-stats') {
     document.getElementById('widget-m365-stats-tenant').value = settings.tenantName || 'Contoso Corp';
@@ -5073,7 +4947,7 @@ function initWidgetModalEvents() {
         settings.filterCategory = document.getElementById('widget-m365-msg-filter').value;
         settings.filterStatus = document.getElementById('widget-m365-msg-status-filter').value;
         settings.filterService = document.getElementById('widget-m365-msg-service-filter').value;
-        settings.limit = parseInt(document.getElementById('widget-m365-msg-limit').value, 10) || 4;
+        settings.limit = parseInt(document.getElementById('widget-m365-msg-limit').value, 10) || 10;
         settings.useLiveFeed = document.getElementById('widget-m365-msg-live').checked;
       } else if (type === 'm365-stats') {
         settings.tenantName = document.getElementById('widget-m365-stats-tenant').value.trim() || 'Contoso Corp';
